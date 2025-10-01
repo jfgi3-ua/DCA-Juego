@@ -1,0 +1,60 @@
+# Carpetas de configuración de VSCode
+.vscode/
+.vscode-test/
+
+# Archivos de historial y respaldos
+.history/
+*.code-workspace
+*.log
+
+# Archivos de depuración
+*.vsix
+
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Linker files
+*.ilk
+
+# Debugger Files
+*.pdb
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# debug information files
+*.dwo
+
+# Binario principal
+game
