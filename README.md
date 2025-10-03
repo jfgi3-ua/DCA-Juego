@@ -36,6 +36,7 @@ Solo necesitamos:
 
 ## 3. Flujo de trabajo paso a paso (¡Importante!)
 Simulando el desarrollo de la práctica "Escape del Laberinto":
+
 a) Crear una rama de trabajo
 Supongamos que vamos a implementar la mecánica de **recoger llaves**:
 ~~~~
@@ -81,7 +82,7 @@ git push origin --delete feature/recoger-llaves
 Esto también se puede hacer con un *click* desde el propio Github, pero solo la rama en remoto, la local se sigue teniendo que borrar a mano.
 
 d) Ejemplo de ciclo completo en GitHub Flow
-1. Crear rama: feature/mover-jugador.
+1. Crear rama: `feature/mover-jugador`.
 2. Implementar la mecánica de movimiento.
 3. Hacer commits frecuentes.
 4. Push a GitHub.
