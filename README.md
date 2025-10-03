@@ -7,9 +7,9 @@
 # GitHub Flow: Guía exhaustiva
 ## 1. ¿Qué es GitHub Flow?
 GitHub Flow es un flujo de trabajo simplificado para Git, desarrollado por GitHub, centrado en la colaboración y despliegues continuos. A diferencia de GitFlow, que es más rígido y tiene múltiples ramas de soporte (`develop`, `release`, `hotfix`), GitHub Flow se basa en:
-- Una rama principal (main) que siempre contiene código listo para producción.
-- Ramas de trabajo temporales para nuevas funcionalidades o correcciones.
-- Pull Requests para discutir y revisar cambios antes de integrarlos en main.
+- Una **rama principal (main)** que siempre contiene código listo para producción.
+- **Ramas de trabajo temporales** para nuevas funcionalidades o correcciones.
+- **Pull Requests** para discutir y revisar cambios antes de integrarlos en main.
 
 ### Diferencias clave con GitFlow (para no liarnos)
 | Aspecto              | GitFlow                              | GitHub Flow                                         |
