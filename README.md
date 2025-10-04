@@ -91,12 +91,31 @@ d) Ejemplo de ciclo completo en GitHub Flow
 7. Merge a main.
 8. Borra rama temporal.
 
-### Cheatsheet básico
+### Resumen y Cheatsheet básico
+Como empezar:
 ~~~
+# Creación y cambio a una nueva rama en la misma instrucción
 git checkout -b feature/nombre
-git add . && git commit -m "mensaje"
-git push origin feature/nombre
-git merge feature/nombre # o PR en GitHub
+
+# Añadir cambios
+git add . && git commit -m "mensaje descriptivo"
+
+# Subir nueva rama al repositorio remoto
+git push -u origin feature/nombre
+
+# Cambiar a rama donde queremos hacer el merge y hacerlo (mucho mejor desde GitHub con PR)
+git checkout main
+git merge feature/nombre
+~~~
+
+Una vez tnemos el trabajo terminado en una rama y hecho eel merge junto con el pull request en la rama principal, debemos integrarlo en el repositorio local y borrar la rama.
+~~~
+git checkout main
+git pull
+git branch -d <nombre-rama>
+
+# Borra las ramas en local que ya no existan en origin (actualiza el estado local con respecto a origin)
+git remote prune origin
 ~~~
 
 ## 4. Buenas prácticas de GitHub Flow
