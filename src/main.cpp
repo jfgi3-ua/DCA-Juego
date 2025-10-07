@@ -1,5 +1,6 @@
-#include <StateMachine.hpp>
-#include <MainGameState.hpp>
+#include "GameState.hpp"
+#include "StateMachine.hpp"
+#include "StartGameState.hpp"
 #include <memory>
 #include <chrono>
 extern "C" {
@@ -14,7 +15,7 @@ int main() {
     // 2) Arrancar la máquina de estados con MainGameState
     StateMachine state_machine;
     float delta_time = 0.0f;
-    state_machine.add_state(std::make_unique<MainGameState>(), false);
+    state_machine.add_state(std::make_unique<StartGameState>(), false);
     state_machine.handle_state_changes(delta_time);
 
     // 3) Bucle principal (hasta que se cierre la ventana)
@@ -25,6 +26,7 @@ int main() {
         // 2 - Procesar lógica
         // 3 - Renderizar
         state_machine.handle_state_changes(delta_time);
+        state_machine.getCurrentState()->handleInput();
         state_machine.getCurrentState()->update(delta_time);
         state_machine.getCurrentState()->render();
     }
