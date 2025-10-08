@@ -2,4 +2,6 @@
 
 player::player() : score(0) {}
 
-player::~player() {}
+player::~player() {
+    
+}
