@@ -1,5 +1,10 @@
-#include <MainGameState.hpp>
-
+#include "MainGameState.hpp"
+#include "GameOverState.hpp"
+#include "StateMachine.hpp"
+#include <iostream>
+extern "C" {
+  #include <raylib.h>
+}
 MainGameState::MainGameState()
 {
 }
