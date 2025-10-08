@@ -35,7 +35,7 @@ void GameOverState::handleInput() {
     if (IsKeyPressed(KEY_ENTER)) {
         if(selectedOption){
             //si opcion == 1 salimos del juego
-            CloseWindow();
+            this->state_machine->set_game_ending(true);
         }else{
             //si opcion == 0 volvemos al juego
             this->state_machine->add_state(std::make_unique<MainGameState>(), true);

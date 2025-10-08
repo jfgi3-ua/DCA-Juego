@@ -18,7 +18,7 @@ int main() {
     state_machine.handle_state_changes(delta_time);
 
     // 3) Bucle principal (hasta que se cierre la ventana)
-    while (!WindowShouldClose()) {
+    while (!WindowShouldClose() && !state_machine.is_game_ending()) {
         delta_time = GetFrameTime();
 
         // 1 - Capturar input
