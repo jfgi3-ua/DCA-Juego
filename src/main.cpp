@@ -1,3 +1,4 @@
+#include "MainGameState.hpp"
 #include "GameState.hpp"
 #include "StateMachine.hpp"
 #include "StartGameState.hpp"
