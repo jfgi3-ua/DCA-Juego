@@ -1,5 +1,5 @@
-#include <StateMachine.hpp>
-#include <MainGameState.hpp>
+#include "StateMachine.hpp"
+#include "MainGameState.hpp"
 #include <memory>
 #include <chrono>
 extern "C" {
@@ -25,6 +25,7 @@ int main() {
         // 2 - Procesar lógica
         // 3 - Renderizar
         state_machine.handle_state_changes(delta_time);
+        state_machine.getCurrentState()->handleInput();
         state_machine.getCurrentState()->update(delta_time);
         state_machine.getCurrentState()->render();
     }

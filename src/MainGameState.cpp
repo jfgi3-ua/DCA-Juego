@@ -1,4 +1,6 @@
-#include <MainGameState.hpp>
+#include "MainGameState.hpp"
+#include "StateMachine.hpp"
+#include "GameOverState.hpp"
 #include <iostream>
 extern "C" {
   #include <raylib.h>
@@ -15,7 +17,9 @@ void MainGameState::init()
 
 void MainGameState::handleInput()
 {
-    std::cout << "Enter a key: ";
+    if(IsKeyPressed(KEY_ENTER)){
+        this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
+    }
 }
 
 void MainGameState::update(float deltaTime)
