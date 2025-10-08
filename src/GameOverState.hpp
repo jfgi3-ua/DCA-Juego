@@ -32,5 +32,6 @@ class GameOverState : public GameState
 
         //para cuando tengamos sprites
         Texture2D gameOverText;
+        Texture2D levelCompleteText;
         Texture2D background;
 };

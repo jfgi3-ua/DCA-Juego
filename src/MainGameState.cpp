@@ -18,6 +18,10 @@ void MainGameState::init()
 void MainGameState::handleInput()
 {
     if(IsKeyPressed(KEY_ENTER)){
+        this->state_machine->add_state(std::make_unique<GameOverState>(1, 0, 1.0f), true);
+    }
+
+    if(IsKeyPressed(KEY_SPACE)){
         this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
     }
 }
