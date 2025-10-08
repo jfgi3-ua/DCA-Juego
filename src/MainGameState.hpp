@@ -1,5 +1,11 @@
 #pragma once
 #include "GameState.hpp"
+#include <iostream>
+#include "Map.hpp"
+#include <vector>
+extern "C" {
+  #include <raylib.h>
+}
 
 class MainGameState : public GameState
 {
@@ -18,4 +24,9 @@ class MainGameState : public GameState
 
     private:
         char entered_key;
+        // Mapa del juego
+        Map map_;
+        int tile_ = 32;
+        Vector2 playerPos_{};
+        std::vector<Vector2> enemiesPos_;
 };
