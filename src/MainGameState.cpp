@@ -1,4 +1,8 @@
-#include <MainGameState.hpp>
+#include "MainGameState.hpp"
+#include <iostream>
+extern "C" {
+  #include <raylib.h>
+}
 
 MainGameState::MainGameState()
 {
