@@ -1,4 +1,5 @@
 #include "Player.hpp"
+#include "raymath.h" 
 #include <iostream>
 
 Player::Player() {}
@@ -15,32 +16,47 @@ void Player::init(Vector2 startPos, float radius)
  */
 void Player::handleInput(float deltaTime, const Map& map)
 {
-    Vector2 newPos = position_;
     int tileSize = map.tile();
+    int heightMap = map.height();
+    int widthMap = map.width();
+    
+    // Nueva posición
+    Vector2 newPos = position_;
 
-    // Movimiento base
-    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))    newPos.y -= speed_ * deltaTime;
-    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN))  newPos.y += speed_ * deltaTime;
-    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT))  newPos.x -= speed_ * deltaTime;
-    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) newPos.x += speed_ * deltaTime;
+    // Posición destino
+    Vector2 moveDir = { 0, 0 };
+    
+    // Actualizar posición dependiendo de la tecla pulsada
+    // WASD / △ ◁ ▽ ▷
+    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))    moveDir.y -= speed_ * deltaTime;
+    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN))  moveDir.y += speed_ * deltaTime;
+    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT))  moveDir.x -= speed_ * deltaTime;
+    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) moveDir.x += speed_ * deltaTime;
 
-    // Colisiones en eje X 
-    Vector2 tryX = { newPos.x, position_.y };
-    int gridX = static_cast<int>(tryX.x / tileSize);
-    int gridY = static_cast<int>(position_.y / tileSize);
+    // Normalizar dirección si se mueve en diagonal
+    if (moveDir.x != 0 || moveDir.y != 0)
+        moveDir = Vector2Normalize(moveDir);
 
-    if (map.isWalkable(gridX, gridY)) {
-        position_.x = tryX.x;
-    }
+    // Posible nueva posición X
+    Vector2 tryPosX = {
+        position_.x + moveDir.x * speed_ * deltaTime,
+        position_.y
+    };
+    
+    // Comprobación de colisión con paredes en el eje X
+    if (!checkCollisionWithWalls(tryPosX, map)) newPos.x = tryPosX.x;
 
-    // Colisiones en eje Y 
-    Vector2 tryY = { position_.x, newPos.y };
-    int gridX2 = static_cast<int>(position_.x / tileSize);
-    int gridY2 = static_cast<int>(tryY.y / tileSize);
+    // Posible nueva posición Y
+    Vector2 tryPosY = {
+        newPos.x,
+        position_.y + moveDir.y * speed_ * deltaTime
+    };
+    
+    // Comprobación de colisión con paredes en el eje Y
+    if (!checkCollisionWithWalls(tryPosY, map)) newPos.y = tryPosY.y;
 
-    if (map.isWalkable(gridX2, gridY2)) {
-        position_.y = tryY.y;
-    }
+    // Actualizar posición final
+    position_ = newPos;
 }
 
 void Player::update(float deltaTime, const Map& map)
