@@ -52,3 +52,35 @@ void Player::render() const
 {
     DrawCircleV(position_, radius_, BLUE);
 }
+
+bool Player::checkCollisionWithWalls(const Vector2& pos, const Map& map) const
+{
+    int tileSize = map.tile();
+
+    // Bucle que itera todo el mapa
+    for (int y = 0; y < map.height(); ++y) {
+        for (int x = 0; x < map.width(); ++x) {
+            // Si en la posición indicada hay una pared (#), le crea una variable tipo Rectangle
+            if (map.at(x, y) == '#') {
+                Rectangle wallRect = {
+                    // Posición con el tamaño de las casillas del mapa
+                    (float)(x * tileSize),
+                    (float)(y * tileSize),
+
+                    // Mismo tamaño que las casillas del mapa
+                    (float)tileSize,
+                    (float)tileSize
+                };
+
+                // Si nuestro jugador choca contra una de estas lo detecta
+                if (CheckCollisionCircleRec(pos, radius_, wallRect)) {
+                    // Hay colisión
+                    return true; 
+                }
+            }
+        }
+    }
+
+     // No hay colisión
+    return false;
+}

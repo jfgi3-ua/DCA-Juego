@@ -15,7 +15,10 @@ class Player {
 
         // Posición actual del jugador 
         Vector2 position() const {return position_; }
-        
+
+        // Comprobar colisiones del jugador
+        bool checkCollisionWithWalls(const Vector2& pos, const Map& map) const;
+
     private:
         Vector2 position_ = {0, 0};
         float speed_ = 150.0f;
