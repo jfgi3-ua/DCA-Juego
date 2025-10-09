@@ -15,11 +15,7 @@ void Player::init(Vector2 startPos, float radius)
  * No se mueve por casillas: es continuo, con control por teclado.
  */
 void Player::handleInput(float deltaTime, const Map& map)
-{
-    int tileSize = map.tile();
-    int heightMap = map.height();
-    int widthMap = map.width();
-    
+{  
     // Nueva posición
     Vector2 newPos = position_;
 
@@ -71,8 +67,6 @@ void Player::render() const
 
 bool Player::checkCollisionWithWalls(const Vector2& pos, const Map& map) const
 {
-    int tileSize = map.tile();
-
     // Bucle que itera todo el mapa
     for (int y = 0; y < map.height(); ++y) {
         for (int x = 0; x < map.width(); ++x) {
@@ -80,12 +74,12 @@ bool Player::checkCollisionWithWalls(const Vector2& pos, const Map& map) const
             if (map.at(x, y) == '#') {
                 Rectangle wallRect = {
                     // Posición con el tamaño de las casillas del mapa
-                    (float)(x * tileSize),
-                    (float)(y * tileSize),
+                    (float)(x * map.tile()),
+                    (float)(y * map.tile()),
 
                     // Mismo tamaño que las casillas del mapa
-                    (float)tileSize,
-                    (float)tileSize
+                    (float)map.tile(),
+                    (float)map.tile()
                 };
 
                 // Si nuestro jugador choca contra una de estas lo detecta
