@@ -30,10 +30,6 @@ void MainGameState::init()
 
 void MainGameState::handleInput()
 {
-    if(IsKeyPressed(KEY_ENTER)){
-        this->state_machine->add_state(std::make_unique<GameOverState>(1, 0, 1.0f), true);
-    }
-
     if(IsKeyPressed(KEY_SPACE)){
         this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
     }
@@ -43,6 +39,11 @@ void MainGameState::update(float deltaTime)
 {
     // Actualizar jugador con colisiones de mapa
     player_.update(deltaTime, map_);
+
+    if (player_.isOnExit(map_)) {
+        std::cout << "Nivel completado" << endl;
+        this->state_machine->add_state(std::make_unique<GameOverState>(1, 0, 1.0f), true);
+    }
     
     // this->handleInput();
 }

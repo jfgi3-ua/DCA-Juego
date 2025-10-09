@@ -19,6 +19,9 @@ class Player {
         // Comprobar colisiones del jugador
         bool checkCollisionWithWalls(const Vector2& pos, const Map& map) const;
 
+        // Comprobar si está encima de la salida
+        bool isOnExit(const Map& map) const;
+
     private:
         Vector2 position_ = {0, 0};
         float speed_ = 150.0f;

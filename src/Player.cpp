@@ -94,3 +94,15 @@ bool Player::checkCollisionWithWalls(const Vector2& pos, const Map& map) const
      // No hay colisión
     return false;
 }
+
+bool Player::isOnExit(const Map& map) const
+{
+    int tileSize = map.tile();
+
+    // Convertir la posición actual de nuestro jugador a coordenadas de celda
+    int cellX = static_cast<int>(position_.x / tileSize);
+    int cellY = static_cast<int>(position_.y / tileSize);
+
+    // Comprobar si el carácter del mapa es 'X'
+    return map.at(cellX, cellY) == 'X';
+}
