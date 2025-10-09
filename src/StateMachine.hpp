@@ -1,5 +1,5 @@
 #pragma once
-#include <GameState.hpp>
+#include "GameState.hpp"
 #include <stack>
 #include <memory>
 #include <unordered_map>
@@ -19,6 +19,7 @@ class StateMachine
         bool isRunning() {return this->is_running;}
 
         bool is_game_ending() {return this->is_ending;}
+        void set_game_ending(bool value) {this->is_ending = value;}
 
         std::unique_ptr<GameState>& getCurrentState() {return this->states_machine.top();}
     private:
