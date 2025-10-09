@@ -41,7 +41,7 @@ void MainGameState::update(float deltaTime)
     player_.update(deltaTime, map_);
 
     if (player_.isOnExit(map_)) {
-        std::cout << "Nivel completado" << endl;
+        std::cout << "Nivel completado" << std::endl;
         this->state_machine->add_state(std::make_unique<GameOverState>(1, 0, 1.0f), true);
     }
     
