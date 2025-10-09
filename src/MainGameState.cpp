@@ -12,8 +12,9 @@ void MainGameState::init()
     tile_ = map_.tile();
 
     IVec2 p = map_.playerStart();
-    playerPos_ = { p.x * (float)tile_ + tile_ / 2.0f,
-                   p.y * (float)tile_ + tile_ / 2.0f };
+    Vector2 startPos = { p.x * (float)tile_ + tile_ / 2.0f,
+                         p.y * (float)tile_ + tile_ / 2.0f };
+    player_.init(startPos, tile_ * 0.35f);
 
     enemiesPos_.clear();
     for (auto e : map_.enemyStarts()) {
@@ -29,6 +30,9 @@ void MainGameState::handleInput()
 
 void MainGameState::update(float deltaTime)
 {
+    // Actualizar jugador con colisiones de mapa
+    player_.update(deltaTime, map_);
+    
     // this->handleInput();
 }
 
@@ -53,8 +57,8 @@ void MainGameState::render()
         }
     }
 
-    // Jugador (círculo)
-    DrawCircleV(playerPos_, tile_ * 0.35f, BLUE);
+    // Jugador 
+    player_.render();
 
     // Enemigos (cuadrados)
     for (auto pos : enemiesPos_) {

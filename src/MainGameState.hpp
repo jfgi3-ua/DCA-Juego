@@ -2,6 +2,7 @@
 #include <GameState.hpp>
 #include <iostream>
 #include "Map.hpp"
+#include "Player.hpp"
 #include <vector>
 extern "C" {
   #include <raylib.h>
@@ -27,6 +28,10 @@ class MainGameState : public GameState
         // Mapa del juego
         Map map_;
         int tile_ = 32;
-        Vector2 playerPos_{};
+
+        // Jugador
+        Player player_;
+
+        // Enemigo
         std::vector<Vector2> enemiesPos_;
 };
