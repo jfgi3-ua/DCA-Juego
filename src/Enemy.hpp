@@ -17,15 +17,23 @@ public:
     float timer = 0.0f;
     bool moving = false;
 
+    float bboxW = 0.0f;
+    float bboxH = 0.0f;
+
+    bool collidesWithPlayer(float playerPx, float playerPy, float playerRadius) const;
+
+
     Enemy() = default;
     Enemy(int x_, int y_, int tileSize) : x(x_), y(y_), targetX(x_), targetY(y_) {
         px = x * tileSize + tileSize * 0.5f;
         py = y * tileSize + tileSize * 0.5f;
         
-        speed = tileSize * 4.0f;
+        speed = tileSize * 1.5f;
         moveCooldown = 0.0f;
         timer = 0.0f;
         moving = false;
+        bboxW = tileSize * 0.7f;
+        bboxH = tileSize * 0.7f;
     }
 
     void update(const Map &map, float dt, int tileSize);

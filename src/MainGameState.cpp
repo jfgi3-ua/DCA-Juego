@@ -56,6 +56,15 @@ void MainGameState::update(float deltaTime)
         enemiesPos_.push_back({ e.x * (float)tile_ + tile_ / 2.0f,
                                 e.y * (float)tile_ + tile_ / 2.0f });
     }
+
+    float playerRadius = tile_ * 0.35f;
+    for (auto &e : enemies) {
+        if (e.collidesWithPlayer(playerPos_.x, playerPos_.y, playerRadius)) {
+            // si colisiona, cambiar a GameOverState (ajusta parámetros si tu constructor difiere)
+            this->state_machine->add_state(std::make_unique<GameOverState>(1, 0, 1.0f), true);
+            break;
+        }
+    }
 }
 void MainGameState::render()
 {

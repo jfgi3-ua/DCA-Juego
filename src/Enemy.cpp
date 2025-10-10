@@ -80,6 +80,30 @@ void Enemy::update(const Map &map, float dt, int tileSize)
     }
 }
 
+bool Enemy::collidesWithPlayer(float playerPx, float playerPy, float playerRadius) const
+{
+    // rectángulo centrado en (px,py) con medias bboxW/2, bboxH/2
+    float halfW = bboxW * 0.5f;
+    float halfH = bboxH * 0.5f;
+    float rectLeft = px - halfW;
+    float rectRight = px + halfW;
+    float rectTop = py - halfH;
+    float rectBottom = py + halfH;
+
+    // punto más cercano del rectángulo al centro del círculo
+    float closestX = playerPx;
+    if (closestX < rectLeft) closestX = rectLeft;
+    if (closestX > rectRight) closestX = rectRight;
+
+    float closestY = playerPy;
+    if (closestY < rectTop) closestY = rectTop;
+    if (closestY > rectBottom) closestY = rectBottom;
+
+    float dx = playerPx - closestX;
+    float dy = playerPy - closestY;
+    return (dx*dx + dy*dy) <= (playerRadius * playerRadius);
+}
+
 void Enemy::draw(int tileSize, Color color) const
 {
     float s = tileSize * 0.7f;
