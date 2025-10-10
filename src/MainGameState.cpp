@@ -1,10 +1,14 @@
 #include "MainGameState.hpp"
 #include "GameOverState.hpp"
 #include "StateMachine.hpp"
+#include "Enemy.hpp"
 #include <iostream>
 extern "C" {
   #include <raylib.h>
 }
+
+static std::vector<Enemy> enemies;
+
 MainGameState::MainGameState()
 {
 }
@@ -21,9 +25,12 @@ void MainGameState::init()
                    p.y * (float)tile_ + tile_ / 2.0f };
 
     enemiesPos_.clear();
+    enemies.clear();
     for (auto e : map_.enemyStarts()) {
         enemiesPos_.push_back({ e.x * (float)tile_ + tile_ / 2.0f,
                                 e.y * (float)tile_ + tile_ / 2.0f });
+        // crear un único Enemy usando el constructor que necesita tile_
+        enemies.emplace_back(e.x, e.y, tile_);
     }
 }
 
@@ -40,9 +47,25 @@ void MainGameState::handleInput()
 
 void MainGameState::update(float deltaTime)
 {
-    // this->handleInput();
-}
+    //this->handleInput();
 
+    for (auto &e : enemies) e.update(map_, deltaTime, tile_);
+
+    enemiesPos_.clear();
+    for (auto &e : enemies) {
+        enemiesPos_.push_back({ e.x * (float)tile_ + tile_ / 2.0f,
+                                e.y * (float)tile_ + tile_ / 2.0f });
+    }
+
+    float playerRadius = tile_ * 0.35f;
+    for (auto &e : enemies) {
+        if (e.collidesWithPlayer(playerPos_.x, playerPos_.y, playerRadius)) {
+            // si colisiona, cambiar a GameOverState (ajusta parámetros si tu constructor difiere)
+            this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
+            break;
+        }
+    }
+}
 void MainGameState::render()
 {
     BeginDrawing();
@@ -68,9 +91,8 @@ void MainGameState::render()
     DrawCircleV(playerPos_, tile_ * 0.35f, BLUE);
 
     // Enemigos (cuadrados)
-    for (auto pos : enemiesPos_) {
-        DrawRectangleV({ pos.x - tile_ * 0.35f, pos.y - tile_ * 0.35f },
-                       { tile_ * 0.7f, tile_ * 0.7f }, RED);
+    for (auto &e : enemies) {
+        e.draw(tile_, RED);
     }
 
     EndDrawing();
