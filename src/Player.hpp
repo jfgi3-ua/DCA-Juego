@@ -14,7 +14,10 @@ class Player {
         void render() const;
 
         // Posición actual del jugador 
-        Vector2 position() const {return position_; }
+        Vector2 getPosition() const {return position_; }
+
+        // Radio del jugador (para colisiones)
+        float getRadius() const { return radius_; }
 
         // Comprobar colisiones del jugador
         bool checkCollisionWithWalls(const Vector2& pos, const Map& map) const;
