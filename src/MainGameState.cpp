@@ -21,8 +21,9 @@ void MainGameState::init()
     tile_ = map_.tile();
 
     IVec2 p = map_.playerStart();
-    playerPos_ = { p.x * (float)tile_ + tile_ / 2.0f,
-                   p.y * (float)tile_ + tile_ / 2.0f };
+    Vector2 startPos = { p.x * (float)tile_ + tile_ / 2.0f,
+                         p.y * (float)tile_ + tile_ / 2.0f };
+    player_.init(startPos, tile_ * 0.35f);
 
     enemiesPos_.clear();
     enemies.clear();
@@ -36,10 +37,6 @@ void MainGameState::init()
 
 void MainGameState::handleInput()
 {
-    if(IsKeyPressed(KEY_ENTER)){
-        this->state_machine->add_state(std::make_unique<GameOverState>(1, 0, 1.0f), true);
-    }
-
     if(IsKeyPressed(KEY_SPACE)){
         this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
     }
@@ -47,6 +44,14 @@ void MainGameState::handleInput()
 
 void MainGameState::update(float deltaTime)
 {
+    // Actualizar jugador con colisiones de mapa
+    player_.update(deltaTime, map_);
+
+    if (player_.isOnExit(map_)) {
+        std::cout << "Nivel completado" << std::endl;
+        this->state_machine->add_state(std::make_unique<GameOverState>(1, 0, 1.0f), true);
+    }
+    
     //this->handleInput();
 
     for (auto &e : enemies) e.update(map_, deltaTime, tile_);
@@ -57,9 +62,8 @@ void MainGameState::update(float deltaTime)
                                 e.y * (float)tile_ + tile_ / 2.0f });
     }
 
-    float playerRadius = tile_ * 0.35f;
     for (auto &e : enemies) {
-        if (e.collidesWithPlayer(playerPos_.x, playerPos_.y, playerRadius)) {
+        if (e.collidesWithPlayer(player_.getPosition().x, player_.getPosition().y, player_.getRadius())) {
             // si colisiona, cambiar a GameOverState (ajusta parámetros si tu constructor difiere)
             this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
             break;
@@ -87,8 +91,8 @@ void MainGameState::render()
         }
     }
 
-    // Jugador (círculo)
-    DrawCircleV(playerPos_, tile_ * 0.35f, BLUE);
+    // Jugador 
+    player_.render();
 
     // Enemigos (cuadrados)
     for (auto &e : enemies) {
