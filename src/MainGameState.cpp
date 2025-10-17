@@ -93,7 +93,7 @@ void MainGameState::render()
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
-    // 1) Mapa (suelo, paredes, llave, salida)
+    // 1) Mapa (dibujado en la zona superior, desde y=0 hasta y=MAP_H_PX)
     for (int y = 0; y < map_.height(); ++y) {
         for (int x = 0; x < map_.width(); ++x) {
             const char c = map_.at(x, y);
@@ -126,34 +126,46 @@ void MainGameState::render()
         e.draw(tile_, RED);
     }
 
-    // 4) Información HUD / Mochila
-    // Panel superior izquierdo
-    const int pad = 8;
-    Rectangle hud{ (float)pad, (float)pad, 150.0f, 60.0f };
-    DrawRectangleRounded(hud, 0.25f, 6, Fade(BLACK, 0.08f));
-    DrawRectangleRoundedLinesEx(hud, 0.25f, 6, 1.0f, DARKGRAY);
-    DrawText("Mochila", pad + 10, pad + 8, 16, DARKGRAY);
+    // 4) HUD inferior
+    const float baseY = (float)(map_.height() * tile_); // empieza justo bajo el mapa
+    // Fondo del HUD a lo ancho de la ventana
+    Rectangle hudBg{ 0.0f, baseY, (float)GetScreenWidth(), (float)HUD_HEIGHT };
+    DrawRectangleRec(hudBg, Fade(BLACK, 0.06f));
+    // sombreado sutil encima del HUD
+    for (int i=0; i<6; ++i) {
+        Color c = Fade(BLACK, 0.05f * (6 - i));
+        DrawLine(0, (int)baseY - i, GetScreenWidth(), (int)baseY - i, c);
+    }
 
-    // “Espacio” de la llave
-    Rectangle slot{ (float)(pad + 12), (float)(pad + 28), 28.0f, 28.0f };
+    // Panel de mochila (alineado a la izquierda dentro del HUD)
+    const int pad = 10;
+    Rectangle hud{ (float)pad, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad };
+    DrawRectangleRounded(hud, 0.25f, 6, Fade(BLACK, 0.10f));
+    DrawRectangleRoundedLinesEx(hud, 0.25f, 6, 1.0f, DARKGRAY);
+    DrawText("Mochila", (int)hud.x + 10, (int)hud.y + 6, 16, DARKGRAY);
+
+    // Slot de llave
+    Rectangle slot{ hud.x + 12, hud.y + 28, 28.0f, 28.0f };
     DrawRectangleLinesEx(slot, 1.0f, GRAY);
-    DrawText("Llave", pad + 46, pad + 32, 16, GRAY);
+    DrawText("Llave", (int)hud.x + 50, (int)hud.y + 30, 16, GRAY);
 
     if (player_.hasKey()) {
-        // Dibuja el icono de la llave dentro del slot
         Rectangle keyIcon{ slot.x + 4, slot.y + 8, slot.width - 8, slot.height - 12 };
         DrawRectangleRec(keyIcon, GOLD);
         DrawRectangleLinesEx(keyIcon, 1.2f, BROWN);
     }
 
-    // 5) Aviso contextual: sobre la salida sin llave
-    int cx = (int)(player_.getPosition().x / tile_);
-    int cy = (int)(player_.getPosition().y / tile_);
+    // 5) Mensaje contextual por encima del HUD
+    const int cx = (int)(player_.getPosition().x / tile_);
+    const int cy = (int)(player_.getPosition().y / tile_);
     if (cx >= 0 && cy >= 0 && cx < map_.width() && cy < map_.height()) {
         if (map_.at(cx, cy) == 'X' && !player_.hasKey()) {
             const char* msg = "Necesitas la llave para salir";
-            int w = MeasureText(msg, 18);
-            DrawText(msg, (GetScreenWidth()-w)/2, GetScreenHeight()-30, 18, MAROON);
+            const int font = 18;
+            const int textW = MeasureText(msg, font);
+            // 10 px de margen por encima del HUD
+            const int textY = (int)baseY - font - 10;
+            DrawText(msg, (GetScreenWidth()-textW)/2, textY, font, MAROON);
         }
     }
 

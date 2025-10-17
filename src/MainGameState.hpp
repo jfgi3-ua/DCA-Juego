@@ -4,6 +4,7 @@
 #include "Map.hpp"
 #include "Player.hpp"
 #include <vector>
+#include "Config.hpp"
 extern "C" {
   #include <raylib.h>
 }
