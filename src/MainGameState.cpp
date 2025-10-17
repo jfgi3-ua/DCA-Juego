@@ -44,16 +44,33 @@ void MainGameState::handleInput()
 
 void MainGameState::update(float deltaTime)
 {
-    // Actualizar jugador con colisiones de mapa
+    // 1) Actualizar (movimiento) jugador con colisiones de mapa
     player_.update(deltaTime, map_);
 
-    if (player_.isOnExit(map_)) {
+    // 2) Celda actual del jugador
+    int cellX = (int)(player_.getPosition().x) / tile_;
+    int cellY = (int)(player_.getPosition().y) / tile_;
+
+    // 3) ¿Está sobre una llave 'K'? -> Recogerla
+    try {
+        if (map_.at(cellX, cellY) == 'K') {
+            player_.setHasKey(true);
+            map_.clearCell(cellX, cellY); // Reemplaza 'K' por '.', es decir, retira la llave del mapa.
+            std::cout << "Llave recogida!" << std::endl; // Para debug
+            // TODO:Aquí podríamos reproducir un sonido o mostrar un mensaje en pantalla si se desea.
+        }
+    } catch (const std::out_of_range& e) {
+        // Ignorar fuera de rango (no debería ocurrir aquí). Fuera de rango no debería ocurrir si los cálculos de celda son correctos.
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
+    // 4) ¿Está sobre la salida 'X' y tiene la llave? -> Nivel completado
+    if (player_.isOnExit(map_) && player_.hasKey()) {
         std::cout << "Nivel completado" << std::endl;
         this->state_machine->add_state(std::make_unique<GameOverState>(1, 0, 1.0f), true);
     }
-    
-    //this->handleInput();
 
+    // 5) IA enemigos y colisiones con jugador
     for (auto &e : enemies) e.update(map_, deltaTime, tile_);
 
     enemiesPos_.clear();
@@ -70,33 +87,74 @@ void MainGameState::update(float deltaTime)
         }
     }
 }
+
 void MainGameState::render()
 {
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
+    // 1) Mapa (suelo, paredes, llave, salida)
     for (int y = 0; y < map_.height(); ++y) {
         for (int x = 0; x < map_.width(); ++x) {
             const char c = map_.at(x, y);
             Rectangle r{ (float)(x * tile_), (float)(y * tile_), (float)tile_, (float)tile_ };
 
-            // Suelo
+            // Suelo + paredes
             DrawRectangleRec(r, (c == '#') ? LIGHTGRAY : WHITE);
 
-            // Paredes
-            if (c == '#') DrawRectangleLinesEx(r, 1.0f, DARKGRAY);
-
-            // Salida
-            if (c == 'X') DrawRectangleRec(r, LIME);
+            if (c == '#') DrawRectangleLinesEx(r, 1.0f, DARKGRAY);  // Paredes
+            else if (c == 'X') DrawRectangleRec(r, LIME);           // Salida
+            else if (c == 'K') {                                    // Llave
+                // Pequeño icono dorado centrado en la celda
+                Rectangle keyRect{
+                    r.x + r.width * 0.25f,
+                    r.y + r.height * 0.35f,
+                    r.width * 0.5f,
+                    r.height * 0.3f
+                };
+                DrawRectangleRec(keyRect, GOLD);
+                DrawRectangleLinesEx(keyRect, 1.5f, BROWN);
+            }
         }
     }
 
-    // Jugador 
+    // 2) Jugador
     player_.render();
 
-    // Enemigos (cuadrados)
+    // 3) Enemigos (cuadrados)
     for (auto &e : enemies) {
         e.draw(tile_, RED);
+    }
+
+    // 4) Información HUD / Mochila
+    // Panel superior izquierdo
+    const int pad = 8;
+    Rectangle hud{ (float)pad, (float)pad, 150.0f, 60.0f };
+    DrawRectangleRounded(hud, 0.25f, 6, Fade(BLACK, 0.08f));
+    DrawRectangleRoundedLinesEx(hud, 0.25f, 6, 1.0f, DARKGRAY);
+    DrawText("Mochila", pad + 10, pad + 8, 16, DARKGRAY);
+
+    // “Espacio” de la llave
+    Rectangle slot{ (float)(pad + 12), (float)(pad + 28), 28.0f, 28.0f };
+    DrawRectangleLinesEx(slot, 1.0f, GRAY);
+    DrawText("Llave", pad + 46, pad + 32, 16, GRAY);
+
+    if (player_.hasKey()) {
+        // Dibuja el icono de la llave dentro del slot
+        Rectangle keyIcon{ slot.x + 4, slot.y + 8, slot.width - 8, slot.height - 12 };
+        DrawRectangleRec(keyIcon, GOLD);
+        DrawRectangleLinesEx(keyIcon, 1.2f, BROWN);
+    }
+
+    // 5) Aviso contextual: sobre la salida sin llave
+    int cx = (int)(player_.getPosition().x / tile_);
+    int cy = (int)(player_.getPosition().y / tile_);
+    if (cx >= 0 && cy >= 0 && cx < map_.width() && cy < map_.height()) {
+        if (map_.at(cx, cy) == 'X' && !player_.hasKey()) {
+            const char* msg = "Necesitas la llave para salir";
+            int w = MeasureText(msg, 18);
+            DrawText(msg, (GetScreenWidth()-w)/2, GetScreenHeight()-30, 18, MAROON);
+        }
     }
 
     EndDrawing();

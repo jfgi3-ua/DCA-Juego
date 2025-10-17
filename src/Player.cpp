@@ -1,5 +1,5 @@
 #include "Player.hpp"
-#include "raymath.h" 
+#include "raymath.h"
 #include <iostream>
 
 Player::Player() {}
@@ -8,6 +8,7 @@ void Player::init(Vector2 startPos, float radius)
 {
     position_ = startPos;
     radius_ = radius;
+    has_key_ = false;
 }
 
 /**
@@ -15,13 +16,13 @@ void Player::init(Vector2 startPos, float radius)
  * No se mueve por casillas: es continuo, con control por teclado.
  */
 void Player::handleInput(float deltaTime, const Map& map)
-{  
+{
     // Nueva posición
     Vector2 newPos = position_;
 
     // Posición destino
     Vector2 moveDir = { 0, 0 };
-    
+
     // Actualizar posición dependiendo de la tecla pulsada
     // WASD / △ ◁ ▽ ▷
     if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))    moveDir.y -= speed_ * deltaTime;
@@ -38,7 +39,7 @@ void Player::handleInput(float deltaTime, const Map& map)
         position_.x + moveDir.x * speed_ * deltaTime,
         position_.y
     };
-    
+
     // Comprobación de colisión con paredes en el eje X
     if (!checkCollisionWithWalls(tryPosX, map)) newPos.x = tryPosX.x;
 
@@ -47,7 +48,7 @@ void Player::handleInput(float deltaTime, const Map& map)
         newPos.x,
         position_.y + moveDir.y * speed_ * deltaTime
     };
-    
+
     // Comprobación de colisión con paredes en el eje Y
     if (!checkCollisionWithWalls(tryPosY, map)) newPos.y = tryPosY.y;
 
@@ -85,7 +86,7 @@ bool Player::checkCollisionWithWalls(const Vector2& pos, const Map& map) const
                 // Si nuestro jugador choca contra una de estas lo detecta
                 if (CheckCollisionCircleRec(pos, radius_, wallRect)) {
                     // Hay colisión
-                    return true; 
+                    return true;
                 }
             }
         }

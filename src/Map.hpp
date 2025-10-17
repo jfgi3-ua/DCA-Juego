@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <algorithm>
 
 /**
  * Coordenada entera en el grid del mapa (no en píxeles).
@@ -61,6 +62,14 @@ class Map {
         /// Posición inicial del jugador (en celdas). Garantizado tras loadFromFile().
         IVec2 playerStart() const { return _player; }
 
+        // Llaves detectadas en el mapa
+        const std::vector<IVec2>& keyPositions() const { return _keys; }
+
+        // “Retirar” un elemento del mapa (ej. llave)
+        // Reemplaza la celda (x,y) por 'replacement' (por defecto, suelo '.').
+        // Devuelve true si la celda estaba dentro de rango y se actualizó.
+        bool clearCell(int x, int y, char replacement='.');
+
         /// Posiciones iniciales de enemigos (en celdas). Puede estar vacío.
         const std::vector<IVec2>& enemyStarts() const { return _enemies; }
 
@@ -80,4 +89,7 @@ class Map {
         // Spawns detectados al cargar:
         IVec2 _player{ -1, -1 };
         std::vector<IVec2> _enemies;
+
+        // Lista de llaves 'K' detectadas al cargar
+        std::vector<IVec2> _keys;
 };
