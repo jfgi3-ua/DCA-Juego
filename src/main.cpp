@@ -18,7 +18,7 @@ int main() {
   const int MAP_H_PX = tmp.height() * TILE_SIZE;
 
   // 1) Crear ventana con altura extra para el HUD inferior y fijar FPS
-  InitWindow(MAP_W_PX, MAP_H_PX + HUD_HEIGHT, "Escape del Laberinto");
+  InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Escape del Laberinto");
   SetTargetFPS(60);
 
   // 2) Arrancar la máquina de estados con MainGameState
