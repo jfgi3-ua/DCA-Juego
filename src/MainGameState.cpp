@@ -17,7 +17,7 @@ void MainGameState::init()
 {
     std::cout << "You are in the Main Game State" << std::endl;
 
-    map_.loadFromFile("assets/maps/map_xl_40x20.txt", 32);
+    map_.loadFromFile("assets/maps/map_16x16.txt", 32);
     tile_ = map_.tile();
 
     IVec2 p = map_.playerStart();
@@ -32,6 +32,11 @@ void MainGameState::init()
                                 e.y * (float)tile_ + tile_ / 2.0f });
         // crear un único Enemy usando el constructor que necesita tile_
         enemies.emplace_back(e.x, e.y, tile_);
+    }
+
+    for (auto s : map_.spikesStarts()) {
+        spikes_.addSpike(s.x, s.y);
+
     }
 }
 
@@ -86,6 +91,8 @@ void MainGameState::update(float deltaTime)
             break;
         }
     }
+
+    spikes_.update(deltaTime);
 }
 
 void MainGameState::render()
@@ -125,6 +132,8 @@ void MainGameState::render()
     for (auto &e : enemies) {
         e.draw(tile_, RED);
     }
+
+    spikes_.render();
 
     // 4) HUD inferior
     const float baseY = (float)(map_.height() * tile_); // empieza justo bajo el mapa
