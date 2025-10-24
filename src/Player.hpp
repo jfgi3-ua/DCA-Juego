@@ -11,7 +11,7 @@ class Player {
         void init(Vector2 startPos, float radius);
         void handleInput(float deltaTime, const Map& map);
         void update(float deltaTime, const Map& map);
-        void render() const;
+        void render(int ox, int oy) const; // Dibujado con offset (para mapa centrado)
 
         // Posición actual del jugador
         Vector2 getPosition() const {return position_; }
