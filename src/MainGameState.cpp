@@ -17,7 +17,7 @@ void MainGameState::init()
 {
     std::cout << "You are in the Main Game State" << std::endl;
 
-    map_.loadFromFile("assets/maps/level1.txt", 32);
+    map_.loadFromFile("assets/maps/map_xl_40x20.txt", 32);
     tile_ = map_.tile();
 
     IVec2 p = map_.playerStart();

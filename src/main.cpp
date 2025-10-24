@@ -13,7 +13,7 @@ extern "C" {
 int main() {
   // 0) Medir el tamaño del mapa y preparar la ventana acorde
   Map tmp;
-  tmp.loadFromFile("assets/maps/level1.txt", TILE_SIZE);
+  tmp.loadFromFile("assets/maps/map_xl_40x20.txt", TILE_SIZE);
   const int MAP_W_PX = tmp.width() * TILE_SIZE;
   const int MAP_H_PX = tmp.height() * TILE_SIZE;
 
