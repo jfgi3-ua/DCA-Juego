@@ -92,7 +92,14 @@ void MainGameState::update(float deltaTime)
         }
     }
 
+    //6 Pinchos y colisiones si activo
     spikes_.update(deltaTime);
+
+    // Si el jugador está sobre un pincho activo
+    if (spikes_.isActiveAt(cellX, cellY)) {
+        std::cout << "Player died by spikes!" << std::endl;
+        this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
+    }
 }
 
 void MainGameState::render()
