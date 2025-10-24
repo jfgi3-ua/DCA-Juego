@@ -63,6 +63,8 @@ bool Map::loadFromFile(const std::string& path, int tileSize) {
                 _enemies.push_back({ x, y });
             } else if (c == 'K') {
                 _keys.push_back({ x, y });
+            } else if (c == '^') {
+                _spikes.push_back({x, y});
             }
         }
     }
