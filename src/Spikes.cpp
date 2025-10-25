@@ -17,13 +17,13 @@ void Spikes::update(float deltaTime) {
     }
 }
 
-void Spikes::render() const {
+void Spikes::render(int ox, int oy) const {
     for (const auto &s : spikes) {
         //si esta activo dibuja ^^ sino nada
         if (s.active) {
             DrawText("^^", 
-                     s.x * tileSize + tileSize / 4,  
-                     s.y * tileSize + tileSize / 8, 
+                     (s.x * tileSize + tileSize / 4) + ox,  
+                     (s.y * tileSize + tileSize / 8) + oy, 
                      tileSize, 
                      BLACK);
         }

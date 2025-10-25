@@ -150,7 +150,7 @@ void MainGameState::render()
         e.draw(tile_, ox, oy, RED);
     }
 
-    spikes_.render();
+    spikes_.render(ox, oy);
 
     // 4) HUD inferior
     const float baseY = (float)(oy + mapHpx); // empieza justo bajo el mapa

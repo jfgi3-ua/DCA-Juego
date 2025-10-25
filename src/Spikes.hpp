@@ -19,6 +19,6 @@ public:
 
     void addSpike(int gridX, int gridY);
     void update(float deltaTime);
-    void render() const;
+    void render(int ox, int oy) const;
     bool isActiveAt(int gridX, int gridY) const;
 };
