@@ -23,7 +23,7 @@ void MainGameState::init()
     IVec2 p = map_.playerStart();
     Vector2 startPos = { p.x * (float)tile_ + tile_ / 2.0f,
                          p.y * (float)tile_ + tile_ / 2.0f };
-    player_.init(startPos, tile_ * 0.35f);
+    player_.init(startPos, tile_ * 0.35f, 5);
 
     enemiesPos_.clear();
     enemies.clear();
@@ -86,9 +86,9 @@ void MainGameState::update(float deltaTime)
 
     for (auto &e : enemies) {
         if (e.collidesWithPlayer(player_.getPosition().x, player_.getPosition().y, player_.getRadius())) {
-            // si colisiona, cambiar a GameOverState (ajusta parámetros si tu constructor difiere)
-            this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
-            break;
+            // si colisiona, quitar una vida
+            player_.onHit();
+            std::cout << "El jugador ha sido golpeado por un enemigo. " << player_.getLives() << std::endl;
         }
     }
 
@@ -98,6 +98,12 @@ void MainGameState::update(float deltaTime)
     // Si el jugador está sobre un pincho activo
     if (spikes_.isActiveAt(cellX, cellY)) {
         std::cout << "Player died by spikes!" << std::endl;
+        std::cout << "El jugador ha sido golpeado por pinchos. " << player_.getLives() << std::endl;
+    }
+
+    // Si el jugador no tiene vidas, cambiar al estado de Game Over
+    if (player_.getLives() <= 0) {
+        std::cout << "Game Over: El jugador no tiene más vidas." << std::endl;
         this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
     }
 }

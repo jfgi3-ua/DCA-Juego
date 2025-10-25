@@ -4,11 +4,12 @@
 
 Player::Player() {}
 
-void Player::init(Vector2 startPos, float radius)
+void Player::init(Vector2 startPos, float radius, int lives)
 {
     position_ = startPos;
     radius_ = radius;
     has_key_ = false;
+    lives_ = lives;
 }
 
 /**
@@ -97,6 +98,7 @@ bool Player::checkCollisionWithWalls(const Vector2& pos, const Map& map) const
     return false;
 }
 
+
 bool Player::isOnExit(const Map& map) const
 {
     int tileSize = map.tile();
@@ -107,4 +109,11 @@ bool Player::isOnExit(const Map& map) const
 
     // Comprobar si el carácter del mapa es 'X'
     return map.at(cellX, cellY) == 'X';
+}
+
+void Player::onHit() 
+{
+    if (lives_ > 0) {
+        lives_--;
+    }
 }

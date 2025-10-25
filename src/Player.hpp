@@ -8,10 +8,14 @@ class Player {
     public:
         Player();
 
-        void init(Vector2 startPos, float radius);
+        void init(Vector2 startPos, float radius, int lives);
         void handleInput(float deltaTime, const Map& map);
         void update(float deltaTime, const Map& map);
         void render(int ox, int oy) const; // Dibujado con offset (para mapa centrado)
+
+        /*
+        *  Getters
+        */
 
         // Posición actual del jugador
         Vector2 getPosition() const {return position_; }
@@ -19,21 +23,34 @@ class Player {
         // Radio del jugador (para colisiones)
         float getRadius() const { return radius_; }
 
+        int getLives() const { return lives_; }
+
         // Comprobar colisiones del jugador
         bool checkCollisionWithWalls(const Vector2& pos, const Map& map) const;
-
+        
         // Comprobar si está encima de la salida
         bool isOnExit(const Map& map) const;
-
+        
         // Estado de mochila
         bool hasKey() const { return has_key_; }
         void setHasKey(bool v) { has_key_ = v; }
 
+        // Gestionar vida al recibir daño
+        void onHit();
+
     private:
+        // Posición
         Vector2 position_ = {0, 0};
+
+        // Velocidad
         float speed_ = 150.0f;
+
+        // Tamaño
         float radius_ = 10.0f;
 
         // Mochila (por ahora solo la llave)
         bool has_key_ = false;
+
+        // Vidas
+        int lives_ = 5;
 };
