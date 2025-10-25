@@ -1,6 +1,7 @@
 #pragma once
 #include "raylib.h"
 #include <vector>
+#include "Config.hpp"
 
 class Spikes {
 private:
@@ -12,13 +13,13 @@ private:
     std::vector<Spike> spikes;
     float timer = 0.0f;
     float interval = 3.0f; // segundos para cambiar de estado
-    int tileSize;
+    int tileSize = TILE_SIZE;
 
 public:
-    Spikes(int tileSize = 32);
+    Spikes();
 
     void addSpike(int gridX, int gridY);
     void update(float deltaTime);
-    void render() const;
+    void render(int ox, int oy) const;
     bool isActiveAt(int gridX, int gridY) const;
 };

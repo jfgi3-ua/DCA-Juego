@@ -107,11 +107,21 @@ void MainGameState::render()
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
+    // Dimensiones
+    const int mapWpx = map_.width()  * tile_;
+    const int mapHpx = map_.height() * tile_;
+    const int viewW  = GetScreenWidth();
+    const int viewH  = GetScreenHeight() - HUD_HEIGHT;
+
+    // Offset centrado (clamp >= 0)
+    const int ox = std::max(0, (viewW - mapWpx) / 2);
+    const int oy = std::max(0, (viewH - mapHpx) / 2);
+
     // 1) Mapa (dibujado en la zona superior, desde y=0 hasta y=MAP_H_PX)
     for (int y = 0; y < map_.height(); ++y) {
         for (int x = 0; x < map_.width(); ++x) {
             const char c = map_.at(x, y);
-            Rectangle r{ (float)(x * tile_), (float)(y * tile_), (float)tile_, (float)tile_ };
+            Rectangle r{ (float)(ox + x * tile_), (float)(oy + y * tile_),(float)tile_, (float)tile_ };
 
             // Suelo + paredes
             DrawRectangleRec(r, (c == '#') ? LIGHTGRAY : WHITE);
@@ -133,17 +143,17 @@ void MainGameState::render()
     }
 
     // 2) Jugador
-    player_.render();
+    player_.render(ox, oy);
 
     // 3) Enemigos (cuadrados)
     for (auto &e : enemies) {
-        e.draw(tile_, RED);
+        e.draw(tile_, ox, oy, RED);
     }
 
-    spikes_.render();
+    spikes_.render(ox, oy);
 
     // 4) HUD inferior
-    const float baseY = (float)(map_.height() * tile_); // empieza justo bajo el mapa
+    const float baseY = (float)(oy + mapHpx); // empieza justo bajo el mapa
     // Fondo del HUD a lo ancho de la ventana
     Rectangle hudBg{ 0.0f, baseY, (float)GetScreenWidth(), (float)HUD_HEIGHT };
     DrawRectangleRec(hudBg, Fade(BLACK, 0.06f));

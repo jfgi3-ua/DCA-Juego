@@ -33,11 +33,11 @@ void Enemy::update(const Map &map, float dt, int tileSize)
             int nx = x + dx[i];
             int ny = y + dy[i];
             if (map.isWalkable(nx, ny)) {
-                
+
                 targetX = nx;
                 targetY = ny;
                 moving = true;
-                timer = 0.0f; 
+                timer = 0.0f;
                 found = true;
                 break;
             }
@@ -104,10 +104,8 @@ bool Enemy::collidesWithPlayer(float playerPx, float playerPy, float playerRadiu
     return (dx*dx + dy*dy) <= (playerRadius * playerRadius);
 }
 
-void Enemy::draw(int tileSize, Color color) const
-{
+void Enemy::draw(int tileSize, int ox, int oy, Color color) const {
     float s = tileSize * 0.7f;
-    Rectangle r{ px - s/2.0f, py - s/2.0f, s, s };
+    Rectangle r{ (px + ox) - s/2.0f, (py + oy) - s/2.0f, s, s };
     DrawRectangleRec(r, color);
-
 }

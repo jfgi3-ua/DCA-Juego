@@ -61,9 +61,10 @@ void Player::update(float deltaTime, const Map& map)
     handleInput(deltaTime, map);
 }
 
-void Player::render() const
+void Player::render(int ox, int oy) const
 {
-    DrawCircleV(position_, radius_, BLUE);
+    Vector2 p = { position_.x + (float)ox, position_.y + (float)oy };
+    DrawCircleV(p, radius_, BLUE);
 }
 
 bool Player::checkCollisionWithWalls(const Vector2& pos, const Map& map) const

@@ -2,7 +2,7 @@
 #include <iostream>
 
 
-Spikes::Spikes(int tileSize) : tileSize(tileSize) {}
+Spikes::Spikes() {}
 
 void Spikes::addSpike(int gridX, int gridY) {
     spikes.push_back({gridX, gridY, true});
@@ -17,13 +17,13 @@ void Spikes::update(float deltaTime) {
     }
 }
 
-void Spikes::render() const {
+void Spikes::render(int ox, int oy) const {
     for (const auto &s : spikes) {
         //si esta activo dibuja ^^ sino nada
         if (s.active) {
             DrawText("^^", 
-                     s.x * tileSize + tileSize / 4,  
-                     s.y * tileSize + tileSize / 8, 
+                     (s.x * tileSize + tileSize / 4) + ox,  
+                     (s.y * tileSize + tileSize / 8) + oy, 
                      tileSize, 
                      BLACK);
         }
