@@ -2,7 +2,7 @@
 #include <iostream>
 
 
-Spikes::Spikes(int tileSize) : tileSize(tileSize) {}
+Spikes::Spikes() {}
 
 void Spikes::addSpike(int gridX, int gridY) {
     spikes.push_back({gridX, gridY, true});
