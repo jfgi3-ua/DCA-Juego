@@ -76,6 +76,9 @@ class Map {
         /// Acceso de solo lectura al grid completo (útil para debug o validaciones).
         const std::vector<std::string>& grid() const { return _grid; }
 
+        /// Posiciones iniciales de pinchos (en celdas). Puede estar vacío.
+        const std::vector<IVec2>& spikesStarts() const { return _spikes; }
+
     private:
         // Dimensiones en celdas
         int _w = 0, _h = 0;
@@ -92,4 +95,7 @@ class Map {
 
         // Lista de llaves 'K' detectadas al cargar
         std::vector<IVec2> _keys;
+
+        // Lista de spikes '^' detectadas al cargar
+        std::vector<IVec2> _spikes;
 };

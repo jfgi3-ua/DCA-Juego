@@ -5,6 +5,7 @@
 #include "Player.hpp"
 #include <vector>
 #include "Config.hpp"
+#include "Spikes.hpp"
 extern "C" {
   #include <raylib.h>
 }
@@ -35,4 +36,7 @@ class MainGameState : public GameState
 
         // Enemigo
         std::vector<Vector2> enemiesPos_;
+
+        //Pinchos
+        Spikes spikes_;
 };
