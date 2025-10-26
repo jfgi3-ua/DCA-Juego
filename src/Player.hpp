@@ -58,7 +58,5 @@ class Player {
         // Temporizador dinámico que cambia cuando el jugador recibe daño
         // (va de 0.0f a INVULNERABLE_DURATION)
         float invulnerableTimer_ = 0.0f;
-
-        // Duración fija de invulnerabilidad
         static constexpr float INVULNERABLE_DURATION = 1.5f;
 };

@@ -92,9 +92,9 @@ void MainGameState::update(float deltaTime)
         }
     }
 
-    //6 Pinchos y colisiones si activo
+    
+    // 6) Pinchos y colisiones si activo
     spikes_.update(deltaTime);
-
     // Si el jugador está sobre un pincho activo
     if (spikes_.isActiveAt(cellX, cellY)) {
     // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
@@ -102,7 +102,7 @@ void MainGameState::update(float deltaTime)
         std::cout << "El jugador ha sido golpeado por pinchos. " << player_.getLives() << std::endl;
     }
 
-    //7 Si el jugador no tiene vidas, cambiar al estado de Game Over
+    // 7) Si el jugador no tiene vidas, cambiar al estado de Game Over
     if (player_.getLives() <= 0) {
         std::cout << "Game Over: El jugador no tiene más vidas." << std::endl;
         this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);

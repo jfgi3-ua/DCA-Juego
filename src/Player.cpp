@@ -143,6 +143,6 @@ void Player::onHit(const Map& map)
         position_.y = prevCellY * (float)tileSize + tileSize / 2.0f;
 
         // Iniciar invulnerabilidad
-        invulnerableTimer_ = 0.0001f; // iniciar cuenta desde justo por encima de 0.0
+        invulnerableTimer_ = 0.0001f;
     }
 }
