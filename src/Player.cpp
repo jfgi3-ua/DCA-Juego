@@ -60,12 +60,24 @@ void Player::handleInput(float deltaTime, const Map& map)
 void Player::update(float deltaTime, const Map& map)
 {
     handleInput(deltaTime, map);
+    if (invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION) {
+        invulnerableTimer_ += deltaTime;
+        if (invulnerableTimer_ > Player::INVULNERABLE_DURATION) invulnerableTimer_ = Player::INVULNERABLE_DURATION;
+    }
 }
 
 void Player::render(int ox, int oy) const
 {
     Vector2 p = { position_.x + (float)ox, position_.y + (float)oy };
+    if (invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION) {
+        // Parpadeo de invulnerabilidad
+        int blinkFrequency = 10; // Frecuencia de parpadeo
+        if (static_cast<int>(invulnerableTimer_ * blinkFrequency) % 2 == 0) {
+            DrawCircleV(p, radius_, BLUE);
+        }
+    } else {
     DrawCircleV(p, radius_, BLUE);
+    }
 }
 
 bool Player::checkCollisionWithWalls(const Vector2& pos, const Map& map) const
@@ -113,7 +125,13 @@ bool Player::isOnExit(const Map& map) const
 
 void Player::onHit() 
 {
-    if (lives_ > 0) {
+    // Si no está en periodo de invulnerabilidad (valor >= INVULNERABLE_DURATION) o es el estado inicial (<= 0.0),
+    // recibe daño y se inicia el conteo desde 0.0 hasta INVULNERABLE_DURATION.
+    if (lives_ > 0 && (invulnerableTimer_ <= 0.0f || invulnerableTimer_ >= Player::INVULNERABLE_DURATION)) {
+        // Quitar vida
         lives_--;
+
+        // Iniciar invulnerabilidad
+        invulnerableTimer_ = 0.0001f; // iniciar cuenta desde justo por encima de 0.0
     }
 }

@@ -101,7 +101,7 @@ void MainGameState::update(float deltaTime)
         std::cout << "El jugador ha sido golpeado por pinchos. " << player_.getLives() << std::endl;
     }
 
-    // Si el jugador no tiene vidas, cambiar al estado de Game Over
+    //7 Si el jugador no tiene vidas, cambiar al estado de Game Over
     if (player_.getLives() <= 0) {
         std::cout << "Game Over: El jugador no tiene más vidas." << std::endl;
         this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);

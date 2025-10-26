@@ -51,6 +51,13 @@ class Player {
         // Mochila (por ahora solo la llave)
         bool has_key_ = false;
 
-        // Vidas
+        // Colisiones y vidas
         int lives_ = 5;
+
+        // Temporizador dinámico que cambia cuando el jugador recibe daño
+        // (va de 0.0f a INVULNERABLE_DURATION)
+        float invulnerableTimer_ = 0.0f;
+
+        // Duración fija de invulnerabilidad
+        static constexpr float INVULNERABLE_DURATION = 1.5f;
 };
