@@ -78,7 +78,7 @@ bool Map::loadFromFile(const std::string& path, int tileSize) {
             }
         }
     }
-    
+
     // 6) Post-condición: debe existir un spawn de jugador
     if (_player.x < 0) throw std::runtime_error("Missing player start 'P'");
     
@@ -160,7 +160,6 @@ bool Map::clearCell(int x, int y, char replacement) {
 void Map::pairMechanisms(std::unordered_map<char, IVec2>& triggers, std::unordered_map<char, IVec2>& targets) {
     _mechanisms.clear();
 
-
     //Comprobamos q cada trigger tenga su target
     for (const auto& [key, triggerPos] : triggers) {
         char targetKey = std::toupper(key);
@@ -173,6 +172,6 @@ void Map::pairMechanisms(std::unordered_map<char, IVec2>& triggers, std::unorder
         }   
 
         std::cout << "Paired mechanism: " << key;
-        _mechanisms.push_back({ key, triggerPos, targetIt->second });
+        _mechanisms.push_back({ targetKey, triggerPos, targetIt->second });
     }
 }

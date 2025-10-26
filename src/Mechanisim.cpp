@@ -1,8 +1,29 @@
 #include "Mechanism.hpp"
 #include <iostream>
 
-Mechanism::Mechanism(MechanismType type, Vector2 trigger, Vector2 target)
-    : type_(type), triggerPos_(trigger), targetPos_(target){}
+Mechanism::Mechanism(char type, IVec2 trigger, IVec2 target) {
+    switch (type) {
+        case 'D':
+            type_ = MechanismType::DOOR;
+            break;
+        case 'T':
+            type_ = MechanismType::TRAP;
+            break;
+        case 'B':
+            type_ = MechanismType::BRIDGE;
+            break;
+        case 'L':
+            type_ = MechanismType::LEVER;
+            break;
+        default:
+            std::cerr << "Warning: Unknown mechanism type '" << type << "'. Defaulting to DOOR." << std::endl;
+            type_ = MechanismType::DOOR;
+            break;
+    }
+    
+    triggerPos_ = trigger;
+    targetPos_ = target;
+}
 
 void Mechanism::update() {}
 
@@ -38,7 +59,7 @@ void Mechanism::render(int ox, int oy) const {
             break;
 
         case MechanismType::LEVER:
-            symbol = 'U';
+            symbol = 'L';
             inactiveColor = {200, 80, 130, 255};  // magenta oscuro
             activeColor   = {255, 105, 180, 255}; // rosa fuerte
             break;

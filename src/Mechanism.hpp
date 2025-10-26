@@ -18,13 +18,13 @@ private:
     MechanismType type_;
 
     //posiscones en tiles
-    Vector2 triggerPos_;
-    Vector2 targetPos_;
+    IVec2 triggerPos_;
+    IVec2 targetPos_;
     bool active_ = false;
     float tileSize_ = TILE_SIZE;
 
 public:
-    Mechanism(MechanismType type, Vector2 trigger, Vector2 target);
+    Mechanism(char type, IVec2 trigger, IVec2 target);
 
     void update();
     void render(int ox, int oy) const;

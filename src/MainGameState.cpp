@@ -35,8 +35,12 @@ void MainGameState::init()
     }
 
     for (auto s : map_.spikesStarts()) {
-        spikes_.addSpike(s.x, s.y);
+        spikes_.addSpike(s.x, s.y); 
+    }
 
+    for (auto m : map_.mechanismsStarts()) { 
+        //m es un MechanismPair
+        mechanisms_.emplace_back(m.id, m.trigger, m.target);
     }
 }
 

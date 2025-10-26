@@ -6,6 +6,7 @@
 #include <vector>
 #include "Config.hpp"
 #include "Spikes.hpp"
+#include "Mechanism.hpp"
 extern "C" {
   #include <raylib.h>
 }
@@ -39,4 +40,7 @@ class MainGameState : public GameState
 
         //Pinchos
         Spikes spikes_;
+
+        //Mecanismos
+        std::vector<Mechanism> mechanisms_;
 };
