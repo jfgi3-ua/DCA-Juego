@@ -37,7 +37,8 @@ class Player {
 
         // Gestionar vida al recibir daño
         void onHit(const Map& map);
-
+        bool isInvulnerable() const;
+        
     private:
         // Posición
         Vector2 position_ = {0, 0};

@@ -85,7 +85,7 @@ void MainGameState::update(float deltaTime)
     }
 
     for (auto &e : enemies) {
-        if (e.collidesWithPlayer(player_.getPosition().x, player_.getPosition().y, player_.getRadius())) {
+        if (e.collidesWithPlayer(player_.getPosition().x, player_.getPosition().y, player_.getRadius()) && !player_.isInvulnerable()) {
             // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
             player_.onHit(map_);
             std::cout << "El jugador ha sido golpeado por un enemigo. " << player_.getLives() << std::endl;
@@ -96,7 +96,7 @@ void MainGameState::update(float deltaTime)
     // 6) Pinchos y colisiones si activo
     spikes_.update(deltaTime);
     // Si el jugador está sobre un pincho activo
-    if (spikes_.isActiveAt(cellX, cellY)) {
+    if (spikes_.isActiveAt(cellX, cellY) && !player_.isInvulnerable()) {
     // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
     player_.onHit(map_);
         std::cout << "El jugador ha sido golpeado por pinchos. " << player_.getLives() << std::endl;

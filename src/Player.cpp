@@ -129,7 +129,7 @@ void Player::onHit(const Map& map)
 {
     // Si no está en periodo de invulnerabilidad (valor >= INVULNERABLE_DURATION) o es el estado inicial (<= 0.0),
     // recibe daño y se inicia el conteo desde 0.0 hasta INVULNERABLE_DURATION.
-    if (lives_ > 0 && (invulnerableTimer_ <= 0.0f || invulnerableTimer_ >= Player::INVULNERABLE_DURATION)) {
+    if (lives_ > 0 && !isInvulnerable()) {
         // Quitar vida
         lives_--;
 
@@ -145,4 +145,9 @@ void Player::onHit(const Map& map)
         // Iniciar invulnerabilidad
         invulnerableTimer_ = 0.0001f;
     }
+}
+
+bool Player::isInvulnerable() const
+{
+    return invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION;
 }
