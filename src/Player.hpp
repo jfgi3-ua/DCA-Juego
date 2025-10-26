@@ -36,11 +36,12 @@ class Player {
         void setHasKey(bool v) { has_key_ = v; }
 
         // Gestionar vida al recibir daño
-        void onHit();
+        void onHit(const Map& map);
 
     private:
         // Posición
         Vector2 position_ = {0, 0};
+        Vector2 lastMoveDir_ = {0, 0};
 
         // Velocidad
         float speed_ = 150.0f;

@@ -40,7 +40,7 @@ void Player::handleInput(float deltaTime, const Map& map)
         position_.x + moveDir.x * speed_ * deltaTime,
         position_.y
     };
-
+    
     // Comprobación de colisión con paredes en el eje X
     if (!checkCollisionWithWalls(tryPosX, map)) newPos.x = tryPosX.x;
 
@@ -52,6 +52,9 @@ void Player::handleInput(float deltaTime, const Map& map)
 
     // Comprobación de colisión con paredes en el eje Y
     if (!checkCollisionWithWalls(tryPosY, map)) newPos.y = tryPosY.y;
+
+    // Guardar última dirección de movimiento
+    lastMoveDir_ = position_;
 
     // Actualizar posición final
     position_ = newPos;
@@ -76,7 +79,7 @@ void Player::render(int ox, int oy) const
             DrawCircleV(p, radius_, BLUE);
         }
     } else {
-    DrawCircleV(p, radius_, BLUE);
+        DrawCircleV(p, radius_, BLUE);
     }
 }
 
@@ -110,7 +113,6 @@ bool Player::checkCollisionWithWalls(const Vector2& pos, const Map& map) const
     return false;
 }
 
-
 bool Player::isOnExit(const Map& map) const
 {
     int tileSize = map.tile();
@@ -123,13 +125,22 @@ bool Player::isOnExit(const Map& map) const
     return map.at(cellX, cellY) == 'X';
 }
 
-void Player::onHit() 
+void Player::onHit(const Map& map) 
 {
     // Si no está en periodo de invulnerabilidad (valor >= INVULNERABLE_DURATION) o es el estado inicial (<= 0.0),
     // recibe daño y se inicia el conteo desde 0.0 hasta INVULNERABLE_DURATION.
     if (lives_ > 0 && (invulnerableTimer_ <= 0.0f || invulnerableTimer_ >= Player::INVULNERABLE_DURATION)) {
         // Quitar vida
         lives_--;
+
+        // Calcular la celda previa usando la posición guardada en lastMoveDir_
+        int tileSize = map.tile();
+        int prevCellX = static_cast<int>(lastMoveDir_.x) / tileSize;
+        int prevCellY = static_cast<int>(lastMoveDir_.y) / tileSize;
+
+        // Colocar al jugador en el centro de la celda previa
+        position_.x = prevCellX * (float)tileSize + tileSize / 2.0f;
+        position_.y = prevCellY * (float)tileSize + tileSize / 2.0f;
 
         // Iniciar invulnerabilidad
         invulnerableTimer_ = 0.0001f; // iniciar cuenta desde justo por encima de 0.0

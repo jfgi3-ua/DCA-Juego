@@ -86,8 +86,8 @@ void MainGameState::update(float deltaTime)
 
     for (auto &e : enemies) {
         if (e.collidesWithPlayer(player_.getPosition().x, player_.getPosition().y, player_.getRadius())) {
-            // si colisiona, quitar una vida
-            player_.onHit();
+            // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
+            player_.onHit(map_);
             std::cout << "El jugador ha sido golpeado por un enemigo. " << player_.getLives() << std::endl;
         }
     }
@@ -97,7 +97,8 @@ void MainGameState::update(float deltaTime)
 
     // Si el jugador está sobre un pincho activo
     if (spikes_.isActiveAt(cellX, cellY)) {
-        std::cout << "Player died by spikes!" << std::endl;
+    // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
+    player_.onHit(map_);
         std::cout << "El jugador ha sido golpeado por pinchos. " << player_.getLives() << std::endl;
     }
 
