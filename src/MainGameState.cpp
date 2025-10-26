@@ -188,6 +188,17 @@ void MainGameState::render()
         DrawRectangleLinesEx(keyIcon, 1.2f, BROWN);
     }
 
+    // Panel de vidas (alineado a la derecha dentro del HUD)
+    DrawRectangleRounded(Rectangle{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad }, 0.25f, 6, Fade(BLACK, 0.10f));
+    DrawRectangleRoundedLinesEx(Rectangle{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad }, 0.25f, 6, 1.0f, DARKGRAY);
+    DrawText("Vidas", (int)((float)GetScreenWidth() - 190.0f) + 10, (int)(baseY + pad) + 6, 16, DARKGRAY);
+
+    if (player_.getLives() > 0) {
+        for (int i = 0; i < player_.getLives(); ++i) {
+            DrawCircleV(Vector2{ (float)GetScreenWidth() - 190.0f + 12.0f + i * 20.0f + 6.0f, baseY + pad + 28.0f + 6.0f }, 5.0f, RED);
+        }
+    }
+
     // 5) Mensaje contextual por encima del HUD
     const int cx = (int)(player_.getPosition().x / tile_);
     const int cy = (int)(player_.getPosition().y / tile_);
