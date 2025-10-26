@@ -3,12 +3,8 @@
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
-
-/**
- * Coordenada entera en el grid del mapa (no en píxeles).
- * x = columna, y = fila.
- */
-struct IVec2 { int x{0}, y{0}; };
+#include "Config.hpp"
+#include <iostream>
 
 /**
  * Clase Map
@@ -79,6 +75,12 @@ class Map {
         /// Posiciones iniciales de pinchos (en celdas). Puede estar vacío.
         const std::vector<IVec2>& spikesStarts() const { return _spikes; }
 
+        /// Posiciones iniciales de mecanismos (en celdas). Puede estar vacío.
+        const std::vector<MechanismPair>& mechanismsStarts() const { return _mechanisms;}
+
+        //Emparejamiento de mecanismos trigger-target
+        void pairMechanisms(std::unordered_map<char, IVec2>& triggers,
+                            std::unordered_map<char, IVec2>& targets);
     private:
         // Dimensiones en celdas
         int _w = 0, _h = 0;
@@ -98,4 +100,7 @@ class Map {
 
         // Lista de spikes '^' detectadas al cargar
         std::vector<IVec2> _spikes;
+
+        // Lista de mecanismos detectadas al cargar
+        std::vector<MechanismPair> _mechanisms;
 };

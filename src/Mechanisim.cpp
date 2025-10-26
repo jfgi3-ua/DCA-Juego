@@ -37,7 +37,7 @@ void Mechanism::render(int ox, int oy) const {
             activeColor   = {255, 180, 70, 255};  // naranja claro
             break;
 
-        case MechanismType::UNKNOWN:
+        case MechanismType::LEVER:
             symbol = 'U';
             inactiveColor = {200, 80, 130, 255};  // magenta oscuro
             activeColor   = {255, 105, 180, 255}; // rosa fuerte

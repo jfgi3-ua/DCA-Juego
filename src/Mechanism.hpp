@@ -10,7 +10,7 @@ enum class MechanismType {
     DOOR,
     TRAP,
     BRIDGE,
-    UNKNOWN
+    LEVER,
 };
 
 class Mechanism {
