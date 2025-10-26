@@ -4,11 +4,12 @@
 
 Player::Player() {}
 
-void Player::init(Vector2 startPos, float radius)
+void Player::init(Vector2 startPos, float radius, int lives)
 {
     position_ = startPos;
     radius_ = radius;
     has_key_ = false;
+    lives_ = lives;
 }
 
 /**
@@ -39,7 +40,7 @@ void Player::handleInput(float deltaTime, const Map& map, const std::vector<Vect
         position_.x + moveDir.x * speed_ * deltaTime,
         position_.y
     };
-
+    
     // Comprobación de colisión con paredes en el eje X
     if (!checkCollisionWithWalls(tryPosX, map, blockedTiles)) newPos.x = tryPosX.x;
 
@@ -52,6 +53,9 @@ void Player::handleInput(float deltaTime, const Map& map, const std::vector<Vect
     // Comprobación de colisión con paredes en el eje Y
     if (!checkCollisionWithWalls(tryPosY, map, blockedTiles)) newPos.y = tryPosY.y;
 
+    // Guardar última dirección de movimiento
+    lastMoveDir_ = position_;
+
     // Actualizar posición final
     position_ = newPos;
 }
@@ -59,13 +63,24 @@ void Player::handleInput(float deltaTime, const Map& map, const std::vector<Vect
 void Player::update(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles)
 {
     handleInput(deltaTime, map, blockedTiles);
-
+    if (invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION) {
+        invulnerableTimer_ += deltaTime;
+        if (invulnerableTimer_ > Player::INVULNERABLE_DURATION) invulnerableTimer_ = Player::INVULNERABLE_DURATION;
+    }
 }
 
 void Player::render(int ox, int oy) const
 {
     Vector2 p = { position_.x + (float)ox, position_.y + (float)oy };
-    DrawCircleV(p, radius_, BLUE);
+    if (invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION) {
+        // Parpadeo de invulnerabilidad
+        int blinkFrequency = 10; // Frecuencia de parpadeo
+        if (static_cast<int>(invulnerableTimer_ * blinkFrequency) % 2 == 0) {
+            DrawCircleV(p, radius_, BLUE);
+        }
+    } else {
+        DrawCircleV(p, radius_, BLUE);
+    }
 }
 
 bool Player::checkCollisionWithWalls(const Vector2& pos,
@@ -121,4 +136,31 @@ bool Player::isOnExit(const Map& map) const
 
     // Comprobar si el carácter del mapa es 'X'
     return map.at(cellX, cellY) == 'X';
+}
+
+void Player::onHit(const Map& map) 
+{
+    // Si no está en periodo de invulnerabilidad (valor >= INVULNERABLE_DURATION) o es el estado inicial (<= 0.0),
+    // recibe daño y se inicia el conteo desde 0.0 hasta INVULNERABLE_DURATION.
+    if (lives_ > 0 && !isInvulnerable()) {
+        // Quitar vida
+        lives_--;
+
+        // Calcular la celda previa usando la posición guardada en lastMoveDir_
+        int tileSize = map.tile();
+        int prevCellX = static_cast<int>(lastMoveDir_.x) / tileSize;
+        int prevCellY = static_cast<int>(lastMoveDir_.y) / tileSize;
+
+        // Colocar al jugador en el centro de la celda previa
+        position_.x = prevCellX * (float)tileSize + tileSize / 2.0f;
+        position_.y = prevCellY * (float)tileSize + tileSize / 2.0f;
+
+        // Iniciar invulnerabilidad
+        invulnerableTimer_ = 0.0001f;
+    }
+}
+
+bool Player::isInvulnerable() const
+{
+    return invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION;
 }

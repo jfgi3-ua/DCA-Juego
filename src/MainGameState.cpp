@@ -23,7 +23,7 @@ void MainGameState::init()
     IVec2 p = map_.playerStart();
     Vector2 startPos = { p.x * (float)tile_ + tile_ / 2.0f,
                          p.y * (float)tile_ + tile_ / 2.0f };
-    player_.init(startPos, tile_ * 0.35f);
+    player_.init(startPos, tile_ * 0.35f, 5);
 
     enemiesPos_.clear();
     enemies.clear();
@@ -90,19 +90,26 @@ void MainGameState::update(float deltaTime)
     }
 
     for (auto &e : enemies) {
-        if (e.collidesWithPlayer(player_.getPosition().x, player_.getPosition().y, player_.getRadius())) {
-            // si colisiona, cambiar a GameOverState (ajusta parámetros si tu constructor difiere)
-            this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
-            break;
+        if (e.collidesWithPlayer(player_.getPosition().x, player_.getPosition().y, player_.getRadius()) && !player_.isInvulnerable()) {
+            // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
+            player_.onHit(map_);
+            std::cout << "El jugador ha sido golpeado por un enemigo. " << player_.getLives() << std::endl;
         }
     }
 
-    //6 Pinchos y colisiones si activo
+    
+    // 6) Pinchos y colisiones si activo
     spikes_.update(deltaTime);
-
     // Si el jugador está sobre un pincho activo
-    if (spikes_.isActiveAt(cellX, cellY)) {
-        std::cout << "Player died by spikes!" << std::endl;
+    if (spikes_.isActiveAt(cellX, cellY) && !player_.isInvulnerable()) {
+    // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
+    player_.onHit(map_);
+        std::cout << "El jugador ha sido golpeado por pinchos. " << player_.getLives() << std::endl;
+    }
+
+    // 7) Si el jugador no tiene vidas, cambiar al estado de Game Over
+    if (player_.getLives() <= 0) {
+        std::cout << "Game Over: El jugador no tiene más vidas." << std::endl;
         this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
     }
 
@@ -198,6 +205,17 @@ void MainGameState::render()
         Rectangle keyIcon{ slot.x + 4, slot.y + 8, slot.width - 8, slot.height - 12 };
         DrawRectangleRec(keyIcon, GOLD);
         DrawRectangleLinesEx(keyIcon, 1.2f, BROWN);
+    }
+
+    // Panel de vidas (alineado a la derecha dentro del HUD)
+    DrawRectangleRounded(Rectangle{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad }, 0.25f, 6, Fade(BLACK, 0.10f));
+    DrawRectangleRoundedLinesEx(Rectangle{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad }, 0.25f, 6, 1.0f, DARKGRAY);
+    DrawText("Vidas", (int)((float)GetScreenWidth() - 190.0f) + 10, (int)(baseY + pad) + 6, 16, DARKGRAY);
+
+    if (player_.getLives() > 0) {
+        for (int i = 0; i < player_.getLives(); ++i) {
+            DrawCircleV(Vector2{ (float)GetScreenWidth() - 190.0f + 12.0f + i * 20.0f + 6.0f, baseY + pad + 28.0f + 6.0f }, 5.0f, RED);
+        }
     }
 
     // 5) Mensaje contextual por encima del HUD
