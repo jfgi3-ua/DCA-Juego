@@ -104,6 +104,9 @@ void MainGameState::update(float deltaTime)
         std::cout << "Player died by spikes!" << std::endl;
         this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
     }
+
+    //7 Mecanismos
+
 }
 
 void MainGameState::render()
@@ -155,6 +158,11 @@ void MainGameState::render()
     }
 
     spikes_.render(ox, oy);
+
+    // Mecanismos
+    for (const auto& mech : mechanisms_) {
+        mech.render(ox, oy);
+    }
 
     // 4) HUD inferior
     const float baseY = (float)(oy + mapHpx); // empieza justo bajo el mapa
