@@ -5,6 +5,7 @@
 #include <algorithm>
 #include "Config.hpp"
 #include <iostream>
+#include "Mechanism.hpp"
 
 /**
  * Clase Map
@@ -76,11 +77,12 @@ class Map {
         const std::vector<IVec2>& spikesStarts() const { return _spikes; }
 
         /// Posiciones iniciales de mecanismos (en celdas). Puede estar vacío.
-        const std::vector<MechanismPair>& mechanismsStarts() const { return _mechanisms;}
+        const std::vector<MechanismPair>& getMechanisms() const { return _mechanisms;}
 
         //Emparejamiento de mecanismos trigger-target
         void pairMechanisms(std::unordered_map<char, IVec2>& triggers,
                             std::unordered_map<char, IVec2>& targets);
+    
     private:
         // Dimensiones en celdas
         int _w = 0, _h = 0;

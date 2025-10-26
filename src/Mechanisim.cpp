@@ -80,6 +80,6 @@ void Mechanism::render(int ox, int oy) const {
     DrawRectangle(gx, gy, size, size, currentColor);
 }
 
-void Mechanism::setActive() { 
+void Mechanism::deactivate() { 
     active_ = false; 
     std::cout << "Mechanism at (" << triggerPos_.x << ", " << triggerPos_.y << ") deactivated." << std::endl;}

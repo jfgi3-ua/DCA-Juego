@@ -27,11 +27,12 @@ public:
     Mechanism(char type, IVec2 trigger, IVec2 target);
 
     IVec2 getTriggerPos() const { return triggerPos_; }
+    IVec2 getTargetPos() const { return targetPos_; }
 
     void update();
     void render(int ox, int oy) const;
 
-    void setActive();
+    void deactivate();
 
     MechanismType type() const { return type_; }
     bool isActive() const { return active_; }
