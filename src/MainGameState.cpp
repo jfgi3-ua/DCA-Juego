@@ -38,7 +38,7 @@ void MainGameState::init()
         spikes_.addSpike(s.x, s.y); 
     }
 
-    for (auto m : map_.mechanismsStarts()) { 
+    for (auto m : map_.getMechanisms()) { 
         //m es un MechanismPair
         mechanisms_.emplace_back(m.id, m.trigger, m.target);
     }
@@ -53,8 +53,9 @@ void MainGameState::handleInput()
 
 void MainGameState::update(float deltaTime)
 {
+    activeMechanisms(); //actualizamos un vector con todos los mecanismos activos
     // 1) Actualizar (movimiento) jugador con colisiones de mapa
-    player_.update(deltaTime, map_);
+    player_.update(deltaTime, map_, activeMechanisms_);
 
     // 2) Celda actual del jugador
     int cellX = (int)(player_.getPosition().x) / tile_;
@@ -110,7 +111,7 @@ void MainGameState::update(float deltaTime)
         IVec2 trigPos = mech.getTriggerPos();
 
          if (mech.isActive() && cellX == trigPos.x && cellY == trigPos.y) {
-            mech.setActive();
+            mech.deactivate();
         }
     }
 }
@@ -214,4 +215,14 @@ void MainGameState::render()
     }
 
     EndDrawing();
+}
+
+void MainGameState::activeMechanisms() {
+    activeMechanisms_.clear();
+    for (const auto& mech : mechanisms_) {
+        if (mech.isActive()) {
+            Vector2 target = { (float)mech.getTargetPos().x, (float)mech.getTargetPos().y };
+            activeMechanisms_.push_back(target);       
+        }
+    }
 }

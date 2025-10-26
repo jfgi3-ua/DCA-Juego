@@ -9,8 +9,8 @@ class Player {
         Player();
 
         void init(Vector2 startPos, float radius);
-        void handleInput(float deltaTime, const Map& map);
-        void update(float deltaTime, const Map& map);
+        void handleInput(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles);
+        void update(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles);
         void render(int ox, int oy) const; // Dibujado con offset (para mapa centrado)
 
         // Posición actual del jugador
@@ -20,7 +20,7 @@ class Player {
         float getRadius() const { return radius_; }
 
         // Comprobar colisiones del jugador
-        bool checkCollisionWithWalls(const Vector2& pos, const Map& map) const;
+        bool checkCollisionWithWalls(const Vector2& pos, const Map& map, const std::vector<Vector2>& blockedTiles) const;
 
         // Comprobar si está encima de la salida
         bool isOnExit(const Map& map) const;

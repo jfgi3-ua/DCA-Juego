@@ -25,6 +25,8 @@ class MainGameState : public GameState
         void pause(){};
         void resume(){};
 
+        void activeMechanisms();
+
 
     private:
         char entered_key;
@@ -43,4 +45,5 @@ class MainGameState : public GameState
 
         //Mecanismos
         std::vector<Mechanism> mechanisms_;
+        std::vector<Vector2> activeMechanisms_;
 };
