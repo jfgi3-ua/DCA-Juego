@@ -105,8 +105,14 @@ void MainGameState::update(float deltaTime)
         this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
     }
 
-    //7 Mecanismos
+    //7 Mecanismos, cmprobar si el jugador está sobre un trigger q no este activo
+    for (auto& mech : mechanisms_) {
+        IVec2 trigPos = mech.getTriggerPos();
 
+         if (mech.isActive() && cellX == trigPos.x && cellY == trigPos.y) {
+            mech.setActive();
+        }
+    }
 }
 
 void MainGameState::render()

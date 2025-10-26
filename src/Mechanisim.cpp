@@ -42,31 +42,31 @@ void Mechanism::render(int ox, int oy) const {
     switch (type_) {
         case MechanismType::DOOR:
             symbol = 'D';
-            inactiveColor = {150, 100, 180, 255}; // violeta apagado
-            activeColor   = {200, 120, 255, 255}; // violeta brillante
+            inactiveColor = {230, 210, 255, 255}; // muy claro
+            activeColor   = {90, 0, 140, 255};    // muy oscuro
             break;
 
         case MechanismType::TRAP:
             symbol = 'T';
-            inactiveColor = {120, 200, 150, 255}; // verde azulado apagado
-            activeColor   = {0, 255, 128, 255};   // verde intenso
+            inactiveColor = {200, 255, 220, 255}; // muy claro
+            activeColor   = {0, 90, 40, 255};     // muy oscuro
             break;
 
         case MechanismType::BRIDGE:
             symbol = 'B';
-            inactiveColor = {255, 140, 0, 255};   // naranja oscuro
-            activeColor   = {255, 180, 70, 255};  // naranja claro
+            inactiveColor = {255, 220, 180, 255}; // muy claro
+            activeColor   = {120, 60, 0, 255};    // muy oscuro
             break;
 
         case MechanismType::LEVER:
             symbol = 'L';
-            inactiveColor = {200, 80, 130, 255};  // magenta oscuro
-            activeColor   = {255, 105, 180, 255}; // rosa fuerte
+            inactiveColor = {255, 220, 240, 255}; // muy claro
+            activeColor   = {120, 0, 60, 255};    // muy oscuro
             break;
 
         default:
-            inactiveColor = {120, 120, 120, 255};
-            activeColor   = {180, 180, 180, 255};
+            inactiveColor = {180, 180, 180, 255};
+            activeColor   = {60, 60, 60, 255};
             symbol = '?';
             break;
     }
@@ -80,13 +80,6 @@ void Mechanism::render(int ox, int oy) const {
     DrawRectangle(gx, gy, size, size, currentColor);
 }
 
-bool Mechanism::isBlockingAt(int gridX, int gridY) const {
-    int tx = (targetPos_.x);
-    int ty = (targetPos_.y);
-
-    if (type_ == MechanismType::DOOR && !active_ &&
-        gridX == tx && gridY == ty) {
-        return true; // puerta cerrada bloquea
-    }
-    return false;
-}
+void Mechanism::setActive() { 
+    active_ = false; 
+    std::cout << "Mechanism at (" << triggerPos_.x << ", " << triggerPos_.y << ") deactivated." << std::endl;}
