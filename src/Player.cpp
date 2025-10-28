@@ -1,6 +1,11 @@
 #include "Player.hpp"
-#include "raymath.h"
-#include <iostream>
+
+// Estado de movimiento por casillas a nivel de fichero (no como miembros de clase)
+static bool s_moving = false;
+static Vector2 s_move_start = {0,0};
+static Vector2 s_move_target = {0,0};
+static float s_move_progress = 0.0f;
+static float s_move_duration = 0.2f;
 
 Player::Player() {}
 
@@ -11,54 +16,59 @@ void Player::init(Vector2 startPos, float radius)
     has_key_ = false;
 }
 
-/**
- * Movimiento con detección de colisiones usando el mapa.
- * No se mueve por casillas: es continuo, con control por teclado.
- */
 void Player::handleInput(float deltaTime, const Map& map)
 {
-    // Nueva posición
-    Vector2 newPos = position_;
+    // Si ya estamos moviéndonos, ignorar nuevos inputs aquí
+    if (moving_) return;
 
-    // Posición destino
-    Vector2 moveDir = { 0, 0 };
+    int dx = 0, dy = 0;
+    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))    dy = -1;
+    else if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) dy = 1;
+    else if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) dx = -1;
+    else if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) dx = 1;
 
-    // Actualizar posición dependiendo de la tecla pulsada
-    // WASD / △ ◁ ▽ ▷
-    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))    moveDir.y -= speed_ * deltaTime;
-    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN))  moveDir.y += speed_ * deltaTime;
-    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT))  moveDir.x -= speed_ * deltaTime;
-    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) moveDir.x += speed_ * deltaTime;
+    // Si no hay movimiento, salir para optimizar el rendimiento
+    if (dx == 0 && dy == 0) return;
 
-    // Normalizar dirección si se mueve en diagonal
-    if (moveDir.x != 0 || moveDir.y != 0)
-        moveDir = Vector2Normalize(moveDir);
+    // Calcular celda actual y destino
+    int tileSize = map.tile();
+    int cellX = static_cast<int>(position_.x / tileSize);
+    int cellY = static_cast<int>(position_.y / tileSize);
+    int targetX = cellX + dx;
+    int targetY = cellY + dy;
 
-    // Posible nueva posición X
-    Vector2 tryPosX = {
-        position_.x + moveDir.x * speed_ * deltaTime,
-        position_.y
-    };
+    // Comprobar que la celda destino es accesible
+    if (!map.isWalkable(targetX, targetY)) return;
 
-    // Comprobación de colisión con paredes en el eje X
-    if (!checkCollisionWithWalls(tryPosX, map)) newPos.x = tryPosX.x;
+    // Comprobar colisión en la posición objetivo (evita tocar esquinas)
+    Vector2 centerTarget = { targetX * (float)tileSize + tileSize / 2.0f,
+                             targetY * (float)tileSize + tileSize / 2.0f };
+    if (checkCollisionWithWalls(centerTarget, map)) return;
 
-    // Posible nueva posición Y
-    Vector2 tryPosY = {
-        newPos.x,
-        position_.y + moveDir.y * speed_ * deltaTime
-    };
-
-    // Comprobación de colisión con paredes en el eje Y
-    if (!checkCollisionWithWalls(tryPosY, map)) newPos.y = tryPosY.y;
-
-    // Actualizar posición final
-    position_ = newPos;
+    // Iniciar animación hacia la celda destino
+    move_start_ = position_;
+    move_target_ = centerTarget;
+    move_progress_ = 0.0f;
+    moving_ = true;
 }
 
 void Player::update(float deltaTime, const Map& map)
 {
-    handleInput(deltaTime, map);
+    // Si estamos en transición entre casillas, interpolar posición
+    if (moving_) {
+        move_progress_ += deltaTime;
+        float t = move_progress_ / move_duration_;
+        if (t >= 1.0f) {
+            position_ = move_target_;
+            moving_ = false;
+            move_progress_ = 0.0f;
+        } else {
+            position_.x = move_start_.x + (move_target_.x - move_start_.x) * t;
+            position_.y = move_start_.y + (move_target_.y - move_start_.y) * t;
+        }
+    } else {
+        handleInput(deltaTime, map);
+    }
 }
 
 void Player::render(int ox, int oy) const
