@@ -28,7 +28,7 @@ class GameOverState : public GameState
         Color backgroundColor = GRAY;
         bool dead;
         float remainingTime;
-        int selectedOption;
+        int selectedOption = 0;
 
         //para cuando tengamos sprites
         Texture2D gameOverText;
