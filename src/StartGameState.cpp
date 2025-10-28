@@ -47,8 +47,8 @@ void StartGameState::render() {
      // --- Botones ---
     float buttonWidth = 150;
     float buttonHeight = 40;
-    float startX = 200;
-    float startY = 200;
+    float startX = WINDOW_WIDTH / 2.0f - buttonWidth / 2.0f;
+    float startY = WINDOW_HEIGHT / 2.0f - buttonHeight;
 
     // Botón JUGAR
     Rectangle playButton = {startX, startY, buttonWidth, buttonHeight};
