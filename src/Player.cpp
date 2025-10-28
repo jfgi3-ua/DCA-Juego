@@ -16,7 +16,7 @@ void Player::init(Vector2 startPos, float radius, int lives)
  * Movimiento con detección de colisiones usando el mapa.
  * No se mueve por casillas: es continuo, con control por teclado.
  */
-void Player::handleInput(float deltaTime, const Map& map)
+void Player::handleInput(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles)
 {
     // Nueva posición
     Vector2 newPos = position_;
@@ -42,7 +42,7 @@ void Player::handleInput(float deltaTime, const Map& map)
     };
     
     // Comprobación de colisión con paredes en el eje X
-    if (!checkCollisionWithWalls(tryPosX, map)) newPos.x = tryPosX.x;
+    if (!checkCollisionWithWalls(tryPosX, map, blockedTiles)) newPos.x = tryPosX.x;
 
     // Posible nueva posición Y
     Vector2 tryPosY = {
@@ -51,7 +51,7 @@ void Player::handleInput(float deltaTime, const Map& map)
     };
 
     // Comprobación de colisión con paredes en el eje Y
-    if (!checkCollisionWithWalls(tryPosY, map)) newPos.y = tryPosY.y;
+    if (!checkCollisionWithWalls(tryPosY, map, blockedTiles)) newPos.y = tryPosY.y;
 
     // Guardar última dirección de movimiento
     lastMoveDir_ = position_;
@@ -60,9 +60,9 @@ void Player::handleInput(float deltaTime, const Map& map)
     position_ = newPos;
 }
 
-void Player::update(float deltaTime, const Map& map)
+void Player::update(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles)
 {
-    handleInput(deltaTime, map);
+    handleInput(deltaTime, map, blockedTiles);
     if (invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION) {
         invulnerableTimer_ += deltaTime;
         if (invulnerableTimer_ > Player::INVULNERABLE_DURATION) invulnerableTimer_ = Player::INVULNERABLE_DURATION;
@@ -83,8 +83,11 @@ void Player::render(int ox, int oy) const
     }
 }
 
-bool Player::checkCollisionWithWalls(const Vector2& pos, const Map& map) const
+bool Player::checkCollisionWithWalls(const Vector2& pos,
+                                     const Map& map,
+                                     const std::vector<Vector2>& blockedTiles) const
 {
+
     // Bucle que itera todo el mapa
     for (int y = 0; y < map.height(); ++y) {
         for (int x = 0; x < map.width(); ++x) {
@@ -108,7 +111,17 @@ bool Player::checkCollisionWithWalls(const Vector2& pos, const Map& map) const
             }
         }
     }
-
+    //Comprobar mecanismos activos (bloqueos temporales)
+    for (const auto& b : blockedTiles) {
+        Rectangle mechRect = {
+            b.x * map.tile(),
+            b.y * map.tile(),
+            (float)map.tile(),
+            (float)map.tile()
+        };
+        if (CheckCollisionCircleRec(pos, radius_, mechRect))
+            return true;
+    }
      // No hay colisión
     return false;
 }
