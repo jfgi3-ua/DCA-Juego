@@ -163,6 +163,10 @@ void MainGameState::render()
         }
     }
 
+    // Mecanismos
+    for (const auto& mech : mechanisms_) {
+        mech.render(ox, oy);
+    }
     // 2) Jugador
     player_.render(ox, oy);
 
@@ -173,10 +177,6 @@ void MainGameState::render()
 
     spikes_.render(ox, oy);
 
-    // Mecanismos
-    for (const auto& mech : mechanisms_) {
-        mech.render(ox, oy);
-    }
 
     // 4) HUD inferior
     const float baseY = (float)(oy + mapHpx); // empieza justo bajo el mapa
