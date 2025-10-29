@@ -4,16 +4,43 @@
 
 ## Tabla de contenidos
 
-1. [GDD básico](#gdd-básico)
-2. [Elección de estrategia de gestión de ramas](#elección-de-estrategia-de-gestión-de-ramas)
-3. [Sistema de bugtracking elegido](#sistema-de-bugtracking-elegido)
-4. [Conclusiones](#conclusiones)
+- [Escape del Laberinto: Hito 1 🚀](#escape-del-laberinto-hito-1-)
+  - [Tabla de contenidos](#tabla-de-contenidos)
+  - [GDD básico 📝](#gdd-básico-)
+    - [¿En que consiste nuestro juego?](#en-que-consiste-nuestro-juego)
+      - [Componentes y mecánicas principales](#componentes-y-mecánicas-principales)
+  - [Elección de estrategia de gestión de ramas 🌿](#elección-de-estrategia-de-gestión-de-ramas-)
+    - [Flujo de trabajo](#flujo-de-trabajo)
+    - [Ejemplo de Pull Request](#ejemplo-de-pull-request)
+    - [Ejemplo de rama feature](#ejemplo-de-rama-feature)
+  - [Sistema de bugtracking elegido 🐛](#sistema-de-bugtracking-elegido-)
+    - [Ejemplo de Issue](#ejemplo-de-issue)
+  - [Conclusiones ✅](#conclusiones-)
+  - [Autores ✍️](#autores-️)
 
 ---
 
 ## GDD básico 📝
 
-> **Nota:** Este capítulo se completará una vez finalicemos el desarrollo de la primera versión jugable del juego. Aquí se documentarán las mecánicas principales, pantallas, enemigos, power-ups y demás elementos relevantes del proyecto.
+### ¿En que consiste nuestro juego?
+
+Nuestro juego consiste en un ***Escape del Laberinto***, es decir, el jugador tiene que pasar a través de pasillos, esquivando trampas y enemigos, a la vez que resolviendo mecanismos para pasar a través de estos para llegar a la salida
+
+#### Componentes y mecánicas principales
+- Jugador:
+  - El jugador se puede mover en todas las direcciones. (Sin diagonales)
+  - El jugador tiene 5 vidas, es decir, puede recibir hasta 5 golpes de obstáculos/enemigos.
+  - El jugador tiene una mochila para indicar los objetos que lleva en ese momento o recoge por el camino. De momento una llave para poder salir del laberinto.
+  - El jugador puede llegar a la meta para superar el nivel.
+  - El jugador puede activar botones y palancas.
+-  Mecanismos:
+   - Los mecanismos no se pueden atravesar por el jugador si no son activados por su activador.
+- Enemigos:
+  - Los enemigos recorren el laberinto aleatoriamente.
+  - Los enemigos pueden quitarle vidas al jugador al colisionar con estos. 
+- Pinchos:
+  - Los pinchos cuando se muestran pueden quitarle vidas al jugador al colisionar con estos. 
+  - Los pinchos se pueden atravesar por el jugador si están ocultos.
 
 ---
 
