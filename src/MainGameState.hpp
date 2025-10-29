@@ -6,6 +6,7 @@
 #include <vector>
 #include "Config.hpp"
 #include "Spikes.hpp"
+#include "Mechanism.hpp"
 extern "C" {
   #include <raylib.h>
 }
@@ -24,6 +25,8 @@ class MainGameState : public GameState
         void pause(){};
         void resume(){};
 
+        void activeMechanisms();
+
 
     private:
         char entered_key;
@@ -39,4 +42,10 @@ class MainGameState : public GameState
 
         //Pinchos
         Spikes spikes_;
+
+        //Mecanismos
+        std::vector<Mechanism> mechanisms_;
+        std::vector<Vector2> activeMechanisms_;
+        // Temporizador del nivel (segundos). Empieza en 60s por defecto.
+        float levelTime_ = 120.0f;
 };

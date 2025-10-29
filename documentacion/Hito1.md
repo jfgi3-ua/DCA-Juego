@@ -4,18 +4,63 @@
 
 ## Tabla de contenidos
 
-1. [GDD básico](#gdd-básico)
-2. [Elección de estrategia de gestión de ramas](#elección-de-estrategia-de-gestión-de-ramas)
-3. [Sistema de bugtracking elegido](#sistema-de-bugtracking-elegido)
-4. [Conclusiones](#conclusiones)
+- [Escape del Laberinto: Hito 1 🚀](#escape-del-laberinto-hito-1-)
+  - [Tabla de contenidos](#tabla-de-contenidos)
+  - [GDD básico 📝](#gdd-básico-)
+    - [¿En que consiste nuestro juego?](#en-que-consiste-nuestro-juego)
+      - [Componentes y mecánicas principales](#componentes-y-mecánicas-principales)
+  - [Elección de estrategia de gestión de ramas 🌿](#elección-de-estrategia-de-gestión-de-ramas-)
+    - [Flujo de trabajo](#flujo-de-trabajo)
+    - [Ejemplo de Pull Request](#ejemplo-de-pull-request)
+    - [Ejemplo de rama feature](#ejemplo-de-rama-feature)
+  - [Sistema de bugtracking elegido 🐛](#sistema-de-bugtracking-elegido-)
+    - [Ejemplo de Issue](#ejemplo-de-issue)
+  - [Conclusiones ✅](#conclusiones-)
+  - [Autores ✍️](#autores-️)
 
 ---
 
 ## GDD básico 📝
 
-> **Nota:** Este capítulo se completará una vez finalicemos el desarrollo de la primera versión jugable del juego. Aquí se documentarán las mecánicas principales, pantallas, enemigos, power-ups y demás elementos relevantes del proyecto.
+### ¿En que consiste nuestro juego?
 
----
+**Escape del Laberinto** es un videojuego de exploración y supervivencia en 2D desarrollado en C++ con Raylib, en el que el jugador deberá encontrar la llave y escapar del laberinto evitando enemigos, trampas y mecanismos bloqueantes.
+
+El objetivo es alcanzar la salida (X) con la llave (K) en su mochila, gestionando el movimiento, las colisiones y las vidas limitadas mientras se resuelven obstáculos dinámicos.
+
+#### Estructura del juego
+- Pantalla de inicio: menú simple con opción de empezar partida.
+- Pantalla principal: se muestra el mapa jugable, el jugador, los enemigos y el HUD inferior.
+- Pantalla de Game Over: aparece cuando el jugador pierde todas sus vidas o logra escapar.
+- Todo gestionado mediante una máquina de estados (StateMachine) con transiciones limpias entre StartGameState, MainGameState y GameOverState.
+
+#### Componentes y mecánicas principales
+- Jugador (Player):
+  - Movimiento fluido en las cuatro direcciones (WASD o flechas, sin diagonales).
+  - Vidas: empieza con 5, es decir, puede recibir hasta 5 golpes de obstáculos/enemigos; pierde una al chocar con un enemigo o pinchos activos.  
+  - Colisión con el mapa: no atraviesa paredes ni mecanismos cerrados.    
+  - Mochila: muestra los objetos recogidos para indicar los objetos que lleva en ese momento o recoge por el camino.  
+    - Actualmente puede portar una llave (K) necesaria para abrir la salida.
+  - Invulnerabilidad temporal: tras recibir daño, tiene unos instantes de inmunidad.  
+  - Interacción: puede activar mecanismos (botones/palancas) que modifican el entorno.
+  - Condiciones:
+    - Victoria: llega a la salida (X) teniendo la llave.
+    - Derrota: pierde todas las vidas o termina el tiempo.
+- Mecanismos (Mechanism):
+  - Son bloqueos o puertas que el jugador no puede atravesar hasta que se activa su trigger (botón, interruptor o palanca).  
+  - Cada mecanismo tiene:  
+    - Tipo (puerta, puente, trampa, etc.).  
+    - Estado (activo/inactivo).  
+  - Vinculación entre activador y objetivo.  
+    - Su estado puede cambiar dinámicamente durante la partida, alterando el camino disponible.
+- Enemigos (Enemy):
+  - Patrullan el laberinto de forma semialeatoria (movimiento autónomo con dirección variable).
+  - Al colisionar con el jugador, le quitan una vida.
+  - Son entidades independientes que se actualizan en cada frame.
+  - Su presencia aumenta la dificultad del recorrido y obliga al jugador a planificar rutas seguras.
+- Pinchos (spikes):
+  - Los pinchos cuando se muestran pueden quitarle vidas al jugador al colisionar con estos. 
+  - Los pinchos se pueden atravesar por el jugador si están ocultos.
 
 ## Elección de estrategia de gestión de ramas 🌿
 

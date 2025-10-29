@@ -35,9 +35,16 @@ void MainGameState::init()
     }
 
     for (auto s : map_.spikesStarts()) {
-        spikes_.addSpike(s.x, s.y);
-
+        spikes_.addSpike(s.x, s.y); 
     }
+
+    for (auto m : map_.getMechanisms()) { 
+        //m es un MechanismPair
+        mechanisms_.emplace_back(m.id, m.trigger, m.target);
+    }
+
+    // Inicializar temporizador de nivel a 60 segundos al iniciar el estado
+    levelTime_ = 120.0f;
 }
 
 void MainGameState::handleInput()
@@ -49,8 +56,18 @@ void MainGameState::handleInput()
 
 void MainGameState::update(float deltaTime)
 {
+    activeMechanisms(); //actualizamos un vector con todos los mecanismos activos
+    // Reducir temporizador de nivel
+    levelTime_ -= deltaTime;
+    if (levelTime_ <= 0.0f) {
+        levelTime_ = 0.0f;
+        // Tiempo agotado -> Game Over (dead = true), pasar tiempo restante = 0
+        this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, levelTime_), true);
+        return;
+    }
+
     // 1) Actualizar (movimiento) jugador con colisiones de mapa
-    player_.update(deltaTime, map_);
+    player_.update(deltaTime, map_, activeMechanisms_);
 
     // 2) Celda actual del jugador
     int cellX = (int)(player_.getPosition().x) / tile_;
@@ -72,7 +89,8 @@ void MainGameState::update(float deltaTime)
     // 4) ¿Está sobre la salida 'X' y tiene la llave? -> Nivel completado
     if (player_.isOnExit(map_) && player_.hasKey()) {
         std::cout << "Nivel completado" << std::endl;
-        this->state_machine->add_state(std::make_unique<GameOverState>(1, 0, 1.0f), true);
+        // Pasar tiempo restante al GameOverState (dead = false)
+        this->state_machine->add_state(std::make_unique<GameOverState>(1, 0, levelTime_), true);
     }
 
     // 5) IA enemigos y colisiones con jugador
@@ -105,7 +123,17 @@ void MainGameState::update(float deltaTime)
     // 7) Si el jugador no tiene vidas, cambiar al estado de Game Over
     if (player_.getLives() <= 0) {
         std::cout << "Game Over: El jugador no tiene más vidas." << std::endl;
-        this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
+        // Pasar tiempo restante (puede ser 0) al GameOverState donde dead = true
+        this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, levelTime_), true);
+    }
+
+    //7 Mecanismos, cmprobar si el jugador está sobre un trigger q no este activo
+    for (auto& mech : mechanisms_) {
+        IVec2 trigPos = mech.getTriggerPos();
+
+         if (mech.isActive() && cellX == trigPos.x && cellY == trigPos.y) {
+            mech.deactivate();
+        }
     }
 }
 
@@ -149,6 +177,10 @@ void MainGameState::render()
         }
     }
 
+    // Mecanismos
+    for (const auto& mech : mechanisms_) {
+        mech.render(ox, oy);
+    }
     // 2) Jugador
     player_.render(ox, oy);
 
@@ -158,6 +190,7 @@ void MainGameState::render()
     }
 
     spikes_.render(ox, oy);
+
 
     // 4) HUD inferior
     const float baseY = (float)(oy + mapHpx); // empieza justo bajo el mapa
@@ -199,6 +232,12 @@ void MainGameState::render()
         }
     }
 
+    // Mostrar temporizador centrado encima del HUD
+    int timerFont = 22;
+    std::string timeText = "Tiempo: " + std::to_string((int)levelTime_) + "s";
+    int textW = MeasureText(timeText.c_str(), timerFont);
+    DrawText(timeText.c_str(), (GetScreenWidth() - textW) / 2, (int)baseY + 8, timerFont, DARKGRAY);
+
     // 5) Mensaje contextual por encima del HUD
     const int cx = (int)(player_.getPosition().x / tile_);
     const int cy = (int)(player_.getPosition().y / tile_);
@@ -214,4 +253,14 @@ void MainGameState::render()
     }
 
     EndDrawing();
+}
+
+void MainGameState::activeMechanisms() {
+    activeMechanisms_.clear();
+    for (const auto& mech : mechanisms_) {
+        if (mech.isActive()) {
+            Vector2 target = { (float)mech.getTargetPos().x, (float)mech.getTargetPos().y };
+            activeMechanisms_.push_back(target);       
+        }
+    }
 }

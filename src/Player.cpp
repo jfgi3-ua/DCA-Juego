@@ -1,6 +1,11 @@
 #include "Player.hpp"
-#include "raymath.h"
-#include <iostream>
+
+// Estado de movimiento por casillas a nivel de fichero (no como miembros de clase)
+static bool s_moving = false;
+static Vector2 s_move_start = {0,0};
+static Vector2 s_move_target = {0,0};
+static float s_move_progress = 0.0f;
+static float s_move_duration = 0.2f;
 
 Player::Player() {}
 
@@ -16,53 +21,59 @@ void Player::init(Vector2 startPos, float radius, int lives)
  * Movimiento con detección de colisiones usando el mapa.
  * No se mueve por casillas: es continuo, con control por teclado.
  */
-void Player::handleInput(float deltaTime, const Map& map)
+void Player::handleInput(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles)
 {
-    // Nueva posición
-    Vector2 newPos = position_;
+    // Si ya estamos moviéndonos, ignorar nuevos inputs aquí
+    if (moving_) return;
 
-    // Posición destino
-    Vector2 moveDir = { 0, 0 };
+    int dx = 0, dy = 0;
+    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))    dy = -1;
+    else if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) dy = 1;
+    else if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) dx = -1;
+    else if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) dx = 1;
 
-    // Actualizar posición dependiendo de la tecla pulsada
-    // WASD / △ ◁ ▽ ▷
-    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))    moveDir.y -= speed_ * deltaTime;
-    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN))  moveDir.y += speed_ * deltaTime;
-    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT))  moveDir.x -= speed_ * deltaTime;
-    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) moveDir.x += speed_ * deltaTime;
+    // Si no hay movimiento, salir para optimizar el rendimiento
+    if (dx == 0 && dy == 0) return;
 
-    // Normalizar dirección si se mueve en diagonal
-    if (moveDir.x != 0 || moveDir.y != 0)
-        moveDir = Vector2Normalize(moveDir);
-
-    // Posible nueva posición X
-    Vector2 tryPosX = {
-        position_.x + moveDir.x * speed_ * deltaTime,
-        position_.y
-    };
+    // Calcular celda actual y destino
+    int tileSize = map.tile();
+    int cellX = static_cast<int>(position_.x / tileSize);
+    int cellY = static_cast<int>(position_.y / tileSize);
+    int targetX = cellX + dx;
+    int targetY = cellY + dy;
     
-    // Comprobación de colisión con paredes en el eje X
-    if (!checkCollisionWithWalls(tryPosX, map)) newPos.x = tryPosX.x;
-
-    // Posible nueva posición Y
-    Vector2 tryPosY = {
-        newPos.x,
-        position_.y + moveDir.y * speed_ * deltaTime
-    };
-
-    // Comprobación de colisión con paredes en el eje Y
-    if (!checkCollisionWithWalls(tryPosY, map)) newPos.y = tryPosY.y;
+    // Comprobar colisión en la posición objetivo (evita tocar esquinas)
+    Vector2 centerTarget = { targetX * (float)tileSize + tileSize / 2.0f,
+                             targetY * (float)tileSize + tileSize / 2.0f };
+    if (checkCollisionWithWalls(centerTarget, map, blockedTiles)) return;
 
     // Guardar última dirección de movimiento
     lastMoveDir_ = position_;
 
-    // Actualizar posición final
-    position_ = newPos;
+    // Iniciar animación hacia la celda destino
+    move_start_ = position_;
+    move_target_ = centerTarget;
+    move_progress_ = 0.0f;
+    moving_ = true;
 }
 
-void Player::update(float deltaTime, const Map& map)
+void Player::update(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles)
 {
-    handleInput(deltaTime, map);
+    // Si estamos en transición entre casillas, interpolar posición
+    if (moving_) {
+        move_progress_ += deltaTime;
+        float t = move_progress_ / move_duration_;
+        if (t >= 1.0f) {
+            position_ = move_target_;
+            moving_ = false;
+            move_progress_ = 0.0f;
+        } else {
+            position_.x = move_start_.x + (move_target_.x - move_start_.x) * t;
+            position_.y = move_start_.y + (move_target_.y - move_start_.y) * t;
+        }
+    } else {
+        handleInput(deltaTime, map, blockedTiles);
+    }
     if (invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION) {
         invulnerableTimer_ += deltaTime;
         if (invulnerableTimer_ > Player::INVULNERABLE_DURATION) invulnerableTimer_ = Player::INVULNERABLE_DURATION;
@@ -83,8 +94,11 @@ void Player::render(int ox, int oy) const
     }
 }
 
-bool Player::checkCollisionWithWalls(const Vector2& pos, const Map& map) const
+bool Player::checkCollisionWithWalls(const Vector2& pos,
+                                     const Map& map,
+                                     const std::vector<Vector2>& blockedTiles) const
 {
+
     // Bucle que itera todo el mapa
     for (int y = 0; y < map.height(); ++y) {
         for (int x = 0; x < map.width(); ++x) {
@@ -108,7 +122,17 @@ bool Player::checkCollisionWithWalls(const Vector2& pos, const Map& map) const
             }
         }
     }
-
+    //Comprobar mecanismos activos (bloqueos temporales)
+    for (const auto& b : blockedTiles) {
+        Rectangle mechRect = {
+            b.x * map.tile(),
+            b.y * map.tile(),
+            (float)map.tile(),
+            (float)map.tile()
+        };
+        if (CheckCollisionCircleRec(pos, radius_, mechRect))
+            return true;
+    }
      // No hay colisión
     return false;
 }
