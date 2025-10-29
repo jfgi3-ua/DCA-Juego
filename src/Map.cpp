@@ -24,6 +24,7 @@ bool Map::loadFromFile(const std::string& path, int tileSize) {
     _enemies.clear();
     _player = { -1, -1 };
     _keys.clear();
+    _spikes.clear();
 
     // 1) Apertura del archivo
     std::ifstream in(path);
@@ -48,12 +49,17 @@ bool Map::loadFromFile(const std::string& path, int tileSize) {
 
     // 4) Aplica tamaño de tile (usado luego para render)
     _tile = tileSize;
-
+    
     // 5) Escaneo para localizar 'P' (jugador) y 'E' (enemigos)
     //    Nota: si hay varias 'P', la última sobrescribiría a la anterior; el
     //    diseño actual asume exactamente una 'P'. En futuras iteraciones
     //    podemos comprobar y fallar si hay != 1.
-    //   También localiza llaves 'K'.
+    //   También localiza llaves 'K', Spikes '^' y mecanismos 'D','T','B', 'U'
+
+    //guardamos las posiciones de los mecanismos y el caracter que los identifica para juntarlos despues
+    std::unordered_map<char, IVec2> triggers;
+    std::unordered_map<char, IVec2> targets;
+
     for (int y = 0; y < _h; ++y) {
         for (int x = 0; x < _w; ++x) {
             const char c = _grid[y][x];
@@ -65,12 +71,19 @@ bool Map::loadFromFile(const std::string& path, int tileSize) {
                 _keys.push_back({ x, y });
             } else if (c == '^') {
                 _spikes.push_back({x, y});
+            } else if (std::islower(c)) {
+                triggers[c] = {x, y};
+            } else if (std::isupper(c)) {
+                targets[c] = {x, y};
             }
         }
     }
 
     // 6) Post-condición: debe existir un spawn de jugador
     if (_player.x < 0) throw std::runtime_error("Missing player start 'P'");
+    
+    //7 Mecanismos: emparejamos triggers y targets
+    pairMechanisms(triggers, targets);
 
     return true;
 }
@@ -142,4 +155,23 @@ bool Map::clearCell(int x, int y, char replacement) {
 
     cell = replacement;
     return true;
+}
+
+void Map::pairMechanisms(std::unordered_map<char, IVec2>& triggers, std::unordered_map<char, IVec2>& targets) {
+    _mechanisms.clear();
+
+    //Comprobamos q cada trigger tenga su target
+    for (const auto& [key, triggerPos] : triggers) {
+        char targetKey = std::toupper(key);
+        
+        // Si no hay target lanzamos error
+        auto targetIt = targets.find(targetKey);
+        if (targetIt == targets.end()) {
+            throw std::runtime_error(
+                std::string("Missing target for mechanism '") + targetKey + "'");
+        }   
+
+        std::cout << "Paired mechanism: " << key;
+        _mechanisms.push_back({ targetKey, triggerPos, targetIt->second });
+    }
 }

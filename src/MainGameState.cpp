@@ -23,7 +23,7 @@ void MainGameState::init()
     IVec2 p = map_.playerStart();
     Vector2 startPos = { p.x * (float)tile_ + tile_ / 2.0f,
                          p.y * (float)tile_ + tile_ / 2.0f };
-    player_.init(startPos, tile_ * 0.35f);
+    player_.init(startPos, tile_ * 0.35f, 5);
 
     enemiesPos_.clear();
     enemies.clear();
@@ -35,8 +35,12 @@ void MainGameState::init()
     }
 
     for (auto s : map_.spikesStarts()) {
-        spikes_.addSpike(s.x, s.y);
+        spikes_.addSpike(s.x, s.y); 
+    }
 
+    for (auto m : map_.getMechanisms()) { 
+        //m es un MechanismPair
+        mechanisms_.emplace_back(m.id, m.trigger, m.target);
     }
 }
 
@@ -49,8 +53,9 @@ void MainGameState::handleInput()
 
 void MainGameState::update(float deltaTime)
 {
+    activeMechanisms(); //actualizamos un vector con todos los mecanismos activos
     // 1) Actualizar (movimiento) jugador con colisiones de mapa
-    player_.update(deltaTime, map_);
+    player_.update(deltaTime, map_, activeMechanisms_);
 
     // 2) Celda actual del jugador
     int cellX = (int)(player_.getPosition().x) / tile_;
@@ -85,20 +90,36 @@ void MainGameState::update(float deltaTime)
     }
 
     for (auto &e : enemies) {
-        if (e.collidesWithPlayer(player_.getPosition().x, player_.getPosition().y, player_.getRadius())) {
-            // si colisiona, cambiar a GameOverState (ajusta parámetros si tu constructor difiere)
-            this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
-            break;
+        if (e.collidesWithPlayer(player_.getPosition().x, player_.getPosition().y, player_.getRadius()) && !player_.isInvulnerable()) {
+            // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
+            player_.onHit(map_);
+            std::cout << "El jugador ha sido golpeado por un enemigo. " << player_.getLives() << std::endl;
         }
     }
 
-    //6 Pinchos y colisiones si activo
+    
+    // 6) Pinchos y colisiones si activo
     spikes_.update(deltaTime);
-
     // Si el jugador está sobre un pincho activo
-    if (spikes_.isActiveAt(cellX, cellY)) {
-        std::cout << "Player died by spikes!" << std::endl;
+    if (spikes_.isActiveAt(cellX, cellY) && !player_.isInvulnerable()) {
+    // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
+    player_.onHit(map_);
+        std::cout << "El jugador ha sido golpeado por pinchos. " << player_.getLives() << std::endl;
+    }
+
+    // 7) Si el jugador no tiene vidas, cambiar al estado de Game Over
+    if (player_.getLives() <= 0) {
+        std::cout << "Game Over: El jugador no tiene más vidas." << std::endl;
         this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
+    }
+
+    //7 Mecanismos, cmprobar si el jugador está sobre un trigger q no este activo
+    for (auto& mech : mechanisms_) {
+        IVec2 trigPos = mech.getTriggerPos();
+
+         if (mech.isActive() && cellX == trigPos.x && cellY == trigPos.y) {
+            mech.deactivate();
+        }
     }
 }
 
@@ -142,6 +163,10 @@ void MainGameState::render()
         }
     }
 
+    // Mecanismos
+    for (const auto& mech : mechanisms_) {
+        mech.render(ox, oy);
+    }
     // 2) Jugador
     player_.render(ox, oy);
 
@@ -151,6 +176,7 @@ void MainGameState::render()
     }
 
     spikes_.render(ox, oy);
+
 
     // 4) HUD inferior
     const float baseY = (float)(oy + mapHpx); // empieza justo bajo el mapa
@@ -181,6 +207,17 @@ void MainGameState::render()
         DrawRectangleLinesEx(keyIcon, 1.2f, BROWN);
     }
 
+    // Panel de vidas (alineado a la derecha dentro del HUD)
+    DrawRectangleRounded(Rectangle{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad }, 0.25f, 6, Fade(BLACK, 0.10f));
+    DrawRectangleRoundedLinesEx(Rectangle{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad }, 0.25f, 6, 1.0f, DARKGRAY);
+    DrawText("Vidas", (int)((float)GetScreenWidth() - 190.0f) + 10, (int)(baseY + pad) + 6, 16, DARKGRAY);
+
+    if (player_.getLives() > 0) {
+        for (int i = 0; i < player_.getLives(); ++i) {
+            DrawCircleV(Vector2{ (float)GetScreenWidth() - 190.0f + 12.0f + i * 20.0f + 6.0f, baseY + pad + 28.0f + 6.0f }, 5.0f, RED);
+        }
+    }
+
     // 5) Mensaje contextual por encima del HUD
     const int cx = (int)(player_.getPosition().x / tile_);
     const int cy = (int)(player_.getPosition().y / tile_);
@@ -196,4 +233,14 @@ void MainGameState::render()
     }
 
     EndDrawing();
+}
+
+void MainGameState::activeMechanisms() {
+    activeMechanisms_.clear();
+    for (const auto& mech : mechanisms_) {
+        if (mech.isActive()) {
+            Vector2 target = { (float)mech.getTargetPos().x, (float)mech.getTargetPos().y };
+            activeMechanisms_.push_back(target);       
+        }
+    }
 }
