@@ -11,7 +11,9 @@ class Player {
         void init(Vector2 startPos, float radius, int lives);
         void handleInput(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles);
         void update(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles);
-        void render(int ox, int oy) const; // Dibujado con offset (para mapa centrado)
+        
+        // Dibujado con offset (para mapa centrado)
+        void render(int ox, int oy) const; 
 
         /*
         *  Getters
@@ -60,4 +62,15 @@ class Player {
         // (va de 0.0f a INVULNERABLE_DURATION)
         float invulnerableTimer_ = 0.0f;
         static constexpr float INVULNERABLE_DURATION = 1.5f;
+
+        // Movimiento por casillas
+        bool moving_ = false;
+        Vector2 move_start_ = {0,0};
+        Vector2 move_target_ = {0,0};
+        
+        // Segundos
+        float move_progress_ = 0.0f; 
+        
+        // Segundos por casilla (calculado en base a tile/speed)
+        float move_duration_ = 0.12f; 
 };
