@@ -42,6 +42,9 @@ void MainGameState::init()
         //m es un MechanismPair
         mechanisms_.emplace_back(m.id, m.trigger, m.target);
     }
+
+    // Inicializar temporizador de nivel a 60 segundos al iniciar el estado
+    levelTime_ = 120.0f;
 }
 
 void MainGameState::handleInput()
@@ -54,6 +57,15 @@ void MainGameState::handleInput()
 void MainGameState::update(float deltaTime)
 {
     activeMechanisms(); //actualizamos un vector con todos los mecanismos activos
+    // Reducir temporizador de nivel
+    levelTime_ -= deltaTime;
+    if (levelTime_ <= 0.0f) {
+        levelTime_ = 0.0f;
+        // Tiempo agotado -> Game Over (dead = true), pasar tiempo restante = 0
+        this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, levelTime_), true);
+        return;
+    }
+
     // 1) Actualizar (movimiento) jugador con colisiones de mapa
     player_.update(deltaTime, map_, activeMechanisms_);
 
@@ -77,7 +89,8 @@ void MainGameState::update(float deltaTime)
     // 4) ¿Está sobre la salida 'X' y tiene la llave? -> Nivel completado
     if (player_.isOnExit(map_) && player_.hasKey()) {
         std::cout << "Nivel completado" << std::endl;
-        this->state_machine->add_state(std::make_unique<GameOverState>(1, 0, 1.0f), true);
+        // Pasar tiempo restante al GameOverState (dead = false)
+        this->state_machine->add_state(std::make_unique<GameOverState>(1, 0, levelTime_), true);
     }
 
     // 5) IA enemigos y colisiones con jugador
@@ -110,7 +123,8 @@ void MainGameState::update(float deltaTime)
     // 7) Si el jugador no tiene vidas, cambiar al estado de Game Over
     if (player_.getLives() <= 0) {
         std::cout << "Game Over: El jugador no tiene más vidas." << std::endl;
-        this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
+        // Pasar tiempo restante (puede ser 0) al GameOverState donde dead = true
+        this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, levelTime_), true);
     }
 
     //7 Mecanismos, cmprobar si el jugador está sobre un trigger q no este activo
@@ -217,6 +231,12 @@ void MainGameState::render()
             DrawCircleV(Vector2{ (float)GetScreenWidth() - 190.0f + 12.0f + i * 20.0f + 6.0f, baseY + pad + 28.0f + 6.0f }, 5.0f, RED);
         }
     }
+
+    // Mostrar temporizador centrado encima del HUD
+    int timerFont = 22;
+    std::string timeText = "Tiempo: " + std::to_string((int)levelTime_) + "s";
+    int textW = MeasureText(timeText.c_str(), timerFont);
+    DrawText(timeText.c_str(), (GetScreenWidth() - textW) / 2, (int)baseY + 8, timerFont, DARKGRAY);
 
     // 5) Mensaje contextual por encima del HUD
     const int cx = (int)(player_.getPosition().x / tile_);

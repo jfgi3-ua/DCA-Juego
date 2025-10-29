@@ -46,4 +46,6 @@ class MainGameState : public GameState
         //Mecanismos
         std::vector<Mechanism> mechanisms_;
         std::vector<Vector2> activeMechanisms_;
+        // Temporizador del nivel (segundos). Empieza en 60s por defecto.
+        float levelTime_ = 120.0f;
 };
