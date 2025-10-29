@@ -19,7 +19,7 @@ class StartGameState : public GameState {
         void resume() override {}
 
     private:
-        Texture2D background{};
+        Texture2D background;
         Color backgroundColor = GRAY;
 
         int selectedOption = 0;               // 0 = Jugar, 1 = Salir
