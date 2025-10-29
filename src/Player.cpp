@@ -42,9 +42,6 @@ void Player::handleInput(float deltaTime, const Map& map, const std::vector<Vect
     int targetX = cellX + dx;
     int targetY = cellY + dy;
     
-    // Comprobar que la celda destino es accesible
-    if (!map.isWalkable(targetX, targetY, blockedTiles)) return;
-
     // Comprobar colisión en la posición objetivo (evita tocar esquinas)
     Vector2 centerTarget = { targetX * (float)tileSize + tileSize / 2.0f,
                              targetY * (float)tileSize + tileSize / 2.0f };
