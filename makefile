@@ -13,19 +13,40 @@ RESET  := \033[0m
 CXX       := g++
 APP_NAME  := game
 
+# Variables de instalación (Debian)
+PREFIX ?= /usr
+DESTDIR ?=
+BINDIR := $(PREFIX)/bin
+DATADIR := $(PREFIX)/share/$(APP_NAME)
+
 # Rutas del proyecto
 SRC_DIR   := src
 OBJ_DIR   := obj
-BINDIR  := $(PREFIX)/bin
-DATADIR := $(PREFIX)/share/$(APP_NAME)
+BIN_DIR  := bin
 LIB_DIR   := vendor/lib
 VENDOR_INC_DIR := vendor/include
 
-# =========================
-# Variables de instalación (Debian)
-# =========================
-PREFIX ?= /usr
-DESTDIR ?=
+# ================================================================
+# Nota importante sobre BIN_DIR vs BINDIR
+#
+# BIN_DIR  → Carpeta de compilación dentro del proyecto.
+#             Aquí se genera el ejecutable durante el desarrollo.
+#             Ejemplo: bin/game
+#
+# BINDIR   → Carpeta de instalación final en el sistema (FHS).
+#             Aquí se instala el ejecutable cuando se empaqueta o
+#             se ejecuta "make install". No se usa para compilar.
+#             Ejemplo: /usr/bin/game
+#
+# REGLA FUNDAMENTAL:
+#   - BIN_DIR se usa durante la compilación (objetivos del make).
+#   - BINDIR se usa solo dentro de la regla "install".
+#
+# Mezclarlos causa errores como intentar enlazar en /usr/bin sin
+# permisos ("Permiso denegado").
+# ================================================================
+
+
 
 # =========================
 # Descubrir fuentes e includes
@@ -65,7 +86,7 @@ RAYLIB_DEP := $(LIB_DIR)/$(RAYLIB)
 # =========================
 # Objetivos phony
 # =========================
-.PHONY: all run clean distclean debug release help info raylib
+.PHONY: all run clean distclean debug release help info raylib install
 
 # Regla por defecto: compilar en modo release
 all: release
@@ -154,10 +175,10 @@ help:
 install: all
 	@echo "$(BLUE)[INSTALL] Instalando en $(DESTDIR)$(PREFIX)...$(RESET)"
 
-	# Ejecutable
-	install -D -m 0755 $(BIN_DIR)/$(APP_NAME) $(DESTDIR)$(BINDIR)/$(APP_NAME)
+	# Instalar ejecutable
+	install -D -m 0755 $(BIN_DIR)/$(APP_NAME) $(DESTDIR)$(BIN_DIR)/$(APP_NAME)
 
-	# Assets
+	# Instalar assets
 	install -d $(DESTDIR)$(DATADIR)/assets
 	cp -r $(ASSETS_DIR)/* $(DESTDIR)$(DATADIR)/assets/
 
