@@ -25,6 +25,7 @@ OBJ_DIR   := obj
 BIN_DIR  := bin
 LIB_DIR   := vendor/lib
 VENDOR_INC_DIR := vendor/include
+ASSETS_DIR := assets
 
 # ================================================================
 # Nota importante sobre BIN_DIR vs BINDIR
@@ -176,11 +177,11 @@ install: all
 	@echo "$(BLUE)[INSTALL] Instalando en $(DESTDIR)$(PREFIX)...$(RESET)"
 
 	# Instalar ejecutable
-	install -D -m 0755 $(BIN_DIR)/$(APP_NAME) $(DESTDIR)$(BIN_DIR)/$(APP_NAME)
+	install -D -m 0755 $(BIN_DIR)/$(APP_NAME) $(DESTDIR)$(BINDIR)/$(APP_NAME)
 
 	# Instalar assets
 	install -d $(DESTDIR)$(DATADIR)/assets
-	cp -r $(ASSETS_DIR)/* $(DESTDIR)$(DATADIR)/assets/
+	cp -r $(ASSETS_DIR)/. $(DESTDIR)$(DATADIR)/assets/
 
 	@echo "$(GREEN)[INSTALL] Instalación completada.$(RESET)"
 
