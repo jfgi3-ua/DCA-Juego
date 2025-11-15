@@ -16,13 +16,13 @@ APP_NAME  := game
 # Variables de instalación (Debian)
 PREFIX ?= /usr
 DESTDIR ?=
-BINDIR  := $(PREFIX)/bin  # carpeta del sistema FHS
+BINDIR := $(PREFIX)/bin
 DATADIR := $(PREFIX)/share/$(APP_NAME)
 
 # Rutas del proyecto
 SRC_DIR   := src
 OBJ_DIR   := obj
-BIN_DIR := bin        # carpeta del proyecto
+BIN_DIR  := bin
 LIB_DIR   := vendor/lib
 VENDOR_INC_DIR := vendor/include
 ASSETS_DIR := assets
@@ -32,14 +32,12 @@ ASSETS_DIR := assets
 #
 # BIN_DIR  → Carpeta de compilación dentro del proyecto.
 #             Aquí se genera el ejecutable durante el desarrollo.
-#             bin/game
-#			  ENTREGABLE 1
+#             Ejemplo: bin/game
 #
 # BINDIR   → Carpeta de instalación final en el sistema (FHS).
 #             Aquí se instala el ejecutable cuando se empaqueta o
 #             se ejecuta "make install". No se usa para compilar.
-#             /usr/bin/game
-#			  ENTREGABLE 2
+#             Ejemplo: /usr/bin/game
 #
 # REGLA FUNDAMENTAL:
 #   - BIN_DIR se usa durante la compilación (objetivos del make).
@@ -48,6 +46,7 @@ ASSETS_DIR := assets
 # Mezclarlos causa errores como intentar enlazar en /usr/bin sin
 # permisos ("Permiso denegado").
 # ================================================================
+
 
 
 # =========================
@@ -174,7 +173,6 @@ help:
 	@echo "  make info            -> Muestra fuentes, objetos e includes"
 	@echo "  make raylib          -> Descarga/compila libraylib.a si falta"
 
-
 install: all
 	@echo "$(BLUE)[INSTALL] Instalando en $(DESTDIR)$(PREFIX)...$(RESET)"
 
@@ -186,6 +184,8 @@ install: all
 	cp -r $(ASSETS_DIR)/. $(DESTDIR)$(DATADIR)/assets/
 
 	@echo "$(GREEN)[INSTALL] Instalación completada.$(RESET)"
+
+
 
 dist: clean
 	@echo "$(BLUE)[DIST] Construyendo paquete .deb con dpkg-buildpackage...$(RESET)"
