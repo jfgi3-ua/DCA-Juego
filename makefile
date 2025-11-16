@@ -20,12 +20,39 @@ endif
 
 APP_NAME ?= game
 
+# Variables de instalación (Debian/FHS)
+PREFIX ?= /usr
+DESTDIR ?=
+BINDIR := $(PREFIX)/bin
+DATADIR := $(PREFIX)/share/$(APP_NAME)
+ASSETS_DIR := assets
+
 # Rutas del proyecto
 SRC_DIR        := src
 OBJ_DIR        := obj
 BIN_DIR        := bin
 LIB_DIR        := vendor/lib
 VENDOR_INC_DIR := vendor/include
+
+# ================================================================
+# Nota importante sobre BIN_DIR vs BINDIR
+#
+# BIN_DIR  → Carpeta de compilación dentro del proyecto.
+#             Aquí se genera el ejecutable durante el desarrollo.
+#             Ejemplo: bin/game
+#
+# BINDIR   → Carpeta de instalación final en el sistema (FHS).
+#             Aquí se instala el ejecutable cuando se empaqueta o
+#             se ejecuta "make install". No se usa para compilar.
+#             Ejemplo: /usr/bin/game
+#
+# REGLA FUNDAMENTAL:
+#   - BIN_DIR se usa durante la compilación (objetivos del make).
+#   - BINDIR se usa solo dentro de la regla "install".
+#
+# Mezclarlos causa errores como intentar enlazar en /usr/bin sin
+# permisos ("Permiso denegado").
+# ================================================================
 
 # =========================
 # Descubrir fuentes e includes
@@ -66,7 +93,7 @@ RAYLIB_DEP := $(LIB_DIR)/$(RAYLIB)
 # Objetivos phony
 # =========================
 .PHONY: all run clean distclean debug release help info raylib \
-        ccache-stats ccache-zero ccache-clear
+        ccache-stats ccache-zero ccache-clear install dist
 
 # Regla por defecto: compilar en modo release
 all: release
@@ -151,6 +178,47 @@ ccache-zero:
 
 ccache-clear:
 	@ccache -C
+
+
+# =========================
+# Instalación FHS
+# =========================
+# Nota: Usa DESTDIR para instalaciones temporales (empaquetado)
+# usamos make install DESTDIR=debian/game/
+install: $(BIN_DIR)/$(APP_NAME)
+
+	#aviso si no se usa DESTDIR, para evitar instalaciones accidentales
+	@if [ -z "$(DESTDIR)" ]; then \
+	  echo "$(YELLOW)[AVISO] Ejecutando make install SIN DESTDIR.$(RESET)"; \
+	  echo "$(YELLOW)         Esto instalará el juego en tu sistema real (requiere sudo).$(RESET)"; \
+	fi
+
+	@echo "$(BLUE)[INSTALL] Instalando en $(DESTDIR)$(PREFIX)...$(RESET)"
+
+	# Instalar ejecutable
+	install -D -m 0755 $(BIN_DIR)/$(APP_NAME) $(DESTDIR)$(BINDIR)/$(APP_NAME)
+
+	# Instalar assets
+	install -d $(DESTDIR)$(DATADIR)/assets
+	cp -r $(ASSETS_DIR)/. $(DESTDIR)$(DATADIR)/assets/
+
+	@echo "$(GREEN)[INSTALL] Instalación completada.$(RESET)"
+
+
+uninstall:
+	@echo "$(RED)[UNINSTALL] Eliminando archivos instalados...$(RESET)"
+	rm -f $(DESTDIR)$(BINDIR)/$(APP_NAME)
+	rm -rf $(DESTDIR)$(DATADIR)
+	@echo "$(GREEN)[UNINSTALL] Completado.$(RESET)"
+	
+# =========================
+# Empaquetado .deb
+# =========================
+dist: clean
+	@echo "$(BLUE)[DIST] Construyendo paquete .deb con dpkg-buildpackage...$(RESET)"
+	dpkg-buildpackage -us -uc -b
+	@echo "$(GREEN)[DIST] Paquete .deb generado (si el directorio debian/ está bien configurado).$(RESET)"
+
 
 # =========================
 # Ayuda rápida
