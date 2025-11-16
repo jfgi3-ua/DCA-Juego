@@ -10,14 +10,21 @@ RESET  := \033[0m
 # =========================
 # Configuración básica
 # =========================
-CXX       := g++
-APP_NAME  := game
+CXX_BASE := g++
+# Si quieres usar ccache: make USE_CCACHE=1
+ifdef USE_CCACHE
+  CXX := ccache $(CXX_BASE)
+else
+  CXX := $(CXX_BASE)
+endif
+
+APP_NAME ?= game
 
 # Rutas del proyecto
-SRC_DIR   := src
-OBJ_DIR   := obj
-BIN_DIR   := bin
-LIB_DIR   := vendor/lib
+SRC_DIR        := src
+OBJ_DIR        := obj
+BIN_DIR        := bin
+LIB_DIR        := vendor/lib
 VENDOR_INC_DIR := vendor/include
 
 # =========================
@@ -58,7 +65,8 @@ RAYLIB_DEP := $(LIB_DIR)/$(RAYLIB)
 # =========================
 # Objetivos phony
 # =========================
-.PHONY: all run clean distclean debug release help info raylib
+.PHONY: all run clean distclean debug release help info raylib \
+        ccache-stats ccache-zero ccache-clear
 
 # Regla por defecto: compilar en modo release
 all: release
@@ -112,6 +120,7 @@ info:
 	$(info INC_FLAGS = $(INC_FLAGS))
 	$(info LIB_DIRS = $(LIB_DIRS))
 	$(info RAYLIB_DEP = $(RAYLIB_DEP))
+	$(info CXX = $(CXX))
 
 # =========================
 # Descarga/compilación Raylib
@@ -132,14 +141,30 @@ $(RAYLIB_DEP):
 	fi
 
 # =========================
+# ccache: utilidades
+# =========================
+ccache-stats:
+	@ccache -s
+
+ccache-zero:
+	@ccache -z
+
+ccache-clear:
+	@ccache -C
+
+# =========================
 # Ayuda rápida
 # =========================
 help:
 	@echo "Comandos disponibles:"
-	@echo "  make / make release  -> Compila en modo release"
-	@echo "  make debug           -> Compila en modo debug"
-	@echo "  make run             -> Compila (release) y ejecuta"
-	@echo "  make clean           -> Borra obj/ y bin/"
-	@echo "  make distclean       -> clean + borra dist/"
-	@echo "  make info            -> Muestra fuentes, objetos e includes"
-	@echo "  make raylib          -> Descarga/compila libraylib.a si falta"
+	@echo "  make / make release          -> Compila en modo release"
+	@echo "  make debug                   -> Compila en modo debug"
+	@echo "  make run                     -> Compila (release) y ejecuta"
+	@echo "  make clean                   -> Borra obj/ y bin/"
+	@echo "  make distclean               -> clean + borra dist/"
+	@echo "  make info                    -> Muestra fuentes, objetos e includes"
+	@echo "  make raylib                  -> Descarga/compila libraylib.a si falta"
+	@echo "  make USE_CCACHE=1            -> Compila usando ccache"
+	@echo "  make ccache-stats            -> Muestra estadísticas de ccache"
+	@echo "  make ccache-zero             -> Pone a cero las estadísticas"
+	@echo "  make ccache-clear            -> Limpia la caché de compilación"

@@ -1,12 +1,12 @@
 #pragma once
 #include "GameState.hpp"
 #include <iostream>
-#include "Map.hpp"
-#include "Player.hpp"
+#include "objects/Map.hpp"
+#include "objects/Player.hpp"
 #include <vector>
 #include "Config.hpp"
-#include "Spikes.hpp"
-#include "Mechanism.hpp"
+#include "objects/Spikes.hpp"
+#include "objects/Mechanism.hpp"
 extern "C" {
   #include <raylib.h>
 }
