@@ -4,7 +4,7 @@
 #include "StartGameState.hpp"
 #include <memory>
 #include <chrono>
-#include "Map.hpp" // Para medir el mapa antes
+#include "objects/Map.hpp" // Para medir el mapa antes
 #include "Config.hpp" // Archivo de configuración global (TILE_SIZE, HUD_HEIGHT)
 extern "C" {
   #include <raylib.h>

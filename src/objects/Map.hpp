@@ -3,7 +3,7 @@
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
-#include "Config.hpp"
+#include "core/Config.hpp"
 #include <iostream>
 #include "Mechanism.hpp"
 #include <unordered_map>
@@ -83,7 +83,7 @@ class Map {
         //Emparejamiento de mecanismos trigger-target
         void pairMechanisms(std::unordered_map<char, IVec2>& triggers,
                             std::unordered_map<char, IVec2>& targets);
-    
+
     private:
         // Dimensiones en celdas
         int _w = 0, _h = 0;

@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "Config.hpp"
+#include "core/Config.hpp"
 
 extern "C" {
   #include <raylib.h>
