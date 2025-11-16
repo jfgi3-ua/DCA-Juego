@@ -10,44 +10,22 @@ RESET  := \033[0m
 # =========================
 # Configuración básica
 # =========================
-CXX       := g++
-APP_NAME  := game
+CXX_BASE := g++
+# Si quieres usar ccache: make USE_CCACHE=1
+ifdef USE_CCACHE
+  CXX := ccache $(CXX_BASE)
+else
+  CXX := $(CXX_BASE)
+endif
 
-# Variables de instalación (Debian)
-PREFIX ?= /usr
-DESTDIR ?=
-BINDIR := $(PREFIX)/bin
-DATADIR := $(PREFIX)/share/$(APP_NAME)
+APP_NAME ?= game
 
 # Rutas del proyecto
-SRC_DIR   := src
-OBJ_DIR   := obj
-BIN_DIR  := bin
-LIB_DIR   := vendor/lib
+SRC_DIR        := src
+OBJ_DIR        := obj
+BIN_DIR        := bin
+LIB_DIR        := vendor/lib
 VENDOR_INC_DIR := vendor/include
-ASSETS_DIR := assets
-
-# ================================================================
-# Nota importante sobre BIN_DIR vs BINDIR
-#
-# BIN_DIR  → Carpeta de compilación dentro del proyecto.
-#             Aquí se genera el ejecutable durante el desarrollo.
-#             Ejemplo: bin/game
-#
-# BINDIR   → Carpeta de instalación final en el sistema (FHS).
-#             Aquí se instala el ejecutable cuando se empaqueta o
-#             se ejecuta "make install". No se usa para compilar.
-#             Ejemplo: /usr/bin/game
-#
-# REGLA FUNDAMENTAL:
-#   - BIN_DIR se usa durante la compilación (objetivos del make).
-#   - BINDIR se usa solo dentro de la regla "install".
-#
-# Mezclarlos causa errores como intentar enlazar en /usr/bin sin
-# permisos ("Permiso denegado").
-# ================================================================
-
-
 
 # =========================
 # Descubrir fuentes e includes
@@ -87,7 +65,8 @@ RAYLIB_DEP := $(LIB_DIR)/$(RAYLIB)
 # =========================
 # Objetivos phony
 # =========================
-.PHONY: all run clean distclean debug release help info raylib install dist
+.PHONY: all run clean distclean debug release help info raylib \
+        ccache-stats ccache-zero ccache-clear
 
 # Regla por defecto: compilar en modo release
 all: release
@@ -141,6 +120,7 @@ info:
 	$(info INC_FLAGS = $(INC_FLAGS))
 	$(info LIB_DIRS = $(LIB_DIRS))
 	$(info RAYLIB_DEP = $(RAYLIB_DEP))
+	$(info CXX = $(CXX))
 
 # =========================
 # Descarga/compilación Raylib
@@ -161,36 +141,30 @@ $(RAYLIB_DEP):
 	fi
 
 # =========================
+# ccache: utilidades
+# =========================
+ccache-stats:
+	@ccache -s
+
+ccache-zero:
+	@ccache -z
+
+ccache-clear:
+	@ccache -C
+
+# =========================
 # Ayuda rápida
 # =========================
 help:
 	@echo "Comandos disponibles:"
-	@echo "  make / make release  -> Compila en modo release"
-	@echo "  make debug           -> Compila en modo debug"
-	@echo "  make run             -> Compila (release) y ejecuta"
-	@echo "  make clean           -> Borra obj/ y bin/"
-	@echo "  make distclean       -> clean + borra dist/"
-	@echo "  make info            -> Muestra fuentes, objetos e includes"
-	@echo "  make raylib          -> Descarga/compila libraylib.a si falta"
-
-install: all
-	@echo "$(BLUE)[INSTALL] Instalando en $(DESTDIR)$(PREFIX)...$(RESET)"
-
-	# Instalar ejecutable
-	install -D -m 0755 $(BIN_DIR)/$(APP_NAME) $(DESTDIR)$(BINDIR)/$(APP_NAME)
-
-	# Instalar assets
-	install -d $(DESTDIR)$(DATADIR)/assets
-	cp -r $(ASSETS_DIR)/. $(DESTDIR)$(DATADIR)/assets/
-
-	@echo "$(GREEN)[INSTALL] Instalación completada.$(RESET)"
-
-
-
-dist: clean
-	@echo "$(BLUE)[DIST] Construyendo paquete .deb con dpkg-buildpackage...$(RESET)"
-	dpkg-buildpackage -us -uc -b
-	@echo "$(GREEN)[DIST] Paquete .deb generado (si el directorio debian/ está bien configurado).$(RESET)"
-
-
-
+	@echo "  make / make release          -> Compila en modo release"
+	@echo "  make debug                   -> Compila en modo debug"
+	@echo "  make run                     -> Compila (release) y ejecuta"
+	@echo "  make clean                   -> Borra obj/ y bin/"
+	@echo "  make distclean               -> clean + borra dist/"
+	@echo "  make info                    -> Muestra fuentes, objetos e includes"
+	@echo "  make raylib                  -> Descarga/compila libraylib.a si falta"
+	@echo "  make USE_CCACHE=1            -> Compila usando ccache"
+	@echo "  make ccache-stats            -> Muestra estadísticas de ccache"
+	@echo "  make ccache-zero             -> Pone a cero las estadísticas"
+	@echo "  make ccache-clear            -> Limpia la caché de compilación"

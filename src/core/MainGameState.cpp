@@ -1,7 +1,7 @@
 #include "MainGameState.hpp"
 #include "GameOverState.hpp"
 #include "StateMachine.hpp"
-#include "Enemy.hpp"
+#include "objects/Enemy.hpp"
 #include <iostream>
 extern "C" {
   #include <raylib.h>
@@ -35,10 +35,10 @@ void MainGameState::init()
     }
 
     for (auto s : map_.spikesStarts()) {
-        spikes_.addSpike(s.x, s.y); 
+        spikes_.addSpike(s.x, s.y);
     }
 
-    for (auto m : map_.getMechanisms()) { 
+    for (auto m : map_.getMechanisms()) {
         //m es un MechanismPair
         mechanisms_.emplace_back(m.id, m.trigger, m.target);
     }
@@ -110,7 +110,7 @@ void MainGameState::update(float deltaTime)
         }
     }
 
-    
+
     // 6) Pinchos y colisiones si activo
     spikes_.update(deltaTime);
     // Si el jugador está sobre un pincho activo
@@ -260,7 +260,7 @@ void MainGameState::activeMechanisms() {
     for (const auto& mech : mechanisms_) {
         if (mech.isActive()) {
             Vector2 target = { (float)mech.getTargetPos().x, (float)mech.getTargetPos().y };
-            activeMechanisms_.push_back(target);       
+            activeMechanisms_.push_back(target);
         }
     }
 }

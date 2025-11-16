@@ -1,4 +1,4 @@
- #include "GameOverState.hpp"
+#include "GameOverState.hpp"
 #include <iostream>
 #include "StateMachine.hpp"
 #include "MainGameState.hpp"
@@ -7,7 +7,7 @@ extern "C" {
     #include <raylib.h>
 }
 
-GameOverState::GameOverState(int nivel, bool die, float time) 
+GameOverState::GameOverState(int nivel, bool die, float time)
 {
     dead = die;
     remainingTime = time;
@@ -58,8 +58,8 @@ void GameOverState::render()
     //CASO 1, MORIMOS dead = 1
 
     // --- TÍTULO PRINCIPAL ---
-    std::string title = dead 
-        ? "GAME OVER" 
+    std::string title = dead
+        ? "GAME OVER"
         : "NIVEL " + std::to_string(currentLevel) + " COMPLETADO";
 
     int titleFontSize = 50;

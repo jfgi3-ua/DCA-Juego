@@ -1,7 +1,7 @@
 #pragma once
 #include "raylib.h"
 #include <vector>
-#include "Config.hpp"
+#include "core/Config.hpp"
 
 class Spikes {
 private:
