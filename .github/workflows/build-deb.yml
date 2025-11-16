@@ -1,0 +1,31 @@
+name: Build Debian Package
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential debhelper devscripts libgl1-mesa-dev libx11-dev
+
+      - name: Build .deb package
+        run: |
+          make clean
+          dpkg-buildpackage -us -uc -b
+
+      - name: Upload .deb to Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ../game_1.0-1_amd64.deb
+          asset_name: game_1.0-1_amd64.deb
+          tag: ${{ github.ref }}
