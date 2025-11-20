@@ -37,10 +37,14 @@ void GameOverState::handleInput() {
             //si opcion == 1 salimos del juego
             this->state_machine->set_game_ending(true);
         }else{
-            //si opcion == 0 volvemos al juego
-            this->state_machine->add_state(std::make_unique<MainGameState>(), true);
-
-            //this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel), true);
+            //si opcion == 0
+            if (dead) {
+                // Si murió, reiniciar el mismo nivel
+                this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel), true);
+            } else {
+                // Si completó el nivel, pasar al siguiente
+                this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel + 1), true);
+            }
         }
     }
 }
@@ -74,7 +78,11 @@ void GameOverState::render()
     if (dead) {
         subtitle = "Has muerto";
     } else {
-        subtitle = "Tiempo restante: " + std::to_string((int)remainingTime) + " s";
+        // Convertir tiempo restante a minutos:segundos
+        int minutes = (int)remainingTime / 60;
+        int seconds = (int)remainingTime % 60;
+        subtitle = "Tiempo restante: " + std::to_string(minutes) + ":" + 
+                  (seconds < 10 ? "0" : "") + std::to_string(seconds);
     }
 
     int subFontSize = 25;
@@ -84,23 +92,28 @@ void GameOverState::render()
     DrawText(subtitle.c_str(), subX, subY, subFontSize, WHITE);
 
     // --- Botones ---
-    float buttonWidth = 150;
+    float buttonWidth = 200;
     float buttonHeight = 40;
     float startX = WINDOW_WIDTH / 2.0f - buttonWidth / 2.0f;
     float startY = WINDOW_HEIGHT / 2.0f - buttonHeight;
 
-    // Botón JUGAR
+    // Texto del botón principal cambia según el estado
+    const char* mainButtonText = dead ? "REINTENTAR" : "SIGUIENTE NIVEL";
+
+    // Botón principal (REINTENTAR o SIGUIENTE NIVEL)
     Rectangle playButton = {startX, startY, buttonWidth, buttonHeight};
     Color playColor = (selectedOption == 0) ? LIGHTGRAY : DARKGRAY;
     DrawRectangleRec(playButton, playColor);
-    DrawText("JUGAR", startX + 30, startY + 5, 30, WHITE);
+    int mainTextWidth = MeasureText(mainButtonText, 24);
+    DrawText(mainButtonText, startX + (buttonWidth - mainTextWidth) / 2, startY + 8, 24, WHITE);
 
     // Botón SALIR
     startY += 100;
     Rectangle exitButton = {startX, startY, buttonWidth, buttonHeight };
     Color exitColor = (selectedOption == 1) ? LIGHTGRAY : DARKGRAY;
     DrawRectangleRec(exitButton, exitColor);
-    DrawText("SALIR", startX + 30, startY + 5, 30, WHITE);
+    int exitTextWidth = MeasureText("SALIR", 24);
+    DrawText("SALIR", startX + (buttonWidth - exitTextWidth) / 2, startY + 8, 24, WHITE);
 
     EndDrawing();
 }
