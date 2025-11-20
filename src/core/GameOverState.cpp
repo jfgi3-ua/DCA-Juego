@@ -26,7 +26,38 @@ void GameOverState::init() {
 }
 
 void GameOverState::handleInput() {
+    
 
+    Vector2 mousePos = GetMousePosition();
+    
+    // Configurar rectángulos de botones (igual que en render)
+    float buttonWidth = 250;
+    float buttonHeight = 40;
+    float startX = WINDOW_WIDTH / 2.0f - buttonWidth / 2.0f;
+    float startY = WINDOW_HEIGHT / 2.0f - buttonHeight;
+    
+    Rectangle retryButton = {startX, startY, buttonWidth, buttonHeight};
+    Rectangle exitButton = {startX, startY + 100, buttonWidth, buttonHeight};
+    
+    // Detectar hover con ratón
+    if (CheckCollisionPointRec(mousePos, retryButton)) {
+        selectedOption = 0;
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            std::cout << "Clic en REINTENTAR/SIGUIENTE" << std::endl;
+            this->state_machine->add_state(std::make_unique<MainGameState>(), true);
+            return;
+        }
+    }
+    
+    if (CheckCollisionPointRec(mousePos, exitButton)) {
+        selectedOption = 1;
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            std::cout << "Clic en SALIR" << std::endl;
+            this->state_machine->set_game_ending(true);
+            return;
+        }
+    }
+    
     // Cambiar selección menu
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_UP)) {
         selectedOption = !selectedOption; // alterna entre 0 y 1
@@ -55,8 +86,8 @@ void GameOverState::update(float) {
 void GameOverState::render()
 {
     BeginDrawing();
-    //DrawTexture(background, 0, 0, WHITE);
     ClearBackground(backgroundColor);
+    Vector2 mousePos = GetMousePosition();
 
     //CASO 0, PASAMOS NIVEL dead = 0
     //CASO 1, MORIMOS dead = 1
@@ -78,11 +109,14 @@ void GameOverState::render()
     if (dead) {
         subtitle = "Has muerto";
     } else {
-        // Convertir tiempo restante a minutos:segundos
-        int minutes = (int)remainingTime / 60;
-        int seconds = (int)remainingTime % 60;
-        subtitle = "Tiempo restante: " + std::to_string(minutes) + ":" + 
-                  (seconds < 10 ? "0" : "") + std::to_string(seconds);
+        // Convertir tiempo a minutos:segundos
+        int totalSeconds = (int)remainingTime;
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        
+        char timeStr[32];
+        snprintf(timeStr, sizeof(timeStr), "%d:%02d", minutes, seconds);
+        subtitle = "Tiempo restante: " + std::string(timeStr);
     }
 
     int subFontSize = 25;
@@ -92,28 +126,30 @@ void GameOverState::render()
     DrawText(subtitle.c_str(), subX, subY, subFontSize, WHITE);
 
     // --- Botones ---
-    float buttonWidth = 200;
+    float buttonWidth = 250;
     float buttonHeight = 40;
     float startX = WINDOW_WIDTH / 2.0f - buttonWidth / 2.0f;
     float startY = WINDOW_HEIGHT / 2.0f - buttonHeight;
 
-    // Texto del botón principal cambia según el estado
-    const char* mainButtonText = dead ? "REINTENTAR" : "SIGUIENTE NIVEL";
-
-    // Botón principal (REINTENTAR o SIGUIENTE NIVEL)
-    Rectangle playButton = {startX, startY, buttonWidth, buttonHeight};
-    Color playColor = (selectedOption == 0) ? LIGHTGRAY : DARKGRAY;
-    DrawRectangleRec(playButton, playColor);
-    int mainTextWidth = MeasureText(mainButtonText, 24);
-    DrawText(mainButtonText, startX + (buttonWidth - mainTextWidth) / 2, startY + 8, 24, WHITE);
+    // Botón REINTENTAR/SIGUIENTE NIVEL
+    Rectangle retryButton = {startX, startY, buttonWidth, buttonHeight};
+    bool retryHover = CheckCollisionPointRec(mousePos, retryButton);
+    Color retryColor = (selectedOption == 0 || retryHover) ? LIGHTGRAY : DARKGRAY;
+    DrawRectangleRec(retryButton, retryColor);
+    DrawRectangleLinesEx(retryButton, 2.0f, retryHover ? YELLOW : BLACK);
+    
+    std::string retryText = dead ? "REINTENTAR" : "SIGUIENTE NIVEL";
+    int retryTextWidth = MeasureText(retryText.c_str(), 25);
+    DrawText(retryText.c_str(), startX + (buttonWidth - retryTextWidth) / 2, startY + 7, 25, WHITE);
 
     // Botón SALIR
     startY += 100;
-    Rectangle exitButton = {startX, startY, buttonWidth, buttonHeight };
-    Color exitColor = (selectedOption == 1) ? LIGHTGRAY : DARKGRAY;
+    Rectangle exitButton = {startX, startY, buttonWidth, buttonHeight};
+    bool exitHover = CheckCollisionPointRec(mousePos, exitButton);
+    Color exitColor = (selectedOption == 1 || exitHover) ? LIGHTGRAY : DARKGRAY;
     DrawRectangleRec(exitButton, exitColor);
-    int exitTextWidth = MeasureText("SALIR", 24);
-    DrawText("SALIR", startX + (buttonWidth - exitTextWidth) / 2, startY + 8, 24, WHITE);
+    DrawRectangleLinesEx(exitButton, 2.0f, exitHover ? YELLOW : BLACK);
+    DrawText("SALIR", startX + 90, startY + 7, 25, WHITE);
 
     EndDrawing();
 }
