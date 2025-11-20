@@ -95,7 +95,11 @@ void MainGameState::update(float deltaTime)
     }
 
     // 5) IA enemigos y colisiones con jugador
-    for (auto &e : enemies) e.update(map_, deltaTime, tile_);
+    // Pasar la posición del jugador a los enemigos para el árbol de decisiones
+    Vector2 playerPos = player_.getPosition();
+    for (auto &e : enemies) {
+        e.update(map_, deltaTime, tile_, playerPos.x, playerPos.y);
+    }
 
     enemiesPos_.clear();
     for (auto &e : enemies) {
@@ -104,10 +108,12 @@ void MainGameState::update(float deltaTime)
     }
 
     for (auto &e : enemies) {
-        if (e.collidesWithPlayer(player_.getPosition().x, player_.getPosition().y, player_.getRadius()) && !player_.isInvulnerable()) {
+        if (e.collidesWithPlayer(playerPos.x, playerPos.y, player_.getRadius()) && !player_.isInvulnerable()) {
             // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
             player_.onHit(map_);
-            std::cout << "El jugador ha sido golpeado por un enemigo. " << player_.getLives() << std::endl;
+            // Notificar al enemigo que golpeó (solo los que persiguen se alejarán)
+            e.onHitPlayer();
+            std::cout << "El jugador ha sido golpeado por un enemigo. Vidas: " << player_.getLives() << std::endl;
         }
     }
 
