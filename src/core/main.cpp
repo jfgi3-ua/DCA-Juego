@@ -22,6 +22,9 @@ int main() {
   int winH = MAP_H_PX + HUD_HEIGHT;
   InitWindow(winW, winH, "Escape del Laberinto");
   SetTargetFPS(60);
+  
+  // Desactivar que ESC cierre la ventana automáticamente
+  SetExitKey(KEY_NULL);
 
   // 2) Arrancar la máquina de estados con MainGameState
   StateMachine state_machine;
