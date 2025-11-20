@@ -13,12 +13,14 @@ extern "C" {
 int main() {
   // 0) Medir el tamaño del mapa y preparar la ventana acorde
   Map tmp;
-  tmp.loadFromFile("assets/maps/map_xl_40x20.txt", TILE_SIZE);
+  tmp.loadFromFile("assets/maps/map_6.txt", TILE_SIZE);
   const int MAP_W_PX = tmp.width() * TILE_SIZE;
   const int MAP_H_PX = tmp.height() * TILE_SIZE;
 
   // 1) Crear ventana con altura extra para el HUD inferior y fijar FPS
-  InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Escape del Laberinto");
+  int winW = std::max(MAP_W_PX, WINDOW_WIDTH);
+  int winH = MAP_H_PX + HUD_HEIGHT;
+  InitWindow(winW, winH, "Escape del Laberinto");
   SetTargetFPS(60);
 
   // 2) Arrancar la máquina de estados con MainGameState
