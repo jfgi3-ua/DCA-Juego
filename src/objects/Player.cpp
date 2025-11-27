@@ -42,8 +42,13 @@ void Player::handleInput(float deltaTime, const Map& map, const std::vector<Vect
     int targetX = cellX + dx;
     int targetY = cellY + dy;
     
+    // Verificar límites del mapa (incluso en NoClip)
+    if (targetX < 0 || targetX >= map.width() || targetY < 0 || targetY >= map.height()) {
+        return; // No permitir salir del mapa
+    }
+    
     // Comprobar colisión en la posición objetivo (evita tocar esquinas)
-    // En modo noClip se puede atravesar paredes
+    // En modo noClip se puede atravesar paredes INTERNAS, pero no los bordes del mapa
     Vector2 centerTarget = { targetX * (float)tileSize + tileSize / 2.0f,
                              targetY * (float)tileSize + tileSize / 2.0f };
     if (!noClip_ && checkCollisionWithWalls(centerTarget, map, blockedTiles)) return;
@@ -85,10 +90,8 @@ void Player::render(int ox, int oy) const
 {
     Vector2 p = { position_.x + (float)ox, position_.y + (float)oy };
     
-    // Color según el modo activo
-    Color playerColor = BLUE;
-    if (godMode_) playerColor = GOLD; // Dorado en God Mode
-    else if (noClip_) playerColor = PURPLE; // Púrpura en NoClip
+    // Color: DORADO si hay algún cheat activo, AZUL normal
+    Color playerColor = hasAnyCheatsActive() ? GOLD : BLUE;
     
     if (invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION && !godMode_) {
         // Parpadeo de invulnerabilidad (no en god mode)
