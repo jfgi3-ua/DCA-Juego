@@ -51,19 +51,7 @@ class MainGameState : public GameState
         float levelTime_ = 30.0f;
 
         // ========== DEVELOPER MODE ==========
-        bool devModeActive_ = false;
-        bool devMenuOpen_ = false;
-        bool awaitingPassword_ = false;
-        std::string passwordInput_ = "";
-        int selectedDevOption_ = 0;
-        
-        // Developer cheats activos
-        bool godMode_ = false;           // Invulnerabilidad permanente
         bool freezeEnemies_ = false;     // Enemigos congelados
         bool infiniteTime_ = false;      // Tiempo infinito
-        bool noClip_ = false;            // Atravesar paredes
-        
-        void handleDevModeInput();
-        void renderDevMenu();
-        void applyDevCheat(int option);
+        bool keyGivenByCheating_ = false; // Track si la llave fue obtenida por cheat
 };

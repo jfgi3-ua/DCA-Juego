@@ -50,6 +50,9 @@ class Player {
         bool isGodMode() const { return godMode_; }
         bool isNoClip() const { return noClip_; }
         
+        // Verificar si algún cheat está activo (para color GOD)
+        bool hasAnyCheatsActive() const { return godMode_ || noClip_; }
+        
     private:
         // Posición
         Vector2 position_ = {0, 0};

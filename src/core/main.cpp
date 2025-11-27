@@ -36,13 +36,29 @@ int main() {
   while (!WindowShouldClose() && !state_machine.is_game_ending()) {
     delta_time = GetFrameTime();
 
-    // 1 - Capturar input
-    // 2 - Procesar lógica
-    // 3 - Renderizar
     state_machine.handle_state_changes(delta_time);
-    state_machine.getCurrentState()->handleInput();
-    state_machine.getCurrentState()->update(delta_time);
+    
+    // Si hay overlay, solo procesar input del overlay
+    if (state_machine.hasOverlay()) {
+      state_machine.getOverlayState()->handleInput();
+      // NO actualizar el juego si hay overlay (pausa)
+    } else {
+      state_machine.getCurrentState()->handleInput();
+      state_machine.getCurrentState()->update(delta_time);
+    }
+    
+    // Renderizar: BeginDrawing una sola vez
+    BeginDrawing();
+    
+    // Primero el estado principal
     state_machine.getCurrentState()->render();
+    
+    // Luego el overlay encima
+    if (state_machine.hasOverlay()) {
+      state_machine.getOverlayState()->render();
+    }
+    
+    EndDrawing();
   }
 
   // 4) Cerrar ventana

@@ -67,8 +67,6 @@ void StartGameState::update(float) {
 }
 
 void StartGameState::render() {
-    BeginDrawing();
-
     ClearBackground(backgroundColor);
     Vector2 mousePos = GetMousePosition();
 
@@ -94,6 +92,4 @@ void StartGameState::render() {
     DrawRectangleRec(exitButton, exitColor);
     DrawRectangleLinesEx(exitButton, 2.0f, exitHover ? YELLOW : BLACK);
     DrawText("SALIR", startX + 30, startY + 5, 30, WHITE);
-
-    EndDrawing();
 }
