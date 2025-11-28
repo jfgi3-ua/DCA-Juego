@@ -10,6 +10,7 @@ add_executable(game)
 target_sources(game PRIVATE
     src/core/main.cpp
     src/core/GameOverState.cpp
+    src/core/DevModeState.cpp
     src/core/MainGameState.cpp
     src/core/StartGameState.cpp
     src/core/StateMachine.cpp
