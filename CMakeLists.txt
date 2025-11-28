@@ -3,7 +3,21 @@ cmake_minimum_required(VERSION 3.10)
 project(game
     VERSION 0.3
     DESCRIPTION "Laberinto"
+    LANGUAGES CXX
 )
+
+# Configuración de raylib multiplataforma
+include(FetchContent)
+
+# Descargar raylib automáticamente si no está disponible
+FetchContent_Declare(
+    raylib
+    GIT_REPOSITORY https://github.com/raysan5/raylib.git
+    GIT_TAG master   # versión estable actual
+)
+
+# Construir raylib dentro del proyecto
+FetchContent_MakeAvailable(raylib)
 
 # Ejecutable principal
 add_executable(game)
