@@ -1,9 +1,10 @@
-game (0.2.1) UNRELEASED; urgency=medium
+game (0.2.2) UNRELEASED; urgency=medium
 
   * Probando dhc -v, Cambiamos a version a x.x.x. CAmbiamos workflow
   * 
+  * Añadimos al help del makefile y cambios en el action
 
- -- Esther <esther@ASUS-Esther>  Fri, 28 Nov 2025 13:38:43 +0100
+ -- Esther <esther@ASUS-Esther>  Fri, 28 Nov 2025 14:00:51 +0100
 
 game (0.0-1) unstable; urgency=medium
 

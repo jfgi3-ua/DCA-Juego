@@ -33,8 +33,13 @@ jobs:
           make dist
           echo "Build completed!"
 
+      - name: Move .deb inside workspace
+        run: |
+          mkdir -p artifacts
+          mv ../game_*_amd64.deb artifacts/
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: debian-package
-          path: "../game_*_amd64.deb"
+          path: artifacts/game_*_amd64.deb
