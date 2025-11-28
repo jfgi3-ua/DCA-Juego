@@ -217,7 +217,7 @@ uninstall:
 dist: clean
 	@echo "$(BLUE)[DIST] Construyendo paquete .deb con dpkg-buildpackage...$(RESET)"
 	dpkg-buildpackage -us -uc -b
-	@echo "$(GREEN)[DIST] Paquete .deb generado (si el directorio debian/ está bien configurado).$(RESET)"
+	@echo "$(GREEN)[DIST] Paquete .deb generado.$(RESET)"
 
 
 # =========================
@@ -236,3 +236,6 @@ help:
 	@echo "  make ccache-stats            -> Muestra estadísticas de ccache"
 	@echo "  make ccache-zero             -> Pone a cero las estadísticas"
 	@echo "  make ccache-clear            -> Limpia la caché de compilación"
+	@echo "  make install [DESTDIR=...]   -> Crea la instalación FHS (usa DESTDIR para empaquetado)"
+	@echo "  make uninstall [DESTDIR=...] -> Elimina los archivos creados por install"
+	@echo "  make dist                    -> Crea un paquete .deb usando dpkg-buildpackage"
