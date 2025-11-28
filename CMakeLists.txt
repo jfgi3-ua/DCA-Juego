@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 
+# Si no se define el tipo de build, usar Release por defecto
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+endif()
+
+
 project(game
     VERSION 0.3
     DESCRIPTION "Laberinto"
