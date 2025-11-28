@@ -14,7 +14,7 @@ extern "C" {
 class MainGameState : public GameState
 {
     public:
-        MainGameState();
+        MainGameState(int level = 1);
         ~MainGameState() = default;
 
         void init() override;
@@ -33,6 +33,7 @@ class MainGameState : public GameState
         // Mapa del juego
         Map map_;
         int tile_ = 32;
+        int level_ = 1;
 
         // Jugador
         Player player_;
@@ -46,6 +47,11 @@ class MainGameState : public GameState
         //Mecanismos
         std::vector<Mechanism> mechanisms_;
         std::vector<Vector2> activeMechanisms_;
-        // Temporizador del nivel (segundos). Empieza en 60s por defecto.
-        float levelTime_ = 120.0f;
+        // Temporizador del nivel (segundos). 30s base + 30s por nivel
+        float levelTime_ = 30.0f;
+
+        // ========== DEVELOPER MODE ==========
+        bool freezeEnemies_ = false;     // Enemigos congelados
+        bool infiniteTime_ = false;      // Tiempo infinito
+        bool keyGivenByCheating_ = false; // Track si la llave fue obtenida por cheat
 };

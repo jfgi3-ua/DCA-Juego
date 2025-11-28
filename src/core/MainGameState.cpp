@@ -1,5 +1,6 @@
 #include "MainGameState.hpp"
 #include "GameOverState.hpp"
+#include "DevModeState.hpp"
 #include "StateMachine.hpp"
 #include "objects/Enemy.hpp"
 #include <iostream>
@@ -9,15 +10,17 @@ extern "C" {
 
 static std::vector<Enemy> enemies;
 
-MainGameState::MainGameState()
+MainGameState::MainGameState(int level)
 {
+    level_ = level > 0 ? level : 1;
 }
 
 void MainGameState::init()
 {
-    std::cout << "You are in the Main Game State" << std::endl;
+    std::cout << "You are in the Main Game State, level " << level_ << std::endl;
 
-    map_.loadFromFile("assets/maps/map_m_20x16.txt", 32);
+    std::string path = "assets/maps/map_" + std::to_string(level_) + ".txt";
+    map_.loadFromFile(path, 32);
     tile_ = map_.tile();
 
     IVec2 p = map_.playerStart();
@@ -43,27 +46,34 @@ void MainGameState::init()
         mechanisms_.emplace_back(m.id, m.trigger, m.target);
     }
 
-    // Inicializar temporizador de nivel a 60 segundos al iniciar el estado
-    levelTime_ = 120.0f;
+    // Inicializar temporizador: 30s base + 30s por cada nivel adicional
+    levelTime_ = 30.0f + (level_ - 1) * 30.0f;
 }
 
 void MainGameState::handleInput()
 {
-    if(IsKeyPressed(KEY_SPACE)){
-        this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, 1.0f), true);
+    // Activar menú de desarrollador con CTRL+D
+    if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_D)) {
+        this->state_machine->add_overlay_state(
+            std::make_unique<DevModeState>(&player_, &levelTime_, &freezeEnemies_, &infiniteTime_, &keyGivenByCheating_, level_)
+        );
+        return;
     }
 }
 
 void MainGameState::update(float deltaTime)
 {
     activeMechanisms(); //actualizamos un vector con todos los mecanismos activos
-    // Reducir temporizador de nivel
-    levelTime_ -= deltaTime;
-    if (levelTime_ <= 0.0f) {
-        levelTime_ = 0.0f;
-        // Tiempo agotado -> Game Over (dead = true), pasar tiempo restante = 0
-        this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, levelTime_), true);
-        return;
+    
+    // Reducir temporizador de nivel (excepto si está en modo tiempo infinito)
+    if (!infiniteTime_) {
+        levelTime_ -= deltaTime;
+        if (levelTime_ <= 0.0f) {
+            levelTime_ = 0.0f;
+            // Tiempo agotado -> Game Over (dead = true)
+            this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, 0.0f), true);
+            return;
+        }
     }
 
     // 1) Actualizar (movimiento) jugador con colisiones de mapa
@@ -89,12 +99,21 @@ void MainGameState::update(float deltaTime)
     // 4) ¿Está sobre la salida 'X' y tiene la llave? -> Nivel completado
     if (player_.isOnExit(map_) && player_.hasKey()) {
         std::cout << "Nivel completado" << std::endl;
-        // Pasar tiempo restante al GameOverState (dead = false)
-        this->state_machine->add_state(std::make_unique<GameOverState>(1, 0, levelTime_), true);
+        // Pasar a pantalla de nivel completado (dead = false)
+        this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_), true);
+        return;
     }
 
     // 5) IA enemigos y colisiones con jugador
-    for (auto &e : enemies) e.update(map_, deltaTime, tile_);
+    // Pasar la posición del jugador a los enemigos para el árbol de decisiones
+    Vector2 playerPos = player_.getPosition();
+    
+    // Solo actualizar enemigos si no están congelados
+    if (!freezeEnemies_) {
+        for (auto &e : enemies) {
+            e.update(map_, deltaTime, tile_, playerPos.x, playerPos.y);
+        }
+    }
 
     enemiesPos_.clear();
     for (auto &e : enemies) {
@@ -103,10 +122,12 @@ void MainGameState::update(float deltaTime)
     }
 
     for (auto &e : enemies) {
-        if (e.collidesWithPlayer(player_.getPosition().x, player_.getPosition().y, player_.getRadius()) && !player_.isInvulnerable()) {
+        if (e.collidesWithPlayer(playerPos.x, playerPos.y, player_.getRadius()) && !player_.isInvulnerable()) {
             // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
             player_.onHit(map_);
-            std::cout << "El jugador ha sido golpeado por un enemigo. " << player_.getLives() << std::endl;
+            // Notificar al enemigo que golpeó (solo los que persiguen se alejarán)
+            e.onHitPlayer();
+            std::cout << "El jugador ha sido golpeado por un enemigo. Vidas: " << player_.getLives() << std::endl;
         }
     }
 
@@ -123,8 +144,9 @@ void MainGameState::update(float deltaTime)
     // 7) Si el jugador no tiene vidas, cambiar al estado de Game Over
     if (player_.getLives() <= 0) {
         std::cout << "Game Over: El jugador no tiene más vidas." << std::endl;
-        // Pasar tiempo restante (puede ser 0) al GameOverState donde dead = true
-        this->state_machine->add_state(std::make_unique<GameOverState>(1, 1, levelTime_), true);
+        // Game Over por muerte (dead = true)
+        this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, levelTime_), true);
+        return;
     }
 
     //7 Mecanismos, cmprobar si el jugador está sobre un trigger q no este activo
@@ -139,16 +161,15 @@ void MainGameState::update(float deltaTime)
 
 void MainGameState::render()
 {
-    BeginDrawing();
     ClearBackground(RAYWHITE);
 
     // Dimensiones
     const int mapWpx = map_.width()  * tile_;
     const int mapHpx = map_.height() * tile_;
     const int viewW  = GetScreenWidth();
-    const int viewH  = GetScreenHeight() - HUD_HEIGHT;
+    const int viewH  = GetScreenHeight() - HUD_HEIGHT; // Espacio disponible sin el HUD
 
-    // Offset centrado (clamp >= 0)
+    // Offset centrado (clamp >= 0) - El mapa queda centrado en el espacio disponible
     const int ox = std::max(0, (viewW - mapWpx) / 2);
     const int oy = std::max(0, (viewH - mapHpx) / 2);
 
@@ -192,8 +213,8 @@ void MainGameState::render()
     spikes_.render(ox, oy);
 
 
-    // 4) HUD inferior
-    const float baseY = (float)(oy + mapHpx); // empieza justo bajo el mapa
+    // 4) HUD inferior - se coloca en la parte inferior de la ventana
+    const float baseY = (float)(GetScreenHeight() - HUD_HEIGHT); // HUD siempre abajo
     // Fondo del HUD a lo ancho de la ventana
     Rectangle hudBg{ 0.0f, baseY, (float)GetScreenWidth(), (float)HUD_HEIGHT };
     DrawRectangleRec(hudBg, Fade(BLACK, 0.06f));
@@ -232,11 +253,18 @@ void MainGameState::render()
         }
     }
 
-    // Mostrar temporizador centrado encima del HUD
+    // Mostrar temporizador centrado encima del HUD (formato mm:ss)
     int timerFont = 22;
-    std::string timeText = "Tiempo: " + std::to_string((int)levelTime_) + "s";
+    int minutes = (int)levelTime_ / 60;
+    int seconds = (int)levelTime_ % 60;
+    std::string timeText = "Tiempo: " + std::to_string(minutes) + ":" + 
+                          (seconds < 10 ? "0" : "") + std::to_string(seconds);
     int textW = MeasureText(timeText.c_str(), timerFont);
     DrawText(timeText.c_str(), (GetScreenWidth() - textW) / 2, (int)baseY + 8, timerFont, DARKGRAY);
+
+    // Mostrar nivel actual arriba a la izquierda
+    std::string levelText = "Nivel: " + std::to_string(level_);
+    DrawText(levelText.c_str(), 10, 10, 24, DARKGRAY);
 
     // 5) Mensaje contextual por encima del HUD
     const int cx = (int)(player_.getPosition().x / tile_);
@@ -251,8 +279,6 @@ void MainGameState::render()
             DrawText(msg, (GetScreenWidth()-textW)/2, textY, font, MAROON);
         }
     }
-
-    EndDrawing();
 }
 
 void MainGameState::activeMechanisms() {
