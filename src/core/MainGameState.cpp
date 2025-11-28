@@ -71,7 +71,7 @@ void MainGameState::update(float deltaTime)
         if (levelTime_ <= 0.0f) {
             levelTime_ = 0.0f;
             // Tiempo agotado -> Game Over (dead = true)
-            this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, 0.0f), true);
+            this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, 0.0f, false), true);
             return;
         }
     }
@@ -100,7 +100,7 @@ void MainGameState::update(float deltaTime)
     if (player_.isOnExit(map_) && player_.hasKey()) {
         std::cout << "Nivel completado" << std::endl;
         // Pasar a pantalla de nivel completado (dead = false)
-        this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_), true);
+        this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, false), true);
         return;
     }
 
@@ -145,7 +145,7 @@ void MainGameState::update(float deltaTime)
     if (player_.getLives() <= 0) {
         std::cout << "Game Over: El jugador no tiene más vidas." << std::endl;
         // Game Over por muerte (dead = true)
-        this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, levelTime_), true);
+        this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, levelTime_, false), true);
         return;
     }
 

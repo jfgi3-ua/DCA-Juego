@@ -7,14 +7,13 @@ extern "C" {
     #include <raylib.h>
 }
 
-GameOverState::GameOverState(int nivel, bool die, float time)
+GameOverState::GameOverState(int nivel, bool die, float time, bool isVictory)
 {
     dead = die;
     remainingTime = time;
-    backgroundColor = dead ? RED : DARKGREEN;
-    currentLevel = nivel; //queremos enseñar el nivel?, pasar de nivel se gestiona en main o en esta clase?
-    //en caso de gestionar el nivel en GameOver
-    //currentLevel = dead ? nivel : nivel++;
+    isVictory_ = isVictory;
+    backgroundColor = isVictory_ ? GOLD : (dead ? RED : DARKGREEN);
+    currentLevel = nivel;
 }
 
 GameOverState::~GameOverState() {
@@ -43,8 +42,16 @@ void GameOverState::handleInput() {
     if (CheckCollisionPointRec(mousePos, retryButton)) {
         selectedOption = 0;
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            std::cout << "Clic en REINTENTAR/SIGUIENTE" << std::endl;
-            this->state_machine->add_state(std::make_unique<MainGameState>(), true);
+            if (isVictory_) {
+                std::cout << "Clic en EMPEZAR DE NUEVO" << std::endl;
+                this->state_machine->add_state(std::make_unique<MainGameState>(1), true);
+            } else if (!dead && currentLevel >= 6) {
+                // Completó el último nivel, mostrar pantalla de victoria
+                this->state_machine->add_state(std::make_unique<GameOverState>(6, false, remainingTime, true), true);
+            } else {
+                std::cout << "Clic en REINTENTAR/SIGUIENTE" << std::endl;
+                this->state_machine->add_state(std::make_unique<MainGameState>(), true);
+            }
             return;
         }
     }
@@ -69,9 +76,15 @@ void GameOverState::handleInput() {
             this->state_machine->set_game_ending(true);
         }else{
             //si opcion == 0
-            if (dead) {
+            if (isVictory_) {
+                // Victoria total: empezar de nuevo desde nivel 1
+                this->state_machine->add_state(std::make_unique<MainGameState>(1), true);
+            } else if (dead) {
                 // Si murió, reiniciar el mismo nivel
                 this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel), true);
+            } else if (currentLevel >= 6) {
+                // Si completó el nivel 6 (último), mostrar pantalla de victoria
+                this->state_machine->add_state(std::make_unique<GameOverState>(6, false, remainingTime, true), true);
             } else {
                 // Si completó el nivel, pasar al siguiente
                 this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel + 1), true);
@@ -88,24 +101,26 @@ void GameOverState::render()
     ClearBackground(backgroundColor);
     Vector2 mousePos = GetMousePosition();
 
-    //CASO 0, PASAMOS NIVEL dead = 0
-    //CASO 1, MORIMOS dead = 1
-
     // --- TÍTULO PRINCIPAL ---
-    std::string title = dead
-        ? "GAME OVER"
-        : "NIVEL " + std::to_string(currentLevel) + " COMPLETADO";
+    std::string title;
+    if (isVictory_) {
+        title = "¡FELICIDADES!";
+    } else {
+        title = dead ? "GAME OVER" : "NIVEL " + std::to_string(currentLevel) + " COMPLETADO";
+    }
 
-    int titleFontSize = 50;
+    int titleFontSize = isVictory_ ? 60 : 50;
     int titleWidth = MeasureText(title.c_str(), titleFontSize);
     int titleX = (WINDOW_WIDTH - titleWidth) / 2;
-    int titleY = WINDOW_HEIGHT / 4;
+    int titleY = isVictory_ ? WINDOW_HEIGHT / 5 : WINDOW_HEIGHT / 4;
 
-    DrawText(title.c_str(), titleX, titleY, titleFontSize, WHITE);
+    DrawText(title.c_str(), titleX, titleY, titleFontSize, isVictory_ ? DARKGREEN : WHITE);
 
     // --- SUBTÍTULO ---
     std::string subtitle;
-    if (dead) {
+    if (isVictory_) {
+        subtitle = "Has completado todos los niveles";
+    } else if (dead) {
         subtitle = "Has muerto";
     } else {
         // Convertir tiempo a minutos:segundos
@@ -118,26 +133,36 @@ void GameOverState::render()
         subtitle = "Tiempo restante: " + std::string(timeStr);
     }
 
-    int subFontSize = 25;
+    int subFontSize = isVictory_ ? 30 : 25;
     int subWidth = MeasureText(subtitle.c_str(), subFontSize);
     int subX = (WINDOW_WIDTH - subWidth) / 2;
-    int subY = titleY + 70;
-    DrawText(subtitle.c_str(), subX, subY, subFontSize, WHITE);
+    int subY = titleY + (isVictory_ ? 80 : 70);
+    DrawText(subtitle.c_str(), subX, subY, subFontSize, isVictory_ ? DARKBROWN : WHITE);
+    
+    // --- MENSAJE ADICIONAL (solo en victoria) ---
+    if (isVictory_) {
+        std::string message = "¡Eres un maestro del laberinto!";
+        int msgFontSize = 22;
+        int msgWidth = MeasureText(message.c_str(), msgFontSize);
+        int msgX = (WINDOW_WIDTH - msgWidth) / 2;
+        int msgY = subY + 50;
+        DrawText(message.c_str(), msgX, msgY, msgFontSize, BROWN);
+    }
 
     // --- Botones ---
     float buttonWidth = 250;
     float buttonHeight = 40;
     float startX = WINDOW_WIDTH / 2.0f - buttonWidth / 2.0f;
-    float startY = WINDOW_HEIGHT / 2.0f - buttonHeight;
+    float startY = isVictory_ ? WINDOW_HEIGHT / 2.0f + 50 : WINDOW_HEIGHT / 2.0f - buttonHeight;
 
-    // Botón REINTENTAR/SIGUIENTE NIVEL
+    // Botón REINTENTAR/SIGUIENTE NIVEL/EMPEZAR DE NUEVO
     Rectangle retryButton = {startX, startY, buttonWidth, buttonHeight};
     bool retryHover = CheckCollisionPointRec(mousePos, retryButton);
     Color retryColor = (selectedOption == 0 || retryHover) ? LIGHTGRAY : DARKGRAY;
     DrawRectangleRec(retryButton, retryColor);
     DrawRectangleLinesEx(retryButton, 2.0f, retryHover ? YELLOW : BLACK);
     
-    std::string retryText = dead ? "REINTENTAR" : "SIGUIENTE NIVEL";
+    std::string retryText = isVictory_ ? "EMPEZAR DE NUEVO" : (dead ? "REINTENTAR" : "SIGUIENTE NIVEL");
     int retryTextWidth = MeasureText(retryText.c_str(), 25);
     DrawText(retryText.c_str(), startX + (buttonWidth - retryTextWidth) / 2, startY + 7, 25, WHITE);
 
