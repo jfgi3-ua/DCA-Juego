@@ -1,8 +1,9 @@
-game (0.0.2) UNRELEASED; urgency=medium
+game (0.2.1) UNRELEASED; urgency=medium
 
   * Probando dhc -v, Cambiamos a version a x.x.x. CAmbiamos workflow
+  * 
 
- -- Esther <esther@ASUS-Esther>  Mon, 24 Nov 2025 21:16:10 +0100
+ -- Esther <esther@ASUS-Esther>  Fri, 28 Nov 2025 13:38:43 +0100
 
 game (0.0-1) unstable; urgency=medium
 

@@ -37,4 +37,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: debian-package
-          path: "dist/*.deb"
+          path: "../game_*_amd64.deb"
