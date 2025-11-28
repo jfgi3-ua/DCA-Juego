@@ -58,3 +58,7 @@ Thumbs.db
 
 # Binario principal
 game
+
+# Directorio de build (artefactos de compilación)
+/build/
+build/**
