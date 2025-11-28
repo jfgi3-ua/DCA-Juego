@@ -38,8 +38,11 @@ target_sources(game PRIVATE
     src/objects/Spikes.cpp
 )
 
-# Exponer el directorio src para que las includes como "objects/Map.hpp" funcionen
-target_include_directories(game PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/vendor/include)
+# Para que busque los includes propios del proyecto y de vendor
+target_include_directories(game PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/vendor/include
+)
 
 # Colocar binarios en build/bin para que queden localizados dentro del árbol de build
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
