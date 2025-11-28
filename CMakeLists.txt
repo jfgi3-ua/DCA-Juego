@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(game
-    VERSION 0.2
+    VERSION 0.3
     DESCRIPTION "Laberinto"
 )
 
+# Ejecutable principal
 add_executable(game)
 
+# Fuentes del proyecto
 target_sources(game PRIVATE
     src/core/main.cpp
     src/core/GameOverState.cpp
