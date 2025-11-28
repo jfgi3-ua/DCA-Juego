@@ -17,7 +17,7 @@ target_sources(game PRIVATE
     src/objects/Player.cpp
     src/objects/Enemy.cpp
     src/objects/Map.cpp
-    src/objects/Mechanisim.cpp
+    src/objects/Mechanism.cpp
     src/objects/Spikes.cpp
 )
 
