@@ -62,6 +62,9 @@ class Map {
 
         // Llaves detectadas en el mapa
         const std::vector<IVec2>& keyPositions() const { return _keys; }
+        
+        // Obtener total de llaves en el mapa
+        int getTotalKeys() const { return static_cast<int>(_keys.size()); }
 
         // “Retirar” un elemento del mapa (ej. llave)
         // Reemplaza la celda (x,y) por 'replacement' (por defecto, suelo '.').
