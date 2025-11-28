@@ -1,0 +1,45 @@
+name: Build Debian Package
+
+on:
+  workflow_dispatch:
+  push:
+    tags: 
+      - '*.*.*'
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential debhelper devscripts libgl1-mesa-dev libx11-dev xorg-dev
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Build .deb package with make dist
+        run: |
+          make dist
+          echo "Build completed!"
+
+      - name: Move .deb inside workspace
+        run: |
+          mkdir -p artifacts
+          mv ../game_*_amd64.deb artifacts/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: debian-package
+          path: artifacts/game_*_amd64.deb
