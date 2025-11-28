@@ -40,6 +40,18 @@ class Player {
         // Gestionar vida al recibir daño
         void onHit(const Map& map);
         bool isInvulnerable() const;
+
+        // ========== MÉTODOS PARA DEVELOPER MODE ==========
+        void setGodMode(bool enabled) { godMode_ = enabled; }
+        void setNoClip(bool enabled) { noClip_ = enabled; }
+        void addLife() { if (lives_ < 10) lives_++; }
+        void setMaxLives() { lives_ = 10; }
+        void resetLives() { lives_ = 5; }
+        bool isGodMode() const { return godMode_; }
+        bool isNoClip() const { return noClip_; }
+        
+        // Verificar si algún cheat está activo (para color GOD)
+        bool hasAnyCheatsActive() const { return godMode_ || noClip_; }
         
     private:
         // Posición
@@ -73,4 +85,8 @@ class Player {
         
         // Segundos por casilla (calculado en base a tile/speed)
         float move_duration_ = 0.12f; 
+
+        // Developer mode flags
+        bool godMode_ = false;
+        bool noClip_ = false;
 };

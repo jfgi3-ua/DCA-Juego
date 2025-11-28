@@ -17,19 +17,47 @@ void StartGameState::init() {
 }
 
 void StartGameState::handleInput() {
-    // Cambiar selección menu
+    Vector2 mousePos = GetMousePosition();
+    
+    // Configurar rectángulos de botones (igual que en render)
+    float buttonWidth = 150;
+    float buttonHeight = 40;
+    float startX = WINDOW_WIDTH / 2.0f - buttonWidth / 2.0f;
+    float startY = WINDOW_HEIGHT / 2.0f - buttonHeight;
+    
+    Rectangle playButton = {startX, startY, buttonWidth, buttonHeight};
+    Rectangle exitButton = {startX, startY + 100, buttonWidth, buttonHeight};
+    
+    // Detectar hover con ratón
+    if (CheckCollisionPointRec(mousePos, playButton)) {
+        selectedOption = 0;
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            std::cout << "Clic en JUGAR" << std::endl;
+            this->state_machine->add_state(std::make_unique<MainGameState>(), true);
+            return;
+        }
+    }
+    
+    if (CheckCollisionPointRec(mousePos, exitButton)) {
+        selectedOption = 1;
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            std::cout << "Clic en SALIR" << std::endl;
+            this->state_machine->set_game_ending(true);
+            return;
+        }
+    }
+    
+    // Cambiar selección menu con teclado
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_UP)) {
         std::cout << "Tecla arriba/abajo presionada." << std::endl;
-        selectedOption = !selectedOption; // alterna entre 0 y 1
+        selectedOption = !selectedOption;
     }
 
     if (IsKeyPressed(KEY_ENTER)) {
         std::cout << "Tecla enter presionada." << std::endl;
         if(selectedOption){
-            //si opcion == 1 salimos del juego
             this->state_machine->set_game_ending(true);
         }else{
-            //si opcion == 0 pasamos al juego
             this->state_machine->add_state(std::make_unique<MainGameState>(), true);
         }
     }
@@ -39,10 +67,8 @@ void StartGameState::update(float) {
 }
 
 void StartGameState::render() {
-    BeginDrawing();
-
-    //DrawTexture(background, 0, 0, WHITE);
     ClearBackground(backgroundColor);
+    Vector2 mousePos = GetMousePosition();
 
      // --- Botones ---
     float buttonWidth = 150;
@@ -52,16 +78,18 @@ void StartGameState::render() {
 
     // Botón JUGAR
     Rectangle playButton = {startX, startY, buttonWidth, buttonHeight};
-    Color playColor = (selectedOption == 0) ? LIGHTGRAY : DARKGRAY;
+    bool playHover = CheckCollisionPointRec(mousePos, playButton);
+    Color playColor = (selectedOption == 0 || playHover) ? LIGHTGRAY : DARKGRAY;
     DrawRectangleRec(playButton, playColor);
+    DrawRectangleLinesEx(playButton, 2.0f, playHover ? YELLOW : BLACK);
     DrawText("JUGAR", startX + 30, startY + 5, 30, WHITE);
 
     // Botón SALIR
     startY += 100;
     Rectangle exitButton = {startX, startY, buttonWidth, buttonHeight };
-    Color exitColor = (selectedOption == 1) ? LIGHTGRAY : DARKGRAY;
+    bool exitHover = CheckCollisionPointRec(mousePos, exitButton);
+    Color exitColor = (selectedOption == 1 || exitHover) ? LIGHTGRAY : DARKGRAY;
     DrawRectangleRec(exitButton, exitColor);
+    DrawRectangleLinesEx(exitButton, 2.0f, exitHover ? YELLOW : BLACK);
     DrawText("SALIR", startX + 30, startY + 5, 30, WHITE);
-
-    EndDrawing();
 }

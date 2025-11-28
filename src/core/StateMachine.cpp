@@ -4,6 +4,8 @@
 StateMachine::StateMachine()
 {
     this->new_state = nullptr;
+    this->overlay_state = nullptr;
+    this->new_overlay_state = nullptr;
 }
 
 void StateMachine::add_state(std::unique_ptr<GameState> newState, bool is_replacing)
@@ -12,6 +14,17 @@ void StateMachine::add_state(std::unique_ptr<GameState> newState, bool is_replac
     this->is_Replacing = is_replacing;
     // El nuevo estado se almacena en la variable miembro new_state usando std::move, lo que transfiere la propiedad del puntero único al objeto StateMachine. De este modo, el nuevo estado queda listo para ser gestionado cuando la máquina procese los cambios de estado.
     this->new_state = std::move(newState);
+}
+
+void StateMachine::add_overlay_state(std::unique_ptr<GameState> newState)
+{
+    is_adding_overlay = true;
+    this->new_overlay_state = std::move(newState);
+}
+
+void StateMachine::remove_overlay_state()
+{
+    is_removing_overlay = true;
 }
 
 void StateMachine::remove_state(bool value)
@@ -23,6 +36,25 @@ void StateMachine::remove_state(bool value)
 //  deltaTime representa el tiempo transcurrido desde el último fotograma, y que puede ser reiniciado durante los cambios de estado para evitar inconsistencias en la lógica del juego
 void StateMachine::handle_state_changes(float &deltaTime)
 {
+    // Manejar overlay states
+    if (this->is_removing_overlay && this->overlay_state)
+    {
+        this->overlay_state.reset();
+        this->is_removing_overlay = false;
+    }
+    
+    if (this->is_adding_overlay)
+    {
+        if (this->new_overlay_state)
+        {
+            this->new_overlay_state->setStateMachine(this);
+            this->overlay_state = std::move(this->new_overlay_state);
+            this->overlay_state->init();
+        }
+        this->is_adding_overlay = false;
+    }
+    
+    // Manejar estados normales
     if (this->is_removing && !this->states_machine.empty())
     {
         this->states_machine.pop();

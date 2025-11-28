@@ -42,10 +42,16 @@ void Player::handleInput(float deltaTime, const Map& map, const std::vector<Vect
     int targetX = cellX + dx;
     int targetY = cellY + dy;
     
+    // Verificar límites del mapa (incluso en NoClip)
+    if (targetX < 0 || targetX >= map.width() || targetY < 0 || targetY >= map.height()) {
+        return; // No permitir salir del mapa
+    }
+    
     // Comprobar colisión en la posición objetivo (evita tocar esquinas)
+    // En modo noClip se puede atravesar paredes INTERNAS, pero no los bordes del mapa
     Vector2 centerTarget = { targetX * (float)tileSize + tileSize / 2.0f,
                              targetY * (float)tileSize + tileSize / 2.0f };
-    if (checkCollisionWithWalls(centerTarget, map, blockedTiles)) return;
+    if (!noClip_ && checkCollisionWithWalls(centerTarget, map, blockedTiles)) return;
 
     // Guardar última dirección de movimiento
     lastMoveDir_ = position_;
@@ -83,14 +89,18 @@ void Player::update(float deltaTime, const Map& map, const std::vector<Vector2>&
 void Player::render(int ox, int oy) const
 {
     Vector2 p = { position_.x + (float)ox, position_.y + (float)oy };
-    if (invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION) {
-        // Parpadeo de invulnerabilidad
+    
+    // Color: DORADO si hay algún cheat activo, AZUL normal
+    Color playerColor = hasAnyCheatsActive() ? GOLD : BLUE;
+    
+    if (invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION && !godMode_) {
+        // Parpadeo de invulnerabilidad (no en god mode)
         int blinkFrequency = 10; // Frecuencia de parpadeo
         if (static_cast<int>(invulnerableTimer_ * blinkFrequency) % 2 == 0) {
-            DrawCircleV(p, radius_, BLUE);
+            DrawCircleV(p, radius_, playerColor);
         }
     } else {
-        DrawCircleV(p, radius_, BLUE);
+        DrawCircleV(p, radius_, playerColor);
     }
 }
 
@@ -151,6 +161,9 @@ bool Player::isOnExit(const Map& map) const
 
 void Player::onHit(const Map& map) 
 {
+    // En modo God, no recibe daño
+    if (godMode_) return;
+    
     // Si no está en periodo de invulnerabilidad (valor >= INVULNERABLE_DURATION) o es el estado inicial (<= 0.0),
     // recibe daño y se inicia el conteo desde 0.0 hasta INVULNERABLE_DURATION.
     if (lives_ > 0 && !isInvulnerable()) {
@@ -173,5 +186,8 @@ void Player::onHit(const Map& map)
 
 bool Player::isInvulnerable() const
 {
+    // God mode es invulnerabilidad permanente
+    if (godMode_) return true;
+    
     return invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION;
 }
