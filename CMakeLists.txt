@@ -44,5 +44,19 @@ target_include_directories(game PRIVATE
     ${CMAKE_SOURCE_DIR}/vendor/include
 )
 
-# Colocar binarios en build/bin para que queden localizados dentro del árbol de build
+# Enlazar raylib
+target_link_libraries(game PRIVATE raylib)
+
+# Configuración multiplataforma
+if (WIN32)
+    message(STATUS "Configurando para Windows")
+    # En Windows, raylib trae soporte para WinMM, gdi32, etc.
+    target_link_libraries(game PRIVATE winmm gdi32)
+elseif (UNIX)
+    message(STATUS "Configurando para Linux")
+    # En Linux, raylib necesita enlazar con librerías del sistema
+    target_link_libraries(game PRIVATE m pthread GL X11)
+endif()
+
+# Organización de binarios
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
