@@ -109,7 +109,7 @@ void Enemy::patrolBehavior(const Map &map, float dt, int tileSize)
             int i = order[k];
             int nx = x + dx[i];
             int ny = y + dy[i];
-            if (map.isWalkable(nx, ny)) {
+            if (map.isWalkableForEnemy(nx, ny)) {
                 targetX = nx;
                 targetY = ny;
                 moving = true;
@@ -177,7 +177,7 @@ void Enemy::chaseBehavior(const Map &map, float dt, int tileSize, float playerX,
             int i = priorities[k];
             int nx = x + dx[i];
             int ny = y + dy[i];
-            if (map.isWalkable(nx, ny)) {
+            if (map.isWalkableForEnemy(nx, ny)) {
                 targetX = nx;
                 targetY = ny;
                 moving = true;
@@ -241,7 +241,7 @@ void Enemy::retreatBehavior(const Map &map, float dt, int tileSize, float player
             int i = priorities[k];
             int nx = x + dx[i];
             int ny = y + dy[i];
-            if (map.isWalkable(nx, ny)) {
+            if (map.isWalkableForEnemy(nx, ny)) {
                 targetX = nx;
                 targetY = ny;
                 moving = true;
