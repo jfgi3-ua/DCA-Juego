@@ -175,9 +175,40 @@ void Player::onHit(const Map& map)
         int prevCellX = static_cast<int>(lastMoveDir_.x) / tileSize;
         int prevCellY = static_cast<int>(lastMoveDir_.y) / tileSize;
 
-        // Colocar al jugador en el centro de la celda previa
-        position_.x = prevCellX * (float)tileSize + tileSize / 2.0f;
-        position_.y = prevCellY * (float)tileSize + tileSize / 2.0f;
+        // Validar que la posición de respawn esté dentro de los límites del mapa
+        // y que no sea una pared
+        bool validRespawn = true;
+        
+        if (prevCellX < 0 || prevCellX >= map.width() || 
+            prevCellY < 0 || prevCellY >= map.height()) {
+            validRespawn = false;
+        } else if (map.at(prevCellX, prevCellY) == '#') {
+            validRespawn = false;
+        }
+
+        // Si la posición de respawn no es válida, usar la posición inicial del jugador
+        Vector2 respawnPos;
+        if (!validRespawn) {
+            IVec2 startPos = map.playerStart();
+            respawnPos.x = startPos.x * (float)tileSize + tileSize / 2.0f;
+            respawnPos.y = startPos.y * (float)tileSize + tileSize / 2.0f;
+        } else {
+            respawnPos.x = prevCellX * (float)tileSize + tileSize / 2.0f;
+            respawnPos.y = prevCellY * (float)tileSize + tileSize / 2.0f;
+        }
+
+        // Validar nuevamente que la posición final no tenga colisión con paredes
+        // (por si acaso, validación extra de seguridad)
+        std::vector<Vector2> emptyBlocked; // Vector vacío para la validación
+        if (!checkCollisionWithWalls(respawnPos, map, emptyBlocked)) {
+            position_ = respawnPos;
+        } else {
+            // Si incluso la posición inicial tiene colisión (caso muy raro),
+            // colocar en la posición de spawn sin validación adicional
+            IVec2 startPos = map.playerStart();
+            position_.x = startPos.x * (float)tileSize + tileSize / 2.0f;
+            position_.y = startPos.y * (float)tileSize + tileSize / 2.0f;
+        }
 
         // Iniciar invulnerabilidad
         invulnerableTimer_ = 0.0001f;
