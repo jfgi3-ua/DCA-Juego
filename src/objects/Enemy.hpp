@@ -29,7 +29,7 @@ public:
 
     // Variables para el árbol de decisiones de IA
     EnemyState state = EnemyState::PATROL;
-    float detectionRange = 3.0f;     // Rango en tiles para detectar al jugador
+    float detectionRange = 6.0f;    // Rango en tiles para detectar al jugador (aumentado para mayor visión)
     float retreatTimer = 0.0f;       // Tiempo restante en estado RETREAT
     float retreatDuration = 3.0f;    // Duración del retroceso (segundos)
 
@@ -41,7 +41,7 @@ public:
         px = x * tileSize + tileSize * 0.5f;
         py = y * tileSize + tileSize * 0.5f;
 
-        speed = tileSize * 1.5f;
+        speed = tileSize * 2.5f;
         moveCooldown = 0.0f;
         timer = 0.0f;
         moving = false;
@@ -71,4 +71,5 @@ private:
     // Utilidades
     float distanceToPlayer(float playerX, float playerY) const;
     void moveTowardsTarget(float dt, int tileSize);
+    bool hasLineOfSight(const Map &map, int playerCellX, int playerCellY) const;
 };
