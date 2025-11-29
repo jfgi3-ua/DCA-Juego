@@ -12,7 +12,7 @@ class GameOverState : public GameState
 {
 
     public:
-        GameOverState(int score, bool die, float time);
+        GameOverState(int score, bool die, float time, bool isVictory = false);
         ~GameOverState() override;
 
         void init() override;
@@ -29,6 +29,7 @@ class GameOverState : public GameState
         bool dead;
         float remainingTime;
         int selectedOption = 0;
+        bool isVictory_ = false;  // true si es victoria total (completó todos los niveles)
 
         //para cuando tengamos sprites
         Texture2D gameOverText;
