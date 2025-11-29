@@ -33,7 +33,7 @@ void GameOverState::handleInput() {
     float buttonWidth = 250;
     float buttonHeight = 40;
     float startX = WINDOW_WIDTH / 2.0f - buttonWidth / 2.0f;
-    float startY = WINDOW_HEIGHT / 2.0f - buttonHeight;
+    float startY = isVictory_ ? WINDOW_HEIGHT / 2.0f + 50 : WINDOW_HEIGHT / 2.0f - buttonHeight;
     
     Rectangle retryButton = {startX, startY, buttonWidth, buttonHeight};
     Rectangle exitButton = {startX, startY + 100, buttonWidth, buttonHeight};

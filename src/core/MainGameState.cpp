@@ -99,8 +99,13 @@ void MainGameState::update(float deltaTime)
     // 4) ¿Está sobre la salida 'X' y tiene la llave? -> Nivel completado
     if (player_.isOnExit(map_) && player_.hasKey()) {
         std::cout << "Nivel completado" << std::endl;
-        // Pasar a pantalla de nivel completado (dead = false)
-        this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, false), true);
+        // Si es el nivel 6 (último), mostrar pantalla de victoria directamente
+        if (level_ >= 6) {
+            this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, true), true);
+        } else {
+            // Pasar a pantalla de nivel completado (dead = false)
+            this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, false), true);
+        }
         return;
     }
 
