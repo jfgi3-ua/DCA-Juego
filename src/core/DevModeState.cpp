@@ -2,6 +2,7 @@
 #include "StateMachine.hpp"
 #include "../objects/Player.hpp"
 #include "MainGameState.hpp"
+#include "GameOverState.hpp"
 #include <iostream>
 
 extern "C" {
@@ -148,10 +149,16 @@ void DevModeState::setupCheatOptions()
     cheatOptions_.push_back({
         "9. Saltar Nivel",
         [this]() {
-            std::cout << "Saltando al siguiente nivel..." << std::endl;
             if (this->state_machine) {
                 this->state_machine->remove_overlay_state();
-                this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel_ + 1), true);
+                // Si estamos en el nivel 6 o superior, mostrar pantalla de victoria
+                if (currentLevel_ >= 6) {
+                    std::cout << "Nivel final completado - Mostrando pantalla de victoria..." << std::endl;
+                    this->state_machine->add_state(std::make_unique<GameOverState>(6, false, 0.0f, true), true);
+                } else {
+                    std::cout << "Saltando al siguiente nivel..." << std::endl;
+                    this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel_ + 1), true);
+                }
             }
         },
         [this]() { return ""; }
