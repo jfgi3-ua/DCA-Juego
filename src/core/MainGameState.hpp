@@ -49,6 +49,9 @@ class MainGameState : public GameState
         std::vector<Vector2> activeMechanisms_;
         // Temporizador del nivel (segundos). 30s base + 30s por nivel
         float levelTime_ = 30.0f;
+        
+        // Total de llaves en el mapa (guardado al inicio, no cambia)
+        int totalKeysInMap_ = 0;
 
         // ========== DEVELOPER MODE ==========
         bool freezeEnemies_ = false;     // Enemigos congelados

@@ -119,10 +119,10 @@ void DevModeState::setupCheatOptions()
     cheatOptions_.push_back({
         "7. Obtener Llave",
         [this]() {
-            if (player_ && keyGivenByCheating_) {
+            if (player_) {
                 if (!player_->hasKey()) {
-                    *keyGivenByCheating_ = true;
-                    player_->setHasKey(true);
+                    if (keyGivenByCheating_) *keyGivenByCheating_ = true;
+                    player_->setKeyCount(999);
                     std::cout << "Llave obtenida (por cheat)" << std::endl;
                 } else {
                     std::cout << "Ya tienes la llave" << std::endl;
@@ -172,7 +172,7 @@ void DevModeState::setupCheatOptions()
             }
             
             if (keyGivenByCheating_ && *keyGivenByCheating_ && player_) {
-                player_->setHasKey(false);
+                player_->setKeyCount(0);
                 *keyGivenByCheating_ = false;
                 std::cout << "Llave quitada (era de cheat)" << std::endl;
             }
