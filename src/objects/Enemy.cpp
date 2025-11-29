@@ -22,6 +22,59 @@ float Enemy::distanceToPlayer(float playerX, float playerY) const {
     return std::sqrt(dx * dx + dy * dy);
 }
 
+// Verificar si hay línea de visión directa al jugador (sin paredes de por medio)
+// Usa el algoritmo de Bresenham para trazar una línea entre el enemigo y el jugador
+bool Enemy::hasLineOfSight(const Map &map, int playerCellX, int playerCellY) const {
+    int x0 = x;
+    int y0 = y;
+    int x1 = playerCellX;
+    int y1 = playerCellY;
+    
+    // Algoritmo de Bresenham para trazar línea
+    int dx = std::abs(x1 - x0);
+    int dy = std::abs(y1 - y0);
+    int sx = (x0 < x1) ? 1 : -1;
+    int sy = (y0 < y1) ? 1 : -1;
+    int err = dx - dy;
+    
+    int currentX = x0;
+    int currentY = y0;
+    
+    while (true) {
+        // Si llegamos al jugador, hay línea de visión
+        if (currentX == x1 && currentY == y1) {
+            return true;
+        }
+        
+        // Verificar si la celda actual es una pared (excepto la posición del enemigo)
+        if (!(currentX == x0 && currentY == y0)) {
+            if (currentX < 0 || currentX >= map.width() || 
+                currentY < 0 || currentY >= map.height()) {
+                return false; // Fuera de límites
+            }
+            
+            char cell = map.at(currentX, currentY);
+            // Si hay una pared, no hay línea de visión
+            if (cell == '#') {
+                return false;
+            }
+        }
+        
+        // Avanzar en la línea
+        int e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            currentX += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            currentY += sy;
+        }
+    }
+    
+    return false;
+}
+
 // Notificar que golpeó al jugador (solo si está persiguiendo)
 void Enemy::onHitPlayer() {
     // Solo los enemigos que estaban persiguiendo se alejan
@@ -54,11 +107,15 @@ void Enemy::updateAI(const Map &map, float dt, int tileSize, float playerX, floa
     float distToPlayer = distanceToPlayer(playerX, playerY);
     float distInTiles = distToPlayer / tileSize;
     
+    // Calcular celda del jugador
+    int playerCellX = (int)(playerX / tileSize);
+    int playerCellY = (int)(playerY / tileSize);
+    
     // Árbol de decisiones basado en el estado actual
     switch (state) {
         case EnemyState::PATROL:
-            // ¿El jugador está cerca? -> Cambiar a CHASE
-            if (distInTiles <= detectionRange) {
+            // ¿El jugador está cerca Y hay línea de visión? -> Cambiar a CHASE
+            if (distInTiles <= detectionRange && hasLineOfSight(map, playerCellX, playerCellY)) {
                 state = EnemyState::CHASE;
                 timer = 0.0f;
                 moving = false; // Recalcular dirección inmediatamente
@@ -68,9 +125,8 @@ void Enemy::updateAI(const Map &map, float dt, int tileSize, float playerX, floa
             break;
             
         case EnemyState::CHASE:
-            // ¿El jugador está lejos? -> Volver a PATROL
-            // Usamos histéresis (1.5x) para evitar oscilación
-            if (distInTiles > detectionRange * 1.5f) {
+            // ¿El jugador está lejos O no hay línea de visión? -> Volver a PATROL
+            if (distInTiles > detectionRange * 1.5f || !hasLineOfSight(map, playerCellX, playerCellY)) {
                 state = EnemyState::PATROL;
                 timer = 0.0f;
             } else {
