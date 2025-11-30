@@ -81,7 +81,7 @@ LIB_DIRS := -L$(LIB_DIR)
 LDFLAGS  := $(LIB_DIRS)
 
 # Librerías (Linux + Raylib)
-LDLIBS   := -lraylib -lGL -lm -lpthread -lrt -ldl -lX11 -lXrandr -lXxf86vm -lXinerama -lXcursor -lXi
+LDLIBS   := -lraylib -lGL -lm -lpthread -lrt -lX11
 
 # =========================
 # Raylib como dependencia
