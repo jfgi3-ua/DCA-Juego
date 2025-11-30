@@ -1,0 +1,13 @@
+game (0.2.2) UNRELEASED; urgency=medium
+
+  * Probando dhc -v, Cambiamos a version a x.x.x. CAmbiamos workflow
+  * 
+  * Añadimos al help del makefile y cambios en el action
+
+ -- Esther <esther@ASUS-Esther>  Fri, 28 Nov 2025 14:00:51 +0100
+
+game (0.0-1) unstable; urgency=medium
+
+  * Primera versión del paquete para el Hito 2 de DCA.
+
+ -- Esther Peral <eps63@alu.ua.es>  Sun, 16 Nov 2025 12:00:00 +0100

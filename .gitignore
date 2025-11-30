@@ -59,6 +59,15 @@ Thumbs.db
 # Binario principal
 game
 
+# Directorios debian build
+debian/.debhelper/
+debian/game/
+debian/files
+debian/game.substvars
+debian/debhelper-build-stamp
+debian/*~
+debian/tmp/
+
 # Directorio de build (artefactos de compilación)
 /build/
 build/**

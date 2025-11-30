@@ -57,6 +57,13 @@ class Map {
          */
         bool isWalkable(int x, int y) const;
 
+        /**
+         * Devuelve true si la celda (x,y) es transitable para enemigos.
+         *  - Fuera de rango, paredes ('#'), salidas ('X') o puertas (mayúsculas) → false.
+         *  - Los enemigos pueden atravesar botones (minúsculas).
+         */
+        bool isWalkableForEnemy(int x, int y) const;
+
         /// Posición inicial del jugador (en celdas). Garantizado tras loadFromFile().
         IVec2 playerStart() const { return _player; }
 

@@ -133,6 +133,38 @@ bool Map::isWalkable(int x, int y) const {
 }
 
 /**
+ * isWalkableForEnemy
+ *  - Versión específica para enemigos con restricciones adicionales.
+ *  - Devuelve false si (x,y) está fuera de rango o si es pared ('#').
+ *  - Devuelve false para salidas ('X') - los enemigos no pueden escapar.
+ *  - Devuelve false para mecanismos en mayúsculas (puertas bloqueadas: 'D', 'B', etc.).
+ *  - Devuelve true para mecanismos en minúsculas (botones/triggers: 'd', 'b', etc.) - pueden atravesarlos.
+ *  - Devuelve true para celdas transitables: '.', 'P', 'E', 'K', etc.
+ *
+ * @note Esta función incluye la comprobación de límites para evitar accesos fuera de rango.
+ */
+bool Map::isWalkableForEnemy(int x, int y) const {
+    // 1) Comprobación de límites (importante antes de indexar _grid)
+    if (x < 0 || y < 0 || x >= _w || y >= _h) return false;
+
+    char cell = _grid[y][x];
+    
+    // 2) Paredes no transitables
+    if (cell == '#') return false;
+    
+    // 3) Salida no transitable para enemigos
+    if (cell == 'X') return false;
+    
+    // 4) Mecanismos en mayúsculas (puertas) no transitables
+    if (std::isupper(cell) && cell != 'P' && cell != 'E' && cell != 'K' && cell != 'X') {
+        return false;
+    }
+    
+    // 5) Todo lo demás es transitable (incluye minúsculas/botones)
+    return true;
+}
+
+/**
  * clearCell
  *  - Reemplaza la celda (x,y) por 'replacement' (por defecto, suelo '.').
  *  - Si la celda contenía una llave 'K', también la elimina del vector _keys.
