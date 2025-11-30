@@ -57,7 +57,7 @@ target_link_libraries(game PRIVATE raylib)
 if (WIN32)
     message(STATUS "Configurando para Windows")
     # En Windows, raylib trae soporte para WinMM, gdi32, etc.
-    target_link_libraries(game PRIVATE winmm gdi32)
+    target_link_libraries(game PRIVATE winmm gdi32 opengl32)
 elseif (UNIX)
     message(STATUS "Configurando para Linux")
     # En Linux, raylib necesita enlazar con librerías del sistema
