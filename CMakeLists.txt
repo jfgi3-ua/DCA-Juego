@@ -64,5 +64,10 @@ elseif (UNIX)
     target_link_libraries(game PRIVATE m pthread GL X11)
 endif()
 
+# Enlace estático en MinGW para evitar DLLs externas
+if (MINGW)
+    set(CMAKE_EXE_LINKER_FLAGS "-static")
+endif()
+
 # Organización de binarios
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
