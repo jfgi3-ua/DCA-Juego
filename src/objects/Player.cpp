@@ -13,7 +13,7 @@ void Player::init(Vector2 startPos, float radius, int lives)
 {
     position_ = startPos;
     radius_ = radius;
-    has_key_ = false;
+    key_count_ = 0;
     lives_ = lives;
 }
 

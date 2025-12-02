@@ -33,9 +33,14 @@ class Player {
         // Comprobar si está encima de la salida
         bool isOnExit(const Map& map) const;
         
-        // Estado de mochila
-        bool hasKey() const { return has_key_; }
-        void setHasKey(bool v) { has_key_ = v; }
+        // Estado de mochila - Sistema de llaves
+        int getKeyCount() const { return key_count_; }
+        void addKey() { key_count_++; }
+        void setKeyCount(int count) { key_count_ = count; }
+        bool hasAllKeys(int totalKeys) const { return key_count_ >= totalKeys; }
+        
+        // Compatibilidad con código antiguo
+        bool hasKey() const { return key_count_ > 0; }
 
         // Gestionar vida al recibir daño
         void onHit(const Map& map);
@@ -64,8 +69,8 @@ class Player {
         // Tamaño
         float radius_ = 10.0f;
 
-        // Mochila (por ahora solo la llave)
-        bool has_key_ = false;
+        // Mochila - Sistema de llaves
+        int key_count_ = 0;
 
         // Colisiones y vidas
         int lives_ = 5;

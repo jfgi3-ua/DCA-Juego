@@ -22,6 +22,9 @@ void MainGameState::init()
     std::string path = "assets/maps/map_" + std::to_string(level_) + ".txt";
     map_.loadFromFile(path, 32);
     tile_ = map_.tile();
+    
+    // Guardar total de llaves del mapa (antes de que se recojan)
+    totalKeysInMap_ = map_.getTotalKeys();
 
     IVec2 p = map_.playerStart();
     Vector2 startPos = { p.x * (float)tile_ + tile_ / 2.0f,
@@ -86,9 +89,9 @@ void MainGameState::update(float deltaTime)
     // 3) ¿Está sobre una llave 'K'? -> Recogerla
     try {
         if (map_.at(cellX, cellY) == 'K') {
-            player_.setHasKey(true);
+            player_.addKey();
             map_.clearCell(cellX, cellY); // Reemplaza 'K' por '.', es decir, retira la llave del mapa.
-            std::cout << "Llave recogida!" << std::endl; // Para debug
+            std::cout << "Llave recogida! (" << player_.getKeyCount() << "/" << totalKeysInMap_ << ")" << std::endl;
             // TODO:Aquí podríamos reproducir un sonido o mostrar un mensaje en pantalla si se desea.
         }
     } catch (const std::out_of_range& e) {
@@ -96,8 +99,8 @@ void MainGameState::update(float deltaTime)
         std::cerr << "Error: " << e.what() << std::endl;
     }
 
-    // 4) ¿Está sobre la salida 'X' y tiene la llave? -> Nivel completado
-    if (player_.isOnExit(map_) && player_.hasKey()) {
+    // 4) ¿Está sobre la salida 'X' y tiene todas las llaves? -> Nivel completado
+    if (player_.isOnExit(map_) && player_.hasAllKeys(totalKeysInMap_)) {
         std::cout << "Nivel completado" << std::endl;
         // Si es el nivel 6 (último), mostrar pantalla de victoria directamente
         if (level_ >= 6) {
@@ -239,12 +242,21 @@ void MainGameState::render()
     // Slot de llave
     Rectangle slot{ hud.x + 12, hud.y + 28, 28.0f, 28.0f };
     DrawRectangleLinesEx(slot, 1.0f, GRAY);
-    DrawText("Llave", (int)hud.x + 50, (int)hud.y + 30, 16, GRAY);
+    
+    // Mostrar "Llave" o "Llaves" según el total
+    const char* labelText = (totalKeysInMap_ > 1) ? "Llaves" : "Llave";
+    DrawText(labelText, (int)hud.x + 50, (int)hud.y + 30, 16, GRAY);
 
     if (player_.hasKey()) {
         Rectangle keyIcon{ slot.x + 4, slot.y + 8, slot.width - 8, slot.height - 12 };
         DrawRectangleRec(keyIcon, GOLD);
         DrawRectangleLinesEx(keyIcon, 1.2f, BROWN);
+        
+        // Si hay más de una llave en el mapa, mostrar contador
+        if (totalKeysInMap_ > 1) {
+            std::string keyCountText = std::to_string(player_.getKeyCount()) + "/" + std::to_string(totalKeysInMap_);
+            DrawText(keyCountText.c_str(), (int)hud.x + 120, (int)hud.y + 30, 16, DARKGRAY);
+        }
     }
 
     // Panel de vidas (alineado a la derecha dentro del HUD)
@@ -275,13 +287,19 @@ void MainGameState::render()
     const int cx = (int)(player_.getPosition().x / tile_);
     const int cy = (int)(player_.getPosition().y / tile_);
     if (cx >= 0 && cy >= 0 && cx < map_.width() && cy < map_.height()) {
-        if (map_.at(cx, cy) == 'X' && !player_.hasKey()) {
-            const char* msg = "Necesitas la llave para salir";
+        if (map_.at(cx, cy) == 'X' && !player_.hasAllKeys(totalKeysInMap_)) {
+            std::string msg;
+            if (totalKeysInMap_ == 1) {
+                msg = "Necesitas la llave para salir";
+            } else {
+                int remaining = totalKeysInMap_ - player_.getKeyCount();
+                msg = "Necesitas " + std::to_string(remaining) + " llave" + (remaining > 1 ? "s" : "") + " más";
+            }
             const int font = 18;
-            const int textW = MeasureText(msg, font);
+            const int textW = MeasureText(msg.c_str(), font);
             // 10 px de margen por encima del HUD
             const int textY = (int)baseY - font - 10;
-            DrawText(msg, (GetScreenWidth()-textW)/2, textY, font, MAROON);
+            DrawText(msg.c_str(), (GetScreenWidth()-textW)/2, textY, font, MAROON);
         }
     }
 }
