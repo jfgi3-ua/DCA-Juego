@@ -67,3 +67,7 @@ debian/game.substvars
 debian/debhelper-build-stamp
 debian/*~
 debian/tmp/
+
+# Directorio de build (artefactos de compilación)
+/build/
+build/**
