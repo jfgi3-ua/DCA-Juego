@@ -21,7 +21,8 @@ ResourceManager& ResourceManager::Get() {
 }
 
 
-
+// encontrar la ruta completa de un asset dentro del proyecto o el sistema de ficheros
+// filename es un path relativo dentro de assets/, por ejemplo "sprites/player.png"
 std::string ResourceManager::GetAssetPath(const std::string& filename) {
 
     //ruta local (modo desarrollo)
