@@ -182,29 +182,7 @@ void MainGameState::render()
     const int oy = std::max(0, (viewH - mapHpx) / 2);
 
     // 1) Mapa (dibujado en la zona superior, desde y=0 hasta y=MAP_H_PX)
-    for (int y = 0; y < map_.height(); ++y) {
-        for (int x = 0; x < map_.width(); ++x) {
-            const char c = map_.at(x, y);
-            Rectangle r{ (float)(ox + x * tile_), (float)(oy + y * tile_),(float)tile_, (float)tile_ };
-
-            // Suelo + paredes
-            DrawRectangleRec(r, (c == '#') ? LIGHTGRAY : WHITE);
-
-            if (c == '#') DrawRectangleLinesEx(r, 1.0f, DARKGRAY);  // Paredes
-            else if (c == 'X') DrawRectangleRec(r, LIME);           // Salida
-            else if (c == 'K') {                                    // Llave
-                // Pequeño icono dorado centrado en la celda
-                Rectangle keyRect{
-                    r.x + r.width * 0.25f,
-                    r.y + r.height * 0.35f,
-                    r.width * 0.5f,
-                    r.height * 0.3f
-                };
-                DrawRectangleRec(keyRect, GOLD);
-                DrawRectangleLinesEx(keyRect, 1.5f, BROWN);
-            }
-        }
-    }
+    map_.render(ox, oy);
 
     // Mecanismos
     for (const auto& mech : mechanisms_) {
