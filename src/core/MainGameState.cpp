@@ -32,7 +32,7 @@ void MainGameState::init()
     IVec2 p = map_.playerStart();
     Vector2 startPos = { p.x * (float)tile_ + tile_ / 2.0f,
                          p.y * (float)tile_ + tile_ / 2.0f };
-    player_.init(startPos, tile_ * 0.35f, 5);
+    player_.init(startPos, tile_ * 0.35f, 5, "sprites/player/Musketeer"); //inicializamos el jugador con la carpeta de sprites
 
     enemiesPos_.clear();
     enemies.clear();
