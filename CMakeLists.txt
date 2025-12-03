@@ -37,6 +37,7 @@ target_sources(game PRIVATE
     src/core/StartGameState.cpp
     src/core/StateMachine.cpp
     src/core/GameState.cpp
+    src/core/ResourceManager.cpp
     src/objects/Player.cpp
     src/objects/Enemy.cpp
     src/objects/Map.cpp
