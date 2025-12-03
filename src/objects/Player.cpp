@@ -1,12 +1,5 @@
 #include "Player.hpp"
 
-// Estado de movimiento por casillas a nivel de fichero (no como miembros de clase)
-static bool s_moving = false;
-static Vector2 s_move_start = {0,0};
-static Vector2 s_move_target = {0,0};
-static float s_move_progress = 0.0f;
-static float s_move_duration = 0.2f;
-
 Player::Player() {}
 
 void Player::init(Vector2 startPos, float radius, int lives)
@@ -60,6 +53,11 @@ void Player::handleInput(float deltaTime, const Map& map, const std::vector<Vect
     move_start_ = position_;
     move_target_ = centerTarget;
     move_progress_ = 0.0f;
+
+    // Calcular duración del movimiento en base al tamaño del tile y la velocidad
+    // (más intuitivo: tiempo = distancia / velocidad). tileSize es la distancia en px.
+    move_duration_ = (tileSize > 0 && speed_ > 0.0f) ? (float)tileSize / speed_ : 0.2f;
+    if (move_duration_ <= 0.0f) move_duration_ = 0.1f;
     moving_ = true;
 }
 
