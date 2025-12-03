@@ -6,6 +6,7 @@
 #include <chrono>
 #include "objects/Map.hpp" // Para medir el mapa antes
 #include "Config.hpp" // Archivo de configuración global (TILE_SIZE, HUD_HEIGHT)
+#include "ResourceManager.hpp"
 extern "C" {
   #include <raylib.h>
 }
@@ -13,7 +14,12 @@ extern "C" {
 int main() {
   // 0) Medir el tamaño del mapa y preparar la ventana acorde
   Map tmp;
-  tmp.loadFromFile("assets/maps/map_6.txt", TILE_SIZE);
+  auto& rm = ResourceManager::Get();
+  int level_ = 6; // Define the level number or get it from user input or configuration
+  std::string relativePath = "maps/map_" + std::to_string(level_) + ".txt";
+  tmp.loadFromFile(rm.GetAssetPath(relativePath), TILE_SIZE);
+
+
   const int MAP_W_PX = tmp.width() * TILE_SIZE;
   const int MAP_H_PX = tmp.height() * TILE_SIZE;
 
@@ -22,7 +28,7 @@ int main() {
   int winH = MAP_H_PX + HUD_HEIGHT;
   InitWindow(winW, winH, "Escape del Laberinto");
   SetTargetFPS(60);
-  
+
   // Desactivar que ESC cierre la ventana automáticamente
   SetExitKey(KEY_NULL);
 
@@ -37,7 +43,7 @@ int main() {
     delta_time = GetFrameTime();
 
     state_machine.handle_state_changes(delta_time);
-    
+
     // Si hay overlay, solo procesar input del overlay
     if (state_machine.hasOverlay()) {
       state_machine.getOverlayState()->handleInput();
@@ -46,18 +52,18 @@ int main() {
       state_machine.getCurrentState()->handleInput();
       state_machine.getCurrentState()->update(delta_time);
     }
-    
+
     // Renderizar: BeginDrawing una sola vez
     BeginDrawing();
-    
+
     // Primero el estado principal
     state_machine.getCurrentState()->render();
-    
+
     // Luego el overlay encima
     if (state_machine.hasOverlay()) {
       state_machine.getOverlayState()->render();
     }
-    
+
     EndDrawing();
   }
 
