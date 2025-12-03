@@ -2,18 +2,34 @@
 #include <iostream>
 
 Mechanism::Mechanism(char type, IVec2 trigger, IVec2 target) {
+
+    auto& rm = ResourceManager::Get();
+    std::string base = "sprites/mecs/";
+
     switch (type) {
         case 'D':
             type_ = MechanismType::DOOR;
+            mecText_ = &rm.GetTexture(base + "doors_lever_chest_animation.png");
+            srcInactive_ = {  64, 32, 32, 32 };   
+            srcActive_   = {  0,  32, 32, 32 };
             break;
         case 'T':
             type_ = MechanismType::TRAP;
+            mecText_ = &rm.GetTexture(base + "trap_saw.png");
+            srcInactive_ = {  64,  26, 32, 32 };   
+            srcActive_   = {  32,  32, 32, 32 };
             break;
         case 'B':
             type_ = MechanismType::BRIDGE;
+            mecText_ = &rm.GetTexture(base + "fire_trap.png");
+            srcInactive_ = {  64,  32, 32, 32 };   
+            srcActive_   = {  32,  32, 32, 32 };
             break;
         case 'L':
             type_ = MechanismType::LEVER;
+            mecText_ = &rm.GetTexture(base + "doors_lever_chest_animation.png");
+            srcInactive_ = {  64,  32, 32, 32 };   
+            srcActive_   = {  32,  32, 32, 32 };
             break;
         default:
             std::cerr << "Warning: Unknown mechanism type '" << type << "'. Defaulting to DOOR." << std::endl;
@@ -32,12 +48,23 @@ void Mechanism::render(int ox, int oy) const {
     int ty = (triggerPos_.y * tileSize_) + oy;
     int gx = (targetPos_.x * tileSize_) + ox;
     int gy = (targetPos_.y * tileSize_) + oy;
-    int size = (tileSize_);
+    
+    const Rectangle& src = active_ ? srcActive_ : srcInactive_;
+    
+    Rectangle dest = {
+        (float)gx,
+        (float)gy,
+        (float)tileSize_,
+        (float)tileSize_
+    };
 
+    DrawTexturePro(*mecText_, src, dest, {0,0}, 0.0f, WHITE);
+
+    /** 
+     int size = (tileSize_);
     //Este metodo habra q cambiarlo una cuendo usemos sprites
     Color inactiveColor;
     Color activeColor;
-    char symbol = '?';
 
     switch (type_) {
         case MechanismType::DOOR:
@@ -72,12 +99,14 @@ void Mechanism::render(int ox, int oy) const {
     }
 
     Color currentColor = active_ ? activeColor : inactiveColor;
-
+    */
     // Dibujar el activador (letra)
-    DrawText(TextFormat("%c", symbol), tx + size / 4, ty + size / 6, size / 2, currentColor);
+    if(active_){
+        DrawText(TextFormat("%c", "?"), tx + TILE_SIZE / 4, ty + TILE_SIZE / 6, TILE_SIZE / 2, BLACK);
+    }
 
     // Dibujar el objetivo (rectángulo)
-    DrawRectangle(gx, gy, size, size, currentColor);
+    //DrawRectangle(gx, gy, size, size, currentColor);
 }
 
 void Mechanism::deactivate() { 
