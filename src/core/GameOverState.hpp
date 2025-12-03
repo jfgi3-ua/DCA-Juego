@@ -32,7 +32,6 @@ class GameOverState : public GameState
         bool isVictory_ = false;  // true si es victoria total (completó todos los niveles)
 
         //para cuando tengamos sprites
-        Texture2D gameOverText;
-        Texture2D levelCompleteText;
-        Texture2D background;
+        const Texture2D* titulo = nullptr;
+        const Texture2D* background = nullptr;
 };

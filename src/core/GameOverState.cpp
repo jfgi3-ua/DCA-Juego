@@ -2,6 +2,7 @@
 #include <iostream>
 #include "StateMachine.hpp"
 #include "MainGameState.hpp"
+#include "ResourceManager.hpp"
 
 extern "C" {
     #include <raylib.h>
@@ -12,17 +13,30 @@ GameOverState::GameOverState(int nivel, bool die, float time, bool isVictory)
     dead = die;
     remainingTime = time;
     isVictory_ = isVictory;
-    backgroundColor = isVictory_ ? GOLD : (dead ? RED : DARKGREEN);
+    backgroundColor = isVictory_ ? GOLD : (dead ? RED : DARKGREEN); //si añadimos sprites eliminar color de fondo
     currentLevel = nivel;
 }
 
 GameOverState::~GameOverState() {
-    //UnloadTexture(gameOverText);
 }
 
 void GameOverState::init() {
-    //gameOverText = LoadTexture("assets/sprites/gameover.png");
+    auto& rm = ResourceManager::Get();
+
+    // Dependiendo del estado de victoria, muerte o nivel completado cargamos recursos distintos
+    if (isVictory_) {
+        titulo = &rm.GetTexture("background-day.png");
+        background = &rm.GetTexture("background-day.png");
+    } else if (dead) {
+        titulo = &rm.GetTexture("background-day.png");
+        background = &rm.GetTexture("background-day.png");
+
+    } else {
+        titulo = &rm.GetTexture("background-day.png");
+        background = &rm.GetTexture("background-day.png");
+    }
 }
+
 
 void GameOverState::handleInput() {
     
@@ -99,9 +113,15 @@ void GameOverState::update(float) {
 void GameOverState::render()
 {
     ClearBackground(backgroundColor);
+    //DrawTexture(*background, 0, 0, WHITE);
     Vector2 mousePos = GetMousePosition();
 
     // --- TÍTULO PRINCIPAL ---
+
+    //se cambiara por sprite cuando lo tengamos
+    //el sprite ya se determina en el init segun si es victoria, muerte o nivel completado NO HACEN FALTA CONDICIONALES AQUI
+    //DrawTexture(*titulo, 0, 0, WHITE);
+
     std::string title;
     if (isVictory_) {
         title = "¡FELICIDADES!";

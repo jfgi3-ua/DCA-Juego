@@ -1,5 +1,6 @@
 #include "StartGameState.hpp"
 #include "StateMachine.hpp"
+#include "ResourceManager.hpp"
 #include <iostream>
 
 extern "C" {
@@ -9,11 +10,12 @@ extern "C" {
 StartGameState::StartGameState() = default;
 
 StartGameState::~StartGameState() {
-    //UnloadTexture(background);
 }
 
 void StartGameState::init() {
-    //background = LoadTexture("assets/sprites/background.png");
+    auto& rm = ResourceManager::Get();
+    //fondo de prueba, para renderizar descomentar en render()
+    background = &rm.GetTexture("background-day.png");
 }
 
 void StartGameState::handleInput() {
@@ -68,6 +70,7 @@ void StartGameState::update(float) {
 
 void StartGameState::render() {
     ClearBackground(backgroundColor);
+    //DrawTexture(*background, 0, 0, WHITE);
     Vector2 mousePos = GetMousePosition();
 
      // --- Botones ---

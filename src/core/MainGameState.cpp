@@ -2,6 +2,7 @@
 #include "GameOverState.hpp"
 #include "DevModeState.hpp"
 #include "StateMachine.hpp"
+#include "ResourceManager.hpp"
 #include "objects/Enemy.hpp"
 #include <iostream>
 extern "C" {
@@ -17,10 +18,12 @@ MainGameState::MainGameState(int level)
 
 void MainGameState::init()
 {
-    std::cout << "You are in the Main Game State, level " << level_ << std::endl;
+    auto& rm = ResourceManager::Get();
+    std::string relativePath = "maps/map_" + std::to_string(level_) + ".txt";
+    std::string absolutePath = rm.GetAssetPath(relativePath);
 
-    std::string path = "assets/maps/map_" + std::to_string(level_) + ".txt";
-    map_.loadFromFile(path, 32);
+    //std::string absolutePath = "/usr/share/game/assets/maps/map_1.txt"; //probando poque da error al intentar abrilo en carpeta random
+    map_.loadFromFile(absolutePath, 32);
     tile_ = map_.tile();
     
     // Guardar total de llaves del mapa (antes de que se recojan)
