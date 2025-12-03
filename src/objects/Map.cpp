@@ -28,6 +28,7 @@ bool Map::loadFromFile(const std::string& path, int tileSize) {
 
     // 1) Apertura del archivo
     std::ifstream in(path);
+    std::cout << "Cargando mapa desde: " << path << std::endl;
     if (!in) throw std::runtime_error("Cannot open map: " + path);
 
     // 2) Lectura línea a línea (cada línea es una fila del grid)

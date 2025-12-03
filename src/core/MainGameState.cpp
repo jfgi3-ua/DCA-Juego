@@ -19,10 +19,10 @@ MainGameState::MainGameState(int level)
 void MainGameState::init()
 {
     auto& rm = ResourceManager::Get();
-    //std::string relativePath = "maps/map_" + std::to_string(level_) + ".txt";
-    //std::string absolutePath = rm.GetAssetPath(relativePath);
+    std::string relativePath = "maps/map_" + std::to_string(level_) + ".txt";
+    std::string absolutePath = rm.GetAssetPath(relativePath);
 
-    std::string absolutePath = "/usr/share/game/assets/maps/map_1.txt"; //probando poque da error al intentar abrilo en carpeta random
+    //std::string absolutePath = "/usr/share/game/assets/maps/map_1.txt"; //probando poque da error al intentar abrilo en carpeta random
     map_.loadFromFile(absolutePath, 32);
     tile_ = map_.tile();
     
