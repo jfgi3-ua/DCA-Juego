@@ -8,7 +8,7 @@ class Player {
     public:
         Player();
 
-        void init(Vector2 startPos, float radius, int lives);
+        void init(Vector2 startPos, float radius, int lives, const std::string& sprite);
         void handleInput(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles);
         void update(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles);
         
@@ -94,4 +94,13 @@ class Player {
         // Developer mode flags
         bool godMode_ = false;
         bool noClip_ = false;
+
+        //sprites folder y texturas
+        std::string characterFolder_; 
+        const Texture2D* idleTex_ = nullptr;   // player/X/Idle.png
+        const Texture2D* walkTex_ = nullptr;  // player/X/Walk.png
+        static constexpr int WALK_FRAMES = 8;
+
+        //direccion del sprite
+        bool isFacingRight_ = true;
 };

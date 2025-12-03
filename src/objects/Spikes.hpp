@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include <vector>
 #include "core/Config.hpp"
+#include "../core/ResourceManager.hpp"
 
 class Spikes {
 private:
@@ -14,6 +15,9 @@ private:
     float timer = 0.0f;
     float interval = 3.0f; // segundos para cambiar de estado
     int tileSize = TILE_SIZE;
+    
+    const Texture2D* spikeTex_ = nullptr; 
+
 
 public:
     Spikes();
