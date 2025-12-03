@@ -1,6 +1,10 @@
 #include "Map.hpp"
 #include <fstream>
 #include <sstream>   // para construir mensajes de error detallados
+extern "C" {
+    #include <raylib.h>
+}
+#include <iostream>
 
 /**
  * Carga un mapa ASCII desde archivo.
@@ -206,5 +210,34 @@ void Map::pairMechanisms(std::unordered_map<char, IVec2>& triggers, std::unorder
 
         std::cout << "Paired mechanism: " << key;
         _mechanisms.push_back({ targetKey, triggerPos, targetIt->second });
+    }
+}
+
+void Map::render(int ox, int oy) const {
+    if (_grid.empty()) return;
+
+    for (int y = 0; y < _h; ++y) {
+        for (int x = 0; x < _w; ++x) {
+            const char c = _grid[y][x];
+            Rectangle r{ (float)(ox + x * _tile), (float)(oy + y * _tile), (float)_tile, (float)_tile };
+
+            // Suelo + paredes
+            DrawRectangleRec(r, (c == '#') ? LIGHTGRAY : WHITE);
+
+            if (c == '#') {
+                DrawRectangleLinesEx(r, 1.0f, DARKGRAY);
+            } else if (c == 'X') {
+                DrawRectangleRec(r, LIME);
+            } else if (c == 'K') {
+                Rectangle keyRect{
+                    r.x + r.width * 0.25f,
+                    r.y + r.height * 0.35f,
+                    r.width * 0.5f,
+                    r.height * 0.3f
+                };
+                DrawRectangleRec(keyRect, GOLD);
+                DrawRectangleLinesEx(keyRect, 1.5f, BROWN);
+            }
+        }
     }
 }
