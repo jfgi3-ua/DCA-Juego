@@ -1,13 +1,20 @@
 #include "Player.hpp"
+#include "../core/ResourceManager.hpp"
 
 Player::Player() {}
 
-void Player::init(Vector2 startPos, float radius, int lives)
+void Player::init(Vector2 startPos, float radius, int lives, const std::string& sprite)
 {
     position_ = startPos;
     radius_ = radius;
     key_count_ = 0;
     lives_ = lives;
+    characterFolder_ = sprite;
+
+    // Cargar sprites desde ResourceManager
+    auto& rm = ResourceManager::Get();
+    idleTex_ = &rm.GetTexture(characterFolder_ + "/Idle.png");
+    walkTex_ = &rm.GetTexture(characterFolder_ + "/Walk.png");
 }
 
 /**
@@ -49,6 +56,10 @@ void Player::handleInput(float deltaTime, const Map& map, const std::vector<Vect
     // Guardar última dirección de movimiento
     lastMoveDir_ = position_;
 
+        // Cambiar orientación del sprite
+    if (dx > 0) isFacingRight_ = true;
+    else if (dx < 0) isFacingRight_ = false;
+
     // Iniciar animación hacia la celda destino
     move_start_ = position_;
     move_target_ = centerTarget;
@@ -86,20 +97,51 @@ void Player::update(float deltaTime, const Map& map, const std::vector<Vector2>&
 
 void Player::render(int ox, int oy) const
 {
-    Vector2 p = { position_.x + (float)ox, position_.y + (float)oy };
-    
-    // Color: DORADO si hay algún cheat activo, AZUL normal
-    Color playerColor = hasAnyCheatsActive() ? GOLD : BLUE;
-    
-    if (invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION && !godMode_) {
-        // Parpadeo de invulnerabilidad (no en god mode)
-        int blinkFrequency = 10; // Frecuencia de parpadeo
-        if (static_cast<int>(invulnerableTimer_ * blinkFrequency) % 2 == 0) {
-            DrawCircleV(p, radius_, playerColor);
-        }
-    } else {
-        DrawCircleV(p, radius_, playerColor);
+    if (!walkTex_) {
+        Vector2 p = { position_.x + (float)ox, position_.y + (float)oy };
+        DrawCircleV(p, radius_, hasAnyCheatsActive() ? GOLD : BLUE);
+        return;
     }
+
+    // Tamaño del frame del sprite sheet
+    float frameHeight = (float)walkTex_->height;
+    float frameWidth  = (float)walkTex_->width / WALK_FRAMES; // 8 frames
+
+    // Escala para que quepa en el tile (con 1.5 para que se vea un poco más grande)
+    float scale = (TILE_SIZE * 1.5f) / frameHeight;
+
+    // --- 1) Rectángulo fuente: usamos el frame 0 de Walk ---
+    Rectangle src;
+    src.x = 0.0f;          // primer frame
+    src.y = 0.0f;
+    src.width  = frameWidth;
+    src.height = frameHeight;
+
+    Vector2 p;
+
+    if (isFacingRight_) {
+        src.x = 0.0f;
+        src.width = frameWidth;
+        p = { position_.x + (float)ox + 8.0f, position_.y + (float)oy - 8.0f};
+    } else {
+        src.x = frameWidth;     // origen invertido
+        src.width = -frameWidth; // flip horizontal
+        p = { position_.x + (float)ox - 8.0f, position_.y + (float)oy - 8.0f};
+
+    }
+
+    // --- 2) Rectángulo destino, escalado y centrado en la posición del jugador ---
+    Rectangle dest;
+    dest.width  = frameWidth * scale;
+    dest.height = frameHeight * scale;
+
+    dest.x = p.x;
+    dest.y = p.y;
+
+    Vector2 origin{ dest.width / 2.0f, dest.height / 2.0f };
+
+    // --- 3) Dibujar sprite ---
+    DrawTexturePro(*walkTex_, src, dest, origin, 0.0f, WHITE);
 }
 
 bool Player::checkCollisionWithWalls(const Vector2& pos,
