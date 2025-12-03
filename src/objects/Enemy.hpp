@@ -41,7 +41,7 @@ public:
         px = x * tileSize + tileSize * 0.5f;
         py = y * tileSize + tileSize * 0.5f;
 
-        speed = tileSize * 2.5f;
+        speed = tileSize * 1.8f;
         moveCooldown = 0.0f;
         timer = 0.0f;
         moving = false;
