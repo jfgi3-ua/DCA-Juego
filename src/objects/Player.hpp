@@ -99,4 +99,8 @@ class Player {
         std::string characterFolder_; 
         const Texture2D* idleTex_ = nullptr;   // player/X/Idle.png
         const Texture2D* walkTex_ = nullptr;  // player/X/Walk.png
+        static constexpr int WALK_FRAMES = 8;
+
+        //direccion del sprite
+        bool isFacingRight_ = true;
 };

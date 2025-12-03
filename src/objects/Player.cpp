@@ -56,6 +56,10 @@ void Player::handleInput(float deltaTime, const Map& map, const std::vector<Vect
     // Guardar última dirección de movimiento
     lastMoveDir_ = position_;
 
+        // Cambiar orientación del sprite
+    if (dx > 0) isFacingRight_ = true;
+    else if (dx < 0) isFacingRight_ = false;
+
     // Iniciar animación hacia la celda destino
     move_start_ = position_;
     move_target_ = centerTarget;
@@ -99,8 +103,6 @@ void Player::render(int ox, int oy) const
         return;
     }
 
-    const int WALK_FRAMES = 8;
-
     // Tamaño del frame del sprite sheet
     float frameHeight = (float)walkTex_->height;
     float frameWidth  = (float)walkTex_->width / WALK_FRAMES; // 8 frames
@@ -115,12 +117,24 @@ void Player::render(int ox, int oy) const
     src.width  = frameWidth;
     src.height = frameHeight;
 
+    Vector2 p;
+
+    if (isFacingRight_) {
+        src.x = 0.0f;
+        src.width = frameWidth;
+        p = { position_.x + (float)ox + 8.0f, position_.y + (float)oy - 8.0f};
+    } else {
+        src.x = frameWidth;     // origen invertido
+        src.width = -frameWidth; // flip horizontal
+        p = { position_.x + (float)ox - 8.0f, position_.y + (float)oy - 8.0f};
+
+    }
+
     // --- 2) Rectángulo destino, escalado y centrado en la posición del jugador ---
     Rectangle dest;
     dest.width  = frameWidth * scale;
     dest.height = frameHeight * scale;
 
-    Vector2 p = { position_.x + (float)ox + 8.0f, position_.y + (float)oy - 8.0f};
     dest.x = p.x;
     dest.y = p.y;
 
