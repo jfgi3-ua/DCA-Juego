@@ -7,6 +7,9 @@
 #include <iostream>
 #include "Mechanism.hpp"
 #include <unordered_map>
+extern "C" {
+    #include <raylib.h>
+}
 
 /**
  * Clase Map
@@ -116,4 +119,10 @@ class Map {
 
         // Lista de mecanismos detectadas al cargar
         std::vector<MechanismPair> _mechanisms;
+
+    public:
+        // Dibujar el mapa en pantalla usando offsets en píxeles (ox, oy).
+        // Esta función encapsula el dibujo de celdas y puede ser llamada
+        // desde estados como `MainGameState`.
+        void render(int ox, int oy) const;
 };
