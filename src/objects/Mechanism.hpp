@@ -24,11 +24,15 @@ private:
     bool active_ = true;
     float tileSize_ = TILE_SIZE;
 
-    const Texture2D* mecText_ = nullptr; //verion activada y desactivada en la misma textura
-    const Texture2D* trigerText_ = nullptr;
-
+    const Texture2D* mecText_ = nullptr; 
+    //verion activada y desactivada en la misma textura pero dsitintas regiones
     Rectangle srcInactive_;
     Rectangle srcActive_;
+
+    const Texture2D* trigerText_ = nullptr;
+    Rectangle triggerInactive_;
+    Rectangle triggerActive_;
+
 
 public:
     Mechanism(char type, IVec2 trigger, IVec2 target);
