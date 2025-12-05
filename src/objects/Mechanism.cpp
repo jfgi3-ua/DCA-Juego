@@ -10,8 +10,8 @@ Mechanism::Mechanism(char type, IVec2 trigger, IVec2 target) {
         case 'D':
             type_ = MechanismType::DOOR;
             mecText_ = &rm.GetTexture(base + "doors_lever_chest_animation.png");
-            srcInactive_ = {  64, 32, 32, 32 };   
-            srcActive_   = {  0,  32, 32, 32 };
+            srcInactive_ = {  64, 95, 32, 32 };   
+            srcActive_   = {  0,  95, 32, 32 };
             break;
         case 'T':
             type_ = MechanismType::TRAP;
@@ -23,13 +23,13 @@ Mechanism::Mechanism(char type, IVec2 trigger, IVec2 target) {
             type_ = MechanismType::BRIDGE;
             mecText_ = &rm.GetTexture(base + "fire_trap.png");
             srcInactive_ = {  64,  32, 32, 32 };   
-            srcActive_   = {  32,  32, 32, 32 };
+            srcActive_   = {  0,  32, 32, 32 };
             break;
         case 'L':
             type_ = MechanismType::LEVER;
             mecText_ = &rm.GetTexture(base + "doors_lever_chest_animation.png");
-            srcInactive_ = {  64,  32, 32, 32 };   
-            srcActive_   = {  32,  32, 32, 32 };
+            srcInactive_ = {  64,  64, 32, 32 };   
+            srcActive_   = {  0,  64, 32, 32 };
             break;
         default:
             std::cerr << "Warning: Unknown mechanism type '" << type << "'. Defaulting to DOOR." << std::endl;
