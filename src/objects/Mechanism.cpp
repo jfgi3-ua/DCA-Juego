@@ -16,13 +16,13 @@ Mechanism::Mechanism(char type, IVec2 trigger, IVec2 target) {
         case 'T':
             type_ = MechanismType::TRAP;
             mecText_ = &rm.GetTexture(base + "trap_saw.png");
-            srcInactive_ = {  64,  26, 32, 32 };   
-            srcActive_   = {  32,  32, 32, 32 };
+            srcInactive_ = {  336,  192, 50, 30 };   
+            srcActive_   = {  0,  26, 32, 32 };
             break;
         case 'B':
             type_ = MechanismType::BRIDGE;
             mecText_ = &rm.GetTexture(base + "fire_trap.png");
-            srcInactive_ = {  64,  32, 32, 32 };   
+            srcInactive_ = {  170,  32, 32, 32 };   
             srcActive_   = {  0,  32, 32, 32 };
             break;
         case 'L':
@@ -51,14 +51,21 @@ void Mechanism::render(int ox, int oy) const {
     
     const Rectangle& src = active_ ? srcActive_ : srcInactive_;
     
-    Rectangle dest = {
-        (float)gx,
-        (float)gy,
-        (float)tileSize_,
-        (float)tileSize_
+    // Escala uniforme (misma en X e Y) para no deformar
+    float scale = std::min(tileSize_ / src.width, tileSize_ / src.height);
+
+    float destW = src.width  * scale;
+    float destH = src.height * scale;
+
+    Rectangle dest {
+        gx,
+        gy,
+        destW,
+        destH
     };
 
     DrawTexturePro(*mecText_, src, dest, {0,0}, 0.0f, WHITE);
+
 
     /** 
      int size = (tileSize_);
