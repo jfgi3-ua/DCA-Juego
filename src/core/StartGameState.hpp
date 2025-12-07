@@ -19,9 +19,6 @@ class StartGameState : public GameState {
         void resume() override {}
 
     private:
-        const Texture2D* background = nullptr;
-        Color backgroundColor = GRAY;
-
         int selectedOption = 0;               // 0 = Jugar, 1 = Salir
 
 };
