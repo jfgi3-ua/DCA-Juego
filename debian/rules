@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+
+# Versión mínima usando debhelper
+%:
+	dh $@
+
+# Compilación usando nuestro Makefile
+override_dh_auto_build:
+	$(MAKE) all
+
+# Instalación usando nuestro Makefile + DESTDIR controlado por Debian
+override_dh_auto_install:
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/game PREFIX=/usr

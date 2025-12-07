@@ -1,0 +1,241 @@
+# =========================
+# Colores para mensajes
+# =========================
+GREEN  := \033[1;32m
+YELLOW := \033[1;33m
+BLUE   := \033[1;34m
+RED    := \033[1;31m
+RESET  := \033[0m
+
+# =========================
+# Configuración básica
+# =========================
+CXX_BASE := g++
+# Si quieres usar ccache: make USE_CCACHE=1
+ifdef USE_CCACHE
+  CXX := ccache $(CXX_BASE)
+else
+  CXX := $(CXX_BASE)
+endif
+
+APP_NAME ?= game
+
+# Variables de instalación (Debian/FHS)
+PREFIX ?= /usr
+DESTDIR ?=
+BINDIR := $(PREFIX)/bin
+DATADIR := $(PREFIX)/share/$(APP_NAME)
+ASSETS_DIR := assets
+
+# Rutas del proyecto
+SRC_DIR        := src
+OBJ_DIR        := obj
+BIN_DIR        := bin
+LIB_DIR        := vendor/lib
+VENDOR_INC_DIR := vendor/include
+
+# ================================================================
+# Nota importante sobre BIN_DIR vs BINDIR
+#
+# BIN_DIR  → Carpeta de compilación dentro del proyecto.
+#             Aquí se genera el ejecutable durante el desarrollo.
+#             Ejemplo: bin/game
+#
+# BINDIR   → Carpeta de instalación final en el sistema (FHS).
+#             Aquí se instala el ejecutable cuando se empaqueta o
+#             se ejecuta "make install". No se usa para compilar.
+#             Ejemplo: /usr/bin/game
+#
+# REGLA FUNDAMENTAL:
+#   - BIN_DIR se usa durante la compilación (objetivos del make).
+#   - BINDIR se usa solo dentro de la regla "install".
+#
+# Mezclarlos causa errores como intentar enlazar en /usr/bin sin
+# permisos ("Permiso denegado").
+# ================================================================
+
+# =========================
+# Descubrir fuentes e includes
+# =========================
+
+# Buscar todos los .cpp recursivamente dentro de src/
+SRC  := $(shell find $(SRC_DIR) -type f -name '*.cpp')
+
+# Generar los .o correspondientes en obj/ con la misma estructura
+OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC))
+
+# Incluir recursivamente todos los subdirectorios de src/ y vendor/include/
+INC_DIRS    := $(shell find $(SRC_DIR) -type d)
+INC_VENDORS := $(shell find $(VENDOR_INC_DIR) -type d 2>/dev/null)
+INC_FLAGS   := $(addprefix -I,$(INC_DIRS)) $(addprefix -I,$(INC_VENDORS))
+
+# =========================
+# Flags de compilación y enlace
+# =========================
+CXXSTD   := -std=c++17
+WARNINGS := -Wall -Wextra -Wpedantic
+OPT      := -O2
+CXXFLAGS := $(CXXSTD) $(WARNINGS) $(OPT) $(INC_FLAGS)
+
+LIB_DIRS := -L$(LIB_DIR)
+LDFLAGS  := $(LIB_DIRS)
+
+# Librerías (Linux + Raylib)
+LDLIBS   := -lraylib -lGL -lm -lpthread -lrt -lX11
+
+# =========================
+# Raylib como dependencia
+# =========================
+RAYLIB     := libraylib.a
+RAYLIB_DEP := $(LIB_DIR)/$(RAYLIB)
+
+# =========================
+# Objetivos phony
+# =========================
+.PHONY: all run clean distclean debug release help info raylib \
+        ccache-stats ccache-zero ccache-clear install dist
+
+# Regla por defecto: compilar en modo release
+all: release
+
+# =========================
+# Build (release / debug)
+# =========================
+release: CXXFLAGS := $(CXXSTD) $(WARNINGS) -O2 -DNDEBUG $(INC_FLAGS)
+release: $(BIN_DIR)/$(APP_NAME)
+
+debug: CXXFLAGS := $(CXXSTD) $(WARNINGS) -O0 -g -DDEBUG $(INC_FLAGS)
+debug: $(BIN_DIR)/$(APP_NAME)
+
+# Enlace final
+$(BIN_DIR)/$(APP_NAME): $(RAYLIB_DEP) $(OBJS)
+	@echo "$(BLUE)[LD] Enlazando $(APP_NAME)...$(RESET)"
+	@mkdir -p $(BIN_DIR)
+	$(CXX) -o $@ $(OBJS) $(LDFLAGS) $(LDLIBS)
+	@echo "$(GREEN)Ejecutable generado: $(BIN_DIR)/$(APP_NAME)$(RESET)"
+
+# Compilación de cada .cpp a .o (crea obj/ y subcarpetas si no existen)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@echo "$(YELLOW)[CXX] $< → $@$(RESET)"
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# =========================
+# Ejecutar el juego
+# =========================
+run: all
+	@echo "$(BLUE)Ejecutando $(BIN_DIR)/$(APP_NAME)...$(RESET)"
+	@./$(BIN_DIR)/$(APP_NAME)
+
+# =========================
+# Limpieza
+# =========================
+clean:
+	@echo "$(RED)[CLEAN] Borrando objetos y binarios...$(RESET)"
+	@rm -rf $(OBJ_DIR) $(BIN_DIR)
+
+distclean: clean
+	@echo "$(RED)[CLEAN] Borrando dependencias descargadas...$(RESET)"
+	@rm -rf dist
+
+# =========================
+# Info de depuración
+# =========================
+info:
+	$(info SRC = $(SRC))
+	$(info OBJS = $(OBJS))
+	$(info INC_FLAGS = $(INC_FLAGS))
+	$(info LIB_DIRS = $(LIB_DIRS))
+	$(info RAYLIB_DEP = $(RAYLIB_DEP))
+	$(info CXX = $(CXX))
+
+# =========================
+# Descarga/compilación Raylib
+# =========================
+raylib: $(RAYLIB_DEP)
+
+$(RAYLIB_DEP):
+	@if [ ! -f "$(RAYLIB_DEP)" ]; then \
+		echo "$(YELLOW)Raylib no está en $(RAYLIB_DEP). Descargando...$(RESET)"; \
+		git clone --depth 1 https://github.com/raysan5/raylib.git; \
+		$(MAKE) -C raylib/src/ PLATFORM=PLATFORM_DESKTOP; \
+		mkdir -p $(LIB_DIR); \
+		mv raylib/src/libraylib.a "$(LIB_DIR)/"; \
+		rm -rf raylib; \
+		echo "$(GREEN)Raylib instalada correctamente en $(RAYLIB_DEP).$(RESET)"; \
+	else \
+		echo "$(GREEN)Raylib ya instalada en $(RAYLIB_DEP).$(RESET)"; \
+	fi
+
+# =========================
+# ccache: utilidades
+# =========================
+ccache-stats:
+	@ccache -s
+
+ccache-zero:
+	@ccache -z
+
+ccache-clear:
+	@ccache -C
+
+
+# =========================
+# Instalación FHS
+# =========================
+# Nota: Usa DESTDIR para instalaciones temporales (empaquetado)
+# usamos make install DESTDIR=debian/game/
+install: $(BIN_DIR)/$(APP_NAME)
+
+	#aviso si no se usa DESTDIR, para evitar instalaciones accidentales
+	@if [ -z "$(DESTDIR)" ]; then \
+	  echo "$(YELLOW)[AVISO] Ejecutando make install SIN DESTDIR.$(RESET)"; \
+	  echo "$(YELLOW)         Esto instalará el juego en tu sistema real (requiere sudo).$(RESET)"; \
+	fi
+
+	@echo "$(BLUE)[INSTALL] Instalando en $(DESTDIR)$(PREFIX)...$(RESET)"
+
+	# Instalar ejecutable
+	install -D -m 0755 $(BIN_DIR)/$(APP_NAME) $(DESTDIR)$(BINDIR)/$(APP_NAME)
+
+	# Instalar assets
+	install -d $(DESTDIR)$(DATADIR)/assets
+	cp -r $(ASSETS_DIR)/. $(DESTDIR)$(DATADIR)/assets/
+
+	@echo "$(GREEN)[INSTALL] Instalación completada.$(RESET)"
+
+
+uninstall:
+	@echo "$(RED)[UNINSTALL] Eliminando archivos instalados...$(RESET)"
+	rm -f $(DESTDIR)$(BINDIR)/$(APP_NAME)
+	rm -rf $(DESTDIR)$(DATADIR)
+	@echo "$(GREEN)[UNINSTALL] Completado.$(RESET)"
+	
+# =========================
+# Empaquetado .deb
+# =========================
+dist: clean
+	@echo "$(BLUE)[DIST] Construyendo paquete .deb con dpkg-buildpackage...$(RESET)"
+	dpkg-buildpackage -us -uc -b
+	@echo "$(GREEN)[DIST] Paquete .deb generado.$(RESET)"
+
+
+# =========================
+# Ayuda rápida
+# =========================
+help:
+	@echo "Comandos disponibles:"
+	@echo "  make / make release          -> Compila en modo release"
+	@echo "  make debug                   -> Compila en modo debug"
+	@echo "  make run                     -> Compila (release) y ejecuta"
+	@echo "  make clean                   -> Borra obj/ y bin/"
+	@echo "  make distclean               -> clean + borra dist/"
+	@echo "  make info                    -> Muestra fuentes, objetos e includes"
+	@echo "  make raylib                  -> Descarga/compila libraylib.a si falta"
+	@echo "  make USE_CCACHE=1            -> Compila usando ccache"
+	@echo "  make ccache-stats            -> Muestra estadísticas de ccache"
+	@echo "  make ccache-zero             -> Pone a cero las estadísticas"
+	@echo "  make ccache-clear            -> Limpia la caché de compilación"
+	@echo "  make install [DESTDIR=...]   -> Crea la instalación FHS (usa DESTDIR para empaquetado)"
+	@echo "  make uninstall [DESTDIR=...] -> Elimina los archivos creados por install"
+	@echo "  make dist                    -> Crea un paquete .deb usando dpkg-buildpackage"
