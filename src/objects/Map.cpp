@@ -75,6 +75,8 @@ bool Map::loadFromFile(const std::string& path, int tileSize) {
                 _enemies.push_back({ x, y });
             } else if (c == 'K') {
                 _keys.push_back({ x, y });
+            } else if (c == 'X') {
+                // Salida, no se necesita almacenar posición aquí?
             } else if (c == '^') {
                 _spikes.push_back({x, y});
             } else if (std::islower(c)) {
@@ -198,32 +200,29 @@ bool Map::clearCell(int x, int y, char replacement) {
 void Map::pairMechanisms(std::unordered_map<char, IVec2>& triggers, std::unordered_map<char, IVec2>& targets) {
     _mechanisms.clear();
 
-    //Comprobamos q cada trigger tenga su target
-    for (const auto& [key, triggerPos] : triggers) {
-        char targetKey = std::toupper(key);
+    //recorremos los triggers para emparejarlos con sus targets
+    for(auto it = triggers.begin(); it != triggers.end(); ++it) {
+        //pasamos la letra a mayusculas para buscar su target
+        char targetChar = std::toupper(it->first);
+        auto targetIt = targets.find(targetChar);
 
-        // Si no hay target lanzamos error
-        auto targetIt = targets.find(targetKey);
-        if (targetIt == targets.end()) {
-            throw std::runtime_error(
-                std::string("Missing target for mechanism '") + targetKey + "'");
+        //si no encontramos el target lanzamos error
+        if(targetIt == targets.end()) {
+            throw std::runtime_error("Missing target for mechanism '" + std::string(1, targetChar) + "'");
         }
 
-        std::cout << "Paired mechanism: " << key;
-        _mechanisms.push_back({ targetKey, triggerPos, targetIt->second });
+        //guardamos el mecanismo emparejado
+        _mechanisms.push_back({targetChar, it->second, targetIt->second});
+
+        //borramos el target ya emparejado para comprobar luego si quedan targets sin emparejar
+        targets.erase(targetIt);
+    }
+
+    //comprobamos si quedan targets sin emparejar
+    if(!targets.empty()) {
+        throw std::runtime_error("Missing trigger for mechanism '" + std::string(1, targets.begin()->first) + "'");
     }
 }
-
-#include "Map.hpp"
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include "core/ResourceManager.hpp" // Asegúrate de incluir esto
-extern "C" {
-    #include <raylib.h>
-}
-
-// ... (resto del código anterior: loadFromFile, at, isWalkable, etc) ...
 
 void Map::render(int ox, int oy) const {
     if (_grid.empty()) return;

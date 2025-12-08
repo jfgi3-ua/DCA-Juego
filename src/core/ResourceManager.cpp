@@ -71,7 +71,8 @@ const Texture2D& ResourceManager::GetTexture(const std::string& filename) {
 
     // 4. Guardar en caché
     textures[filename] = tex;
-
+    std::cout << "Textura cargada: " << path << std::endl;
+    
     // 5. Devolver referencia a la textura cacheada
     return textures[filename];
 }

@@ -23,7 +23,7 @@ void MainGameState::init()
     std::string absolutePath = rm.GetAssetPath(relativePath);
 
     //std::string absolutePath = "/usr/share/game/assets/maps/map_1.txt"; //probando poque da error al intentar abrilo en carpeta random
-    map_.loadFromFile(absolutePath, 32);
+    map_.loadFromFile(absolutePath, TILE_SIZE);
     tile_ = map_.tile();
 
     // Guardar total de llaves del mapa (antes de que se recojan)
