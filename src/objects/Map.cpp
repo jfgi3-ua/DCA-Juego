@@ -101,9 +101,9 @@ void Map::loadTextures() {
     auto& rm = ResourceManager::Get();
     
     _mapTexture = &rm.GetTexture("sprites/walls_floor.png");
-    _floorSrc = { 0, 160, 32, 32 };
-    _wallSrc  = { 0,  32, 32, 32 };
-    _exitSrc  = { 96, 128, 32, 32 };  
+    _floorSrc = { 176, 340, 32, 28 };
+    _wallSrc  = { 10, 47, 32, 30 };
+    _exitSrc  = { 48, 336, 32, 32 };  
     
     _keyTexture = &rm.GetTexture("sprites/icons/Icons.png");
     _keySrc = { 64, 0, 16, 16 }; 
@@ -253,20 +253,21 @@ void Map::render(int ox, int oy) const {
                 (float)_tile
             };
 
-            // Dibujado base (por ahora mantenemos tu lógica antigua)
-            DrawRectangleRec(destRect, (c == '#') ? LIGHTGRAY : WHITE);
-
+            // 1) Dibujar suelo base
+            DrawTexturePro(*_mapTexture, _floorSrc, destRect, {0,0}, 0.0f, WHITE);
+            
+            // 2) Dibujar paredes
             if (c == '#') {
-                DrawRectangleLinesEx(destRect, 1.0f, DARKGRAY);
-            }
+                DrawTexturePro(*_mapTexture, _wallSrc, destRect, {0,0}, 0.0f, WHITE);
+            } 
+            // 3) Dibujar salida
             else if (c == 'X') {
-                DrawRectangleRec(destRect, LIME);
+                DrawTexturePro(*_mapTexture, _exitSrc, destRect, {0,0}, 0.0f, WHITE);
             }
+            // 4) Dibujar llave
             else if (c == 'K') {
-                // A partir de aquí, solo usamos lo que ya está cargado en loadTexture()
-                if (_keyTexture) {
-                    DrawTexturePro(*_keyTexture, _keySrc, destRect, {0,0}, 0.0f, WHITE);
-                }
+                DrawTexturePro(*_keyTexture, _keySrc, destRect, {0,0}, 0.0f, WHITE);
+    
             }
         }
     }
