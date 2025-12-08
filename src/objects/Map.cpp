@@ -1,7 +1,6 @@
 #include "Map.hpp"
 #include <fstream>
 #include <sstream>   // para construir mensajes de error detallados
-#include "core/ResourceManager.hpp"
 extern "C" {
     #include <raylib.h>
 }
@@ -93,7 +92,22 @@ bool Map::loadFromFile(const std::string& path, int tileSize) {
     //7 Mecanismos: emparejamos triggers y targets
     pairMechanisms(triggers, targets);
 
+    //8 cargamos texturas SE HACE EN MAINGAMESTATE
+
     return true;
+}
+
+void Map::loadTextures() {
+    auto& rm = ResourceManager::Get();
+    
+    _mapTexture = &rm.GetTexture("sprites/walls_floor.png");
+    _floorSrc = { 0, 160, 32, 32 };
+    _wallSrc  = { 0,  32, 32, 32 };
+    _exitSrc  = { 96, 128, 32, 32 };  
+    
+    _keyTexture = &rm.GetTexture("sprites/icons/Icons.png");
+    _keySrc = { 64, 0, 16, 16 }; 
+
 }
 
 /**
@@ -227,40 +241,11 @@ void Map::pairMechanisms(std::unordered_map<char, IVec2>& triggers, std::unorder
 void Map::render(int ox, int oy) const {
     if (_grid.empty()) return;
 
-    // 1. Cargamos el SpriteSheet completo ("Icons.png")
-    // Nota: Uso "Icons.png" con mayúscula porque así aparece en tu estructura de archivos.
-    // En Linux es sensible a mayúsculas.
-    const Texture2D& atlasTex = ResourceManager::Get().GetTexture("sprites/icons/Icons.png");
-
-    // 2. Configuración del recorte (Source Rect)
-    // Asumimos que los iconos son cuadrados. Si la imagen es una tira larga,
-    // el ancho del sprite suele ser igual a la altura de la imagen.
-    // Si es una cuadrícula de 32x32, pon 32. Vamos a intentar deducirlo o usar 32 por defecto.
-    float spriteSize = 16.0f; // TAMAÑO DEL ICONO EN EL PNG (Ajusta este valor si tus iconos son de 16x16 o 64x64)
-
-    // El "quinto sprite" corresponde al índice 4 (0, 1, 2, 3, 4)
-    int spriteIndex = 4;
-
-    // Calculamos la posición X e Y del sprite dentro de la imagen
-    // Esto funciona tanto si es una sola fila como si es una cuadrícula de varias filas.
-    int iconsPerRow = atlasTex.width / (int)spriteSize;
-    if (iconsPerRow == 0) iconsPerRow = 1; // Evitar división por cero si la textura no cargó
-
-    int gridX = spriteIndex % iconsPerRow; // Columna
-    int gridY = spriteIndex / iconsPerRow; // Fila
-
-    Rectangle sourceRect = {
-        gridX * spriteSize, // X en el png
-        gridY * spriteSize, // Y en el png
-        spriteSize,         // Ancho a recortar
-        spriteSize          // Alto a recortar
-    };
 
     for (int y = 0; y < _h; ++y) {
         for (int x = 0; x < _w; ++x) {
             const char c = _grid[y][x];
 
-            // Rectángulo de destino en pantalla (dónde se dibuja)
             Rectangle destRect{
                 (float)(ox + x * _tile),
                 (float)(oy + y * _tile),
@@ -268,20 +253,20 @@ void Map::render(int ox, int oy) const {
                 (float)_tile
             };
 
-            // Dibujado base (Suelo / Paredes / Salida)
-            // (Mantenemos tu lógica para lo que no sea la llave)
+            // Dibujado base (por ahora mantenemos tu lógica antigua)
             DrawRectangleRec(destRect, (c == '#') ? LIGHTGRAY : WHITE);
 
             if (c == '#') {
                 DrawRectangleLinesEx(destRect, 1.0f, DARKGRAY);
-            } else if (c == 'X') {
+            }
+            else if (c == 'X') {
                 DrawRectangleRec(destRect, LIME);
             }
-            // RENDERIZADO DE LA LLAVE
             else if (c == 'K') {
-                // DrawTexturePro hace la magia: toma el trozo 'sourceRect' del PNG
-                // y lo estira para que encaje en 'destRect' (tu casilla del mapa)
-                DrawTexturePro(atlasTex, sourceRect, destRect, {0,0}, 0.0f, WHITE);
+                // A partir de aquí, solo usamos lo que ya está cargado en loadTexture()
+                if (_keyTexture) {
+                    DrawTexturePro(*_keyTexture, _keySrc, destRect, {0,0}, 0.0f, WHITE);
+                }
             }
         }
     }

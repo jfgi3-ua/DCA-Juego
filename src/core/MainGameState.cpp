@@ -24,6 +24,7 @@ void MainGameState::init()
 
     //std::string absolutePath = "/usr/share/game/assets/maps/map_1.txt"; //probando poque da error al intentar abrilo en carpeta random
     map_.loadFromFile(absolutePath, TILE_SIZE);
+    map_.loadTextures(); //lo llamamos aqui ya q tambien se llama en main y no se pueden cargar texturas antes de InitWindow
     tile_ = map_.tile();
 
     // Guardar total de llaves del mapa (antes de que se recojan)

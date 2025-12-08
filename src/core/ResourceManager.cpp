@@ -93,11 +93,11 @@ void ResourceManager::UnloadTexture(const std::string& filename) {
 
 void ResourceManager::UnloadAll() {
 
-    // Libero uno por uno
+    // Liberar todas las texturas sin borrar en mitad del bucle
     for (auto& t : textures) {
-        UnloadTexture(t.first);
+        ::UnloadTexture(t.second);
     }
 
-    // Limpio la tabla
+    // Ahora borramos el mapa entero
     textures.clear();
 }
