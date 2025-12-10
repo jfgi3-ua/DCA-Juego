@@ -82,7 +82,7 @@ void ResourceManager::UnloadTexture(const std::string& filename) {
     auto it = textures.find(filename);
     if (it != textures.end()) {
         // Liberar la textura de la GPU
-        UnloadTexture(it->first);
+        ::UnloadTexture(it->second);
 
         // Eliminar del mapa
         textures.erase(it);
