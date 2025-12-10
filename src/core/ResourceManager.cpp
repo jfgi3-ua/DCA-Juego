@@ -71,7 +71,8 @@ const Texture2D& ResourceManager::GetTexture(const std::string& filename) {
 
     // 4. Guardar en caché
     textures[filename] = tex;
-
+    std::cout << "Textura cargada: " << path << std::endl;
+    
     // 5. Devolver referencia a la textura cacheada
     return textures[filename];
 }
@@ -92,11 +93,11 @@ void ResourceManager::UnloadTexture(const std::string& filename) {
 
 void ResourceManager::UnloadAll() {
 
-    // Libero uno por uno
+    // Liberar todas las texturas sin borrar en mitad del bucle
     for (auto& t : textures) {
-        UnloadTexture(t.first);
+        ::UnloadTexture(t.second);
     }
 
-    // Limpio la tabla
+    // Ahora borramos el mapa entero
     textures.clear();
 }

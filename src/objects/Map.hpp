@@ -7,6 +7,8 @@
 #include <iostream>
 #include "Mechanism.hpp"
 #include <unordered_map>
+#include "core/ResourceManager.hpp"
+
 extern "C" {
     #include <raylib.h>
 }
@@ -89,13 +91,21 @@ class Map {
 
         /// Posiciones iniciales de pinchos (en celdas). Puede estar vacío.
         const std::vector<IVec2>& spikesStarts() const { return _spikes; }
-
+        
         /// Posiciones iniciales de mecanismos (en celdas). Puede estar vacío.
         const std::vector<MechanismPair>& getMechanisms() const { return _mechanisms;}
-
+        
         //Emparejamiento de mecanismos trigger-target
         void pairMechanisms(std::unordered_map<char, IVec2>& triggers,
-                            std::unordered_map<char, IVec2>& targets);
+            std::unordered_map<char, IVec2>& targets);
+            
+        // Dibujar el mapa en pantalla usando offsets en píxeles (ox, oy).
+        // Esta función encapsula el dibujo de celdas y puede ser llamada
+        // desde estados como `MainGameState`.
+        void render(int ox, int oy) const;
+
+        //Cargamos las texturas del mapa mediante el ResourceManager y selecionamos los rectangulos fuente
+        void loadTextures();
 
     private:
         // Dimensiones en celdas
@@ -116,13 +126,16 @@ class Map {
 
         // Lista de spikes '^' detectadas al cargar
         std::vector<IVec2> _spikes;
-
+        
         // Lista de mecanismos detectadas al cargar
         std::vector<MechanismPair> _mechanisms;
 
-    public:
-        // Dibujar el mapa en pantalla usando offsets en píxeles (ox, oy).
-        // Esta función encapsula el dibujo de celdas y puede ser llamada
-        // desde estados como `MainGameState`.
-        void render(int ox, int oy) const;
+        const Texture2D* _mapTexture = nullptr;
+        const Texture2D* _keyTexture = nullptr; 
+
+        Rectangle _floorSrc;
+        Rectangle _wallSrc;
+        Rectangle _exitSrc;
+        Rectangle _keySrc;
+        
 };
