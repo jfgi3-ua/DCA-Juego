@@ -48,6 +48,8 @@ void MainGameState::init()
         spikes_.addSpike(s.x, s.y);
     }
 
+    spikes_.LoadTextures();
+
     for (auto m : map_.getMechanisms()) {
         //m es un MechanismPair
         mechanisms_.emplace_back(m.id, m.trigger, m.target);

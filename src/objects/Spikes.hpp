@@ -17,6 +17,8 @@ private:
     int tileSize = TILE_SIZE;
     
     const Texture2D* spikeTex_ = nullptr; 
+    Rectangle srcRectActive_;
+    Rectangle srcRectInactive_;
 
 
 public:
@@ -26,4 +28,5 @@ public:
     void update(float deltaTime);
     void render(int ox, int oy) const;
     bool isActiveAt(int gridX, int gridY) const;
+    void LoadTextures();
 };
