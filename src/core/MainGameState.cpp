@@ -1,10 +1,11 @@
+#include <iostream>
 #include "MainGameState.hpp"
 #include "GameOverState.hpp"
 #include "DevModeState.hpp"
 #include "StateMachine.hpp"
 #include "ResourceManager.hpp"
 #include "objects/Enemy.hpp"
-#include <iostream>
+#include "ecs/Components.hpp"
 extern "C" {
   #include <raylib.h>
 }
@@ -55,6 +56,25 @@ void MainGameState::init()
 
     // Inicializar temporizador: 30s base + 30s por cada nivel adicional
     levelTime_ = 30.0f + (level_ - 1) * 30.0f;
+
+    // ---------------------------------------------------------
+    // PRUEBA: CREACIÓN DE ENTIDAD CON ENTT
+    // ---------------------------------------------------------
+
+    // 1. Crear una entidad vacía
+    auto entidadPrueba = registry.create();
+
+    // 2. Añadirle el componente de prueba con el valor 100
+    registry.emplace<TestComponent>(entidadPrueba, 100);
+
+    // 3. Verificar si se ha guardado correctamente
+    if(registry.all_of<TestComponent>(entidadPrueba)) {
+        auto& comp = registry.get<TestComponent>(entidadPrueba);
+        std::cout << "\n[HITO 1 - ECS] EXITO: Entidad creada. Valor recuperado: "
+                  << comp.valor << "\n" << std::endl;
+    } else {
+        std::cout << "\n[HITO 1 - ECS] ERROR: No se encontro el componente.\n" << std::endl;
+    }
 }
 
 void MainGameState::handleInput()

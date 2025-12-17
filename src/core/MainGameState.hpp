@@ -1,15 +1,16 @@
 #pragma once
-#include "GameState.hpp"
 #include <iostream>
-#include "objects/Map.hpp"
-#include "objects/Player.hpp"
 #include <vector>
 #include "Config.hpp"
+#include "GameState.hpp"
+#include "objects/Map.hpp"
+#include "objects/Player.hpp"
 #include "objects/Spikes.hpp"
 #include "objects/Mechanism.hpp"
 extern "C" {
   #include <raylib.h>
 }
+#include <entt/entt.hpp>  // Librería ECS
 
 class MainGameState : public GameState
 {
@@ -49,9 +50,12 @@ class MainGameState : public GameState
         std::vector<Vector2> activeMechanisms_;
         // Temporizador del nivel (segundos). 30s base + 30s por nivel
         float levelTime_ = 30.0f;
-        
+
         // Total de llaves en el mapa (guardado al inicio, no cambia)
         int totalKeysInMap_ = 0;
+
+        // ECS registry
+        entt::registry registry;
 
         // ========== DEVELOPER MODE ==========
         bool freezeEnemies_ = false;     // Enemigos congelados
