@@ -77,8 +77,13 @@ void MainGameState::init()
     // 4. Configuración del Sprite
     Texture2D playerTex = LoadTexture("assets/sprites/player/Archer/Idle.png");
     Vector2 manualOffset = { 8.0f, -8.0f };  // Ajuste manual del sprite
-    // IMPORTANTE: Idle suele tener 6 frames en tus assets, ajusta este número si es distinto.
     registry.emplace<SpriteComponent>(playerEntity, playerTex, 6, manualOffset);
+
+    // 5. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
+    registry.emplace<MovementComponent>(playerEntity, 150.0f);
+
+    // 6. Etiqueta de Input (para que sepa que ESTE es el jugador controlable)
+    registry.emplace<PlayerInputComponent>(playerEntity);
 }
 
 void MainGameState::handleInput()
@@ -108,7 +113,11 @@ void MainGameState::update(float deltaTime)
     }
 
     // 1) Actualizar (movimiento) jugador con colisiones de mapa
-    player_.update(deltaTime, map_, activeMechanisms_);
+    // player_.update(deltaTime, map_, activeMechanisms_); // LOGICA ANTIGUA
+
+    // Primero Input (decide destino), luego Movimiento (mueve)
+    InputSystem(registry, map_);
+    MovementSystem(registry, deltaTime);
 
     // 2) Celda actual del jugador
     int cellX = (int)(player_.getPosition().x) / tile_;
