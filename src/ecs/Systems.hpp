@@ -3,6 +3,7 @@
 #include <entt/entt.hpp>
 #include "objects/Map.hpp"
 #include <cmath>
+#include <iostream> // Para debug
 extern "C" {
     #include <raylib.h>
 }
@@ -143,4 +144,75 @@ inline void MovementSystem(entt::registry &registry, float deltaTime) {
             transform.position.y = move.startPos.y + (move.targetPos.y - move.startPos.y) * t;
         }
     });
+}
+
+inline void CollisionSystem(entt::registry &registry, const Map &map) {
+    // 1. Obtener al jugador (asumimos que solo hay uno con PlayerInputComponent y Collider)
+    auto playerView = registry.view<TransformComponent, ColliderComponent, PlayerInputComponent>();
+
+    // Si no hay jugador, no hacemos nada
+    if (playerView.begin() == playerView.end()) return;
+
+    entt::entity playerEntity = *playerView.begin();
+    auto &playerTrans = playerView.get<TransformComponent>(playerEntity);
+    auto &playerCol = playerView.get<ColliderComponent>(playerEntity);
+
+    // Calcular la caja absoluta del jugador en el mundo
+    // Sumamos la posición de la entidad al offset del collider
+    Rectangle playerBox = {
+        playerTrans.position.x + playerCol.rect.x,
+        playerTrans.position.y + playerCol.rect.y,
+        playerCol.rect.width,
+        playerCol.rect.height
+    };
+
+    // 2. Iterar sobre todas las demas entidades con colisionador (Enemigos, Pinchos, etc.)
+    // Excluimos al jugador usando 'entt::exclude<PlayerInputComponent>' si quisiéramos,
+    // pero aquí simplemente chequeamos colisiones contra "todo lo que sea peligroso".
+    auto hazardView = registry.view<TransformComponent, ColliderComponent>();
+
+    for(auto entity : hazardView) {
+        // No chequear colisión con uno mismo
+        if(entity == playerEntity) continue;
+
+        auto &hazardTrans = hazardView.get<TransformComponent>(entity);
+        auto &hazardCol = hazardView.get<ColliderComponent>(entity);
+
+        if (!hazardCol.active) continue;
+
+        // Calcular caja absoluta del peligro
+        Rectangle hazardBox = {
+            hazardTrans.position.x + hazardCol.rect.x,
+            hazardTrans.position.y + hazardCol.rect.y,
+            hazardCol.rect.width,
+            hazardCol.rect.height
+        };
+
+        // 3. Verificar Solapamiento (AABB)
+        if (CheckCollisionRecs(playerBox, hazardBox)) {
+
+            // Reacción según el tipo
+            if (hazardCol.type == CollisionType::Spike || hazardCol.type == CollisionType::Enemy) {
+                std::cout << "¡COLISIÓN DETECTADA! Reiniciando jugador..." << std::endl;
+
+                // Lógica de Respawn simple: Volver al inicio del mapa
+                IVec2 startGrid = map.playerStart();
+                float tileSize = (float)map.tile();
+
+                // Reiniciar posición física
+                playerTrans.position = {
+                    startGrid.x * tileSize + tileSize / 2.0f,
+                    startGrid.y * tileSize + tileSize / 2.0f
+                };
+
+                // IMPORTANTE: Reiniciar lógica de movimiento para evitar que siga interpolando
+                if (registry.all_of<MovementComponent>(playerEntity)) {
+                    auto &move = registry.get<MovementComponent>(playerEntity);
+                    move.isMoving = false;
+                    move.progress = 0.0f;
+                    move.targetPos = playerTrans.position; // Cancelar destino
+                }
+            }
+        }
+    }
 }

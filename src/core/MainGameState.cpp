@@ -59,9 +59,9 @@ void MainGameState::init()
     levelTime_ = 30.0f + (level_ - 1) * 30.0f;
 
     // ---------------------------------------------------------
-    // PRUEBA: ENTT
+    // REFACTOR: ENTT
     // ---------------------------------------------------------
-
+    // --- PLAYER ---
     // 1. Obtener coordenadas del grid donde está la 'P' (ej: x=2, y=3)
     IVec2 startGridPos = map_.playerStart();
 
@@ -76,7 +76,7 @@ void MainGameState::init()
 
     // 4. Configuración del Sprite
     Texture2D playerTex = LoadTexture("assets/sprites/player/Archer/Idle.png");
-    Vector2 manualOffset = { 8.0f, -8.0f };  // Ajuste manual del sprite
+    Vector2 manualOffset = { 0.0f, -10.0f };  // Ajuste manual del sprite
     registry.emplace<SpriteComponent>(playerEntity, playerTex, 6, manualOffset);
 
     // 5. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
@@ -84,6 +84,37 @@ void MainGameState::init()
 
     // 6. Etiqueta de Input (para que sepa que ESTE es el jugador controlable)
     registry.emplace<PlayerInputComponent>(playerEntity);
+
+    // -- Colisiones --
+    // 1. Añadir ColliderComponent al JUGADOR
+    // Ajustamos la caja para que sea un poco más pequeña que el tile (hitbox permisiva... de momento)
+    float hitSize = tile_ * 0.6f;
+    float offset = (tile_ - hitSize) / 2.0f;
+    // Offset centrado relativo al centro del personaje (que es donde está transform.position)
+    // Como transform.position es el CENTRO, un rect en {-w/2, -h/2} estaría centrado.
+    registry.emplace<ColliderComponent>(playerEntity,
+        Rectangle{ -hitSize/2, -hitSize/2, hitSize, hitSize },
+        CollisionType::Player
+    );
+
+    // 2. Crear un PINCHO DE PRUEBA (Entidad ECS)
+    auto spikeEntity = registry.create();
+
+    float spikeX = (startGridPos.x + 2) * tile_ + tile_ / 2.0f;
+    float spikeY = startGridPos.y * tile_ + tile_ / 2.0f;
+
+    registry.emplace<TransformComponent>(spikeEntity, Vector2{spikeX, spikeY}, Vector2{(float)tile_, (float)tile_});
+
+    // Cargar textura de pinchos
+    Texture2D spikeTex = ResourceManager::Get().GetTexture("assets/sprites/spikes.png");
+    registry.emplace<SpriteComponent>(spikeEntity, spikeTex); // Imagen estática ahora mismo... ya veremos si animarla luego
+
+    // Añadir Collider al pincho
+    // hitbox un poco más pequeña para dar margen
+    registry.emplace<ColliderComponent>(spikeEntity,
+        Rectangle{ -hitSize/2, -hitSize/2, hitSize, hitSize },
+        CollisionType::Spike
+    );
 }
 
 void MainGameState::handleInput()
@@ -118,6 +149,9 @@ void MainGameState::update(float deltaTime)
     // Primero Input (decide destino), luego Movimiento (mueve)
     InputSystem(registry, map_);
     MovementSystem(registry, deltaTime);
+
+    // Chequeo de colisiones
+    CollisionSystem(registry, map_);
 
     // 2) Celda actual del jugador
     int cellX = (int)(player_.getPosition().x) / tile_;

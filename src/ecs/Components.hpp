@@ -3,7 +3,7 @@ extern "C" {
   #include <raylib.h>
 }
 
-// Componente de Transformación (Posición y Escala)s
+// Componente de Transformación (Posición y Escala)
 struct TransformComponent {
     Vector2 position;
     Vector2 size;
@@ -39,6 +39,26 @@ struct MovementComponent {
     // Constructor con valores por defecto similares a tu Player.cpp
     MovementComponent(float spd = 150.0f)
         : speed(spd), isMoving(false), startPos{0,0}, targetPos{0,0}, progress(0.0f), duration(0.12f) {}
+};
+
+// Tipo de colisión para identificar la reacción
+enum class CollisionType {
+    None,
+    Player,
+    Enemy,
+    Spike,
+    Item
+};
+
+// Componente de Colisión (Hitbox)
+struct ColliderComponent {
+    // Rectángulo relativo a la posición de la entidad
+    // x, y son offsets; width, height son el tamaño de la caja
+    Rectangle rect;
+    CollisionType type;
+    bool active; // Para desactivar colisiones temporalmente (ej: invulnerabilidad)
+
+    ColliderComponent(Rectangle r, CollisionType t) : rect(r), type(t), active(true) {}
 };
 
 // Etiqueta para el jugador
