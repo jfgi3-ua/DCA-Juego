@@ -6,6 +6,7 @@
 #include "ResourceManager.hpp"
 #include "objects/Enemy.hpp"
 #include "ecs/Components.hpp"
+#include "ecs/Systems.hpp"
 extern "C" {
   #include <raylib.h>
 }
@@ -58,23 +59,25 @@ void MainGameState::init()
     levelTime_ = 30.0f + (level_ - 1) * 30.0f;
 
     // ---------------------------------------------------------
-    // PRUEBA: CREACIÓN DE ENTIDAD CON ENTT
+    // PRUEBA: ENTT
     // ---------------------------------------------------------
 
-    // 1. Crear una entidad vacía
-    auto entidadPrueba = registry.create();
+    // 1. Obtener coordenadas del grid donde está la 'P' (ej: x=2, y=3)
+    IVec2 startGridPos = map_.playerStart();
 
-    // 2. Añadirle el componente de prueba con el valor 100
-    registry.emplace<TestComponent>(entidadPrueba, 100);
+    // 2. Convertir a posición de mundo (píxeles)
+    // Usamos la esquina superior izquierda del tile como referencia (más fácil para ECS)
+    float centerX = (startGridPos.x * map_.tile()) + (map_.tile() / 2.0f);
+    float centerY = (startGridPos.y * map_.tile()) + (map_.tile() / 2.0f);
+    auto playerEntity = registry.create();
 
-    // 3. Verificar si se ha guardado correctamente
-    if(registry.all_of<TestComponent>(entidadPrueba)) {
-        auto& comp = registry.get<TestComponent>(entidadPrueba);
-        std::cout << "\n[HITO 1 - ECS] EXITO: Entidad creada. Valor recuperado: "
-                  << comp.valor << "\n" << std::endl;
-    } else {
-        std::cout << "\n[HITO 1 - ECS] ERROR: No se encontro el componente.\n" << std::endl;
-    }
+    // 3. Guardamos la posición central.
+    registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)map_.tile(), (float)map_.tile()});
+
+    // 4. Configuración del Sprite
+    Texture2D playerTex = LoadTexture("assets/sprites/player/Archer/Idle.png");
+    // IMPORTANTE: Idle suele tener 6 frames en tus assets, ajusta este número si es distinto.
+    registry.emplace<SpriteComponent>(playerEntity, playerTex, 6);
 }
 
 void MainGameState::handleInput()
@@ -191,121 +194,6 @@ void MainGameState::update(float deltaTime)
     }
 }
 
-// void MainGameState::render()
-// {
-//     ClearBackground(RAYWHITE);
-
-//     // Dimensiones
-//     const int mapWpx = map_.width()  * tile_;
-//     const int mapHpx = map_.height() * tile_;
-//     const int viewW  = GetScreenWidth();
-//     const int viewH  = GetScreenHeight() - HUD_HEIGHT; // Espacio disponible sin el HUD
-
-//     // Offset centrado (clamp >= 0) - El mapa queda centrado en el espacio disponible
-//     const int ox = std::max(0, (viewW - mapWpx) / 2);
-//     const int oy = std::max(0, (viewH - mapHpx) / 2);
-
-//     // 1) Mapa (dibujado en la zona superior, desde y=0 hasta y=MAP_H_PX)
-//     map_.render(ox, oy);
-
-//     // Mecanismos
-//     for (const auto& mech : mechanisms_) {
-//         mech.render(ox, oy);
-//     }
-//     // 2) Jugador
-//     player_.render(ox, oy);
-
-//     // 3) Enemigos (cuadrados)
-//     for (auto &e : enemies) {
-//         e.draw(tile_, ox, oy, RED);
-//     }
-
-//     spikes_.render(ox, oy);
-
-
-//     // 4) HUD inferior - se coloca en la parte inferior de la ventana
-//     const float baseY = (float)(GetScreenHeight() - HUD_HEIGHT); // HUD siempre abajo
-//     // Fondo del HUD a lo ancho de la ventana
-//     Rectangle hudBg{ 0.0f, baseY, (float)GetScreenWidth(), (float)HUD_HEIGHT };
-//     DrawRectangleRec(hudBg, Fade(BLACK, 0.06f));
-//     // sombreado sutil encima del HUD
-//     for (int i=0; i<6; ++i) {
-//         Color c = Fade(BLACK, 0.05f * (6 - i));
-//         DrawLine(0, (int)baseY - i, GetScreenWidth(), (int)baseY - i, c);
-//     }
-
-//     // Panel de mochila (alineado a la izquierda dentro del HUD)
-//     const int pad = 10;
-//     Rectangle hud{ (float)pad, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad };
-//     DrawRectangleRounded(hud, 0.25f, 6, Fade(BLACK, 0.10f));
-//     DrawRectangleRoundedLinesEx(hud, 0.25f, 6, 1.0f, DARKGRAY);
-//     DrawText("Mochila", (int)hud.x + 10, (int)hud.y + 6, 16, DARKGRAY);
-
-//     // Slot de llave
-//     Rectangle slot{ hud.x + 12, hud.y + 28, 28.0f, 28.0f };
-//     DrawRectangleLinesEx(slot, 1.0f, GRAY);
-
-//     // Mostrar "Llave" o "Llaves" según el total
-//     const char* labelText = (totalKeysInMap_ > 1) ? "Llaves" : "Llave";
-//     DrawText(labelText, (int)hud.x + 50, (int)hud.y + 30, 16, GRAY);
-
-//     if (player_.hasKey()) {
-//         Rectangle keyIcon{ slot.x + 4, slot.y + 8, slot.width - 8, slot.height - 12 };
-//         DrawRectangleRec(keyIcon, GOLD);
-//         DrawRectangleLinesEx(keyIcon, 1.2f, BROWN);
-
-//         // Si hay más de una llave en el mapa, mostrar contador
-//         if (totalKeysInMap_ > 1) {
-//             std::string keyCountText = std::to_string(player_.getKeyCount()) + "/" + std::to_string(totalKeysInMap_);
-//             DrawText(keyCountText.c_str(), (int)hud.x + 120, (int)hud.y + 30, 16, DARKGRAY);
-//         }
-//     }
-
-//     // Panel de vidas (alineado a la derecha dentro del HUD)
-//     DrawRectangleRounded(Rectangle{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad }, 0.25f, 6, Fade(BLACK, 0.10f));
-//     DrawRectangleRoundedLinesEx(Rectangle{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad }, 0.25f, 6, 1.0f, DARKGRAY);
-//     DrawText("Vidas", (int)((float)GetScreenWidth() - 190.0f) + 10, (int)(baseY + pad) + 6, 16, DARKGRAY);
-
-//     if (player_.getLives() > 0) {
-//         for (int i = 0; i < player_.getLives(); ++i) {
-//             DrawCircleV(Vector2{ (float)GetScreenWidth() - 190.0f + 12.0f + i * 20.0f + 6.0f, baseY + pad + 28.0f + 6.0f }, 5.0f, RED);
-//         }
-//     }
-
-//     // Mostrar temporizador centrado encima del HUD (formato mm:ss)
-//     int timerFont = 22;
-//     int minutes = (int)levelTime_ / 60;
-//     int seconds = (int)levelTime_ % 60;
-//     std::string timeText = "Tiempo: " + std::to_string(minutes) + ":" +
-//                           (seconds < 10 ? "0" : "") + std::to_string(seconds);
-//     int textW = MeasureText(timeText.c_str(), timerFont);
-//     DrawText(timeText.c_str(), (GetScreenWidth() - textW) / 2, (int)baseY + 8, timerFont, DARKGRAY);
-
-//     // Mostrar nivel actual arriba a la izquierda
-//     std::string levelText = "Nivel: " + std::to_string(level_);
-//     DrawText(levelText.c_str(), 10, 10, 24, DARKGRAY);
-
-//     // 5) Mensaje contextual por encima del HUD
-//     const int cx = (int)(player_.getPosition().x / tile_);
-//     const int cy = (int)(player_.getPosition().y / tile_);
-//     if (cx >= 0 && cy >= 0 && cx < map_.width() && cy < map_.height()) {
-//         if (map_.at(cx, cy) == 'X' && !player_.hasAllKeys(totalKeysInMap_)) {
-//             std::string msg;
-//             if (totalKeysInMap_ == 1) {
-//                 msg = "Necesitas la llave para salir";
-//             } else {
-//                 int remaining = totalKeysInMap_ - player_.getKeyCount();
-//                 msg = "Necesitas " + std::to_string(remaining) + " llave" + (remaining > 1 ? "s" : "") + " más";
-//             }
-//             const int font = 18;
-//             const int textW = MeasureText(msg.c_str(), font);
-//             // 10 px de margen por encima del HUD
-//             const int textY = (int)baseY - font - 10;
-//             DrawText(msg.c_str(), (GetScreenWidth()-textW)/2, textY, font, MAROON);
-//         }
-//     }
-// }
-
 void MainGameState::render()
 {
     ClearBackground(RAYWHITE);
@@ -317,8 +205,10 @@ void MainGameState::render()
     const int viewH  = GetScreenHeight() - HUD_HEIGHT; // Espacio disponible sin el HUD
 
     // Offset centrado (clamp >= 0) - El mapa queda centrado en el espacio disponible
-    const int ox = std::max(0, (viewW - mapWpx) / 2);
-    const int oy = std::max(0, (viewH - mapHpx) / 2);
+    // const int ox = std::max(0, (viewW - mapWpx) / 2);
+    // const int oy = std::max(0, (viewH - mapHpx) / 2);
+    const int ox = (viewW > mapWpx) ? (viewW - mapWpx) / 2 : 0;
+    const int oy = (viewH > mapHpx) ? (viewH - mapHpx) / 2 : 0;
 
     // 1) Mapa (dibujado en la zona superior, desde y=0 hasta y=MAP_H_PX)
     map_.render(ox, oy);
@@ -329,6 +219,7 @@ void MainGameState::render()
     }
     // 2) Jugador
     player_.render(ox, oy);
+    RenderSystem(registry, (float)ox, (float)oy, (float)map_.tile());
 
     // 3) Enemigos (cuadrados)
     for (auto &e : enemies) {
@@ -441,6 +332,8 @@ void MainGameState::render()
             DrawText(msg.c_str(), (GetScreenWidth()-textW)/2, textY, font, MAROON);
         }
     }
+
+    EndDrawing();
 }
 
 void MainGameState::activeMechanisms() {
