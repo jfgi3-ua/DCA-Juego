@@ -76,8 +76,9 @@ void MainGameState::init()
 
     // 4. Configuración del Sprite
     Texture2D playerTex = LoadTexture("assets/sprites/player/Archer/Idle.png");
+    Vector2 manualOffset = { 8.0f, -8.0f };  // Ajuste manual del sprite
     // IMPORTANTE: Idle suele tener 6 frames en tus assets, ajusta este número si es distinto.
-    registry.emplace<SpriteComponent>(playerEntity, playerTex, 6);
+    registry.emplace<SpriteComponent>(playerEntity, playerTex, 6, manualOffset);
 }
 
 void MainGameState::handleInput()

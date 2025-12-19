@@ -36,8 +36,8 @@ inline void RenderSystem(entt::registry &registry, float offset_x, float offset_
         // 4. Destino (Dest)
         // Escalamos el ancho y alto según el factor calculado
         Rectangle destRec = {
-            transform.position.x + offset_x, // Posición (Centro del jugador + Offset cámara)
-            transform.position.y + offset_y,
+            transform.position.x + offset_x + sprite.visualOffset.x, // Posición (Centro del jugador + Offset de renderizado)
+            transform.position.y + offset_y + sprite.visualOffset.y,
             frameWidth * scale,              // Ancho escalado
             frameHeight * scale              // Alto escalado
         };

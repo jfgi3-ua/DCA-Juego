@@ -17,7 +17,9 @@ struct SpriteComponent {
     float frameTime;    // Tiempo por cuadro (para animar luego)
     float timer;        // Acumulador de tiempo
 
-    // Constructor mejorado
-    SpriteComponent(Texture2D tex, int frames = 1)
-        : texture(tex), numFrames(frames), currentFrame(0), frameTime(0.1f), timer(0.0f) {}
+  // Ajuste visual (Offset) - Para renderizar correctamente si la textura no encaja bien
+    Vector2 visualOffset;
+
+    SpriteComponent(Texture2D tex, int frames = 1, Vector2 offset = {0.0f, 0.0f})
+        : texture(tex), numFrames(frames), currentFrame(0), frameTime(0.1f), timer(0.0f), visualOffset(offset) {}
 };
