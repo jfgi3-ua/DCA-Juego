@@ -8,8 +8,8 @@ void Spikes::LoadTextures() {
     auto& rm = ResourceManager::Get();
     spikeTex_ = &rm.GetTexture("sprites/spikes.png");
     
-    srcRectActive_ = {28, 126, 28, 28};
-    srcRectInactive_ = { 28, 0, 28, 28};
+    srcRectActive_ = {28, 126, 22, 22};
+    srcRectInactive_ = { 28, 0, 22, 22};
 }
 
 void Spikes::addSpike(int gridX, int gridY) {
@@ -34,7 +34,7 @@ void Spikes::render(int ox, int oy) const {
 
         Rectangle dest {
             ox + s.x * tileSize,
-            oy + s.y * tileSize,
+            oy + s.y * tileSize ,
             (float)tileSize,
             (float)tileSize
         };
