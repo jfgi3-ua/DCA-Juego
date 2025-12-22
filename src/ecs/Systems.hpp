@@ -1,6 +1,0 @@
-#pragma once
-#include "ecs/systems/PlayerSystems.hpp"
-#include "ecs/systems/EnemySystems.hpp"
-#include "ecs/systems/CollisionSystems.hpp"
-#include "ecs/systems/RenderSystems.hpp"
-#include "ecs/systems/WorldSystems.hpp"
