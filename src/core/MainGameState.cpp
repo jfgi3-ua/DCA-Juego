@@ -141,6 +141,7 @@ void MainGameState::update(float deltaTime)
     InputSystem(registry, map_);
     EnemyAISystem(registry, map_);
     MovementSystem(registry, deltaTime);
+    SpikeSystem(registry, deltaTime);
     CollisionSystem(registry, map_); // Chequeo de colisiones
     MechanismSystem(registry, map_);
 
@@ -519,16 +520,21 @@ void MainGameState::loadLevelEntities() {
                 auto &sprite = registry.emplace<SpriteComponent>(entity, spikeTex);
 
                 // 1. DEFINIR TAMAÑO DEL RECORTE (GRID)
-                float realSpriteSize = 32.0f;
-                sprite.fixedFrameSize = {realSpriteSize, realSpriteSize};
+                float frameW = spikeTex.width / 4.0f;
+                float frameH = spikeTex.height / 8.0f;
+                sprite.fixedFrameSize = {frameW, frameH};
 
                 // 2. SELECCIONAR SPRITE ESPECÍFICO
                 // Ahora "4" significará 4 bloques de 32px, no de 16px.
-                sprite.currentRow = 4;   // Fila 5 (empezando en 0)
-                sprite.currentFrame = 0; // Columna 1 (empezando en 0)
+                sprite.currentRow = 4;   // Fila 5 (empezando en 0) -> activo
+                sprite.currentFrame = 1; // Columna 2 (empezando en 0) como en legacy
 
                 // 3. ESCALA PERSONALIZADA
-                sprite.customScale = (float)map_.tile() / realSpriteSize;
+                // Usamos el ancho del frame para cubrir el tile completo
+                sprite.customScale = (float)map_.tile() / frameW;
+
+                // Mantener centrado el sprite en el tile
+                sprite.visualOffset = {0.0f, 0.0f};
 
                 // Collider (ajustado)
                 float hitSize = map_.tile() * 0.9f;
@@ -536,6 +542,13 @@ void MainGameState::loadLevelEntities() {
                     Rectangle{-hitSize/2, -hitSize/2, hitSize, hitSize},
                     CollisionType::Spike
                 );
+
+                // Pinchos retráctiles (intervalo por defecto = 3s)
+                // Ajuste de alineación vertical basado en el sprite actual (spikes.png)
+                float scale = (float)map_.tile() / frameW;
+                float inactiveOffsetY = (float)map_.tile() - (30.0f * scale); // fila 0: bbox bottom ~30px
+                float activeOffsetY = (float)map_.tile() - (24.0f * scale);   // fila 4: bbox bottom ~24px
+                registry.emplace<SpikeComponent>(entity, true, 3.0f, activeOffsetY, inactiveOffsetY);
             }
 
             // --- CASO 2: ENEMIGOS (E) ---

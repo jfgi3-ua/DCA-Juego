@@ -28,7 +28,9 @@ inline void RenderSystem(entt::registry &registry, float offset_x, float offset_
 
     auto view = registry.view<const TransformComponent, const SpriteComponent>();
 
-    view.each([offset_x, offset_y, tileSize](const auto &transform, const auto &sprite) {
+    for (auto entity : view) {
+        const auto &transform = view.get<const TransformComponent>(entity);
+        const auto &sprite = view.get<const SpriteComponent>(entity);
 
         // 1. Medidas del frame individual y escala
         float frameWidth, frameHeight;
@@ -66,6 +68,20 @@ inline void RenderSystem(entt::registry &registry, float offset_x, float offset_
             frameHeight
         };
 
+        // Render especial para pinchos: anclado al tile (top-left) como en legacy
+        if (registry.all_of<SpikeComponent>(entity)) {
+            const auto &spike = registry.get<SpikeComponent>(entity);
+            float yOffset = spike.active ? spike.activeOffsetY : spike.inactiveOffsetY;
+            Rectangle destRec = {
+                transform.position.x + offset_x - tileSize / 2.0f,
+                transform.position.y + offset_y - tileSize / 2.0f + yOffset,
+                tileSize,
+                tileSize
+            };
+            DrawTexturePro(sprite.texture, sourceRec, destRec, {0.0f, 0.0f}, 0.0f, WHITE);
+            continue;
+        }
+
         // 4. Destino (Dest)
         // Escalamos el ancho y alto según el factor calculado
         Rectangle destRec = {
@@ -81,13 +97,38 @@ inline void RenderSystem(entt::registry &registry, float offset_x, float offset_
 
         // 6. Dibujar
         DrawTexturePro(sprite.texture, sourceRec, destRec, origin, 0.0f, WHITE);
-    });
+    }
 }
 
 inline void RenderMechanismSystem(entt::registry &registry, int offset_x, int offset_y) {
     auto view = registry.view<const MechanismComponent>();
     for (auto entity : view) {
         view.get<const MechanismComponent>(entity).mechanism.render(offset_x, offset_y);
+    }
+}
+
+inline void SpikeSystem(entt::registry &registry, float deltaTime) {
+    auto view = registry.view<SpikeComponent, SpriteComponent, ColliderComponent>();
+    if (!view) return;
+
+    static float timer = 0.0f;
+    timer += deltaTime;
+
+    float interval = view.get<SpikeComponent>(*view.begin()).interval;
+    if (timer < interval) return;
+
+    timer = 0.0f;
+
+    for (auto entity : view) {
+        auto &spike = view.get<SpikeComponent>(entity);
+        auto &sprite = view.get<SpriteComponent>(entity);
+        auto &collider = view.get<ColliderComponent>(entity);
+
+        spike.active = !spike.active;
+        collider.active = spike.active;
+
+        // Ajuste visual según estado (fila del spritesheet)
+        sprite.currentRow = spike.active ? 4 : 0;
     }
 }
 
@@ -249,6 +290,10 @@ inline void CollisionSystem(entt::registry &registry, Map &map) {
 
             // CASO A: DAÑO (Pincho / Enemigo)
             if (hazardCol.type == CollisionType::Spike || hazardCol.type == CollisionType::Enemy) {
+                if (hazardCol.type == CollisionType::Spike && registry.all_of<SpikeComponent>(entity)) {
+                    const auto &spike = registry.get<SpikeComponent>(entity);
+                    if (!spike.active) return;
+                }
                 std::cout << "¡COLISIÓN DETECTADA! Reiniciando jugador..." << std::endl;
 
                 // Lógica de Respawn simple: Volver al inicio del mapa
