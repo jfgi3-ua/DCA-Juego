@@ -145,6 +145,34 @@ void MainGameState::update(float deltaTime)
     MovementSystem(registry, deltaTime);
     CollisionSystem(registry, map_); // Chequeo de colisiones
 
+    // --- FLUJO DE JUEGO ECS: derrota/victoria ---
+    auto playerView = registry.view<TransformComponent, StatsComponent, PlayerInputComponent>();
+    if (playerView) {
+        auto playerEntity = *playerView.begin();
+        const auto &stats = playerView.get<StatsComponent>(playerEntity);
+        const auto &trans = playerView.get<TransformComponent>(playerEntity);
+
+        // Derrota por vidas
+        if (stats.lives <= 0) {
+            this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, levelTime_, false), true);
+            return;
+        }
+
+        // Victoria por salida + llaves
+        int cellX = (int)(trans.position.x / tile_);
+        int cellY = (int)(trans.position.y / tile_);
+        if (cellX >= 0 && cellY >= 0 && cellX < map_.width() && cellY < map_.height()) {
+            if (map_.at(cellX, cellY) == 'X' && stats.keysCollected >= totalKeysInMap_) {
+                if (level_ >= 6) {
+                    this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, true), true);
+                } else {
+                    this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, false), true);
+                }
+                return;
+            }
+        }
+    }
+
     // 2) Celda actual del jugador
     // !! --- CÓDIGO ANTIGUO  ---
     // int cellX = (int)(player_.getPosition().x) / tile_;
