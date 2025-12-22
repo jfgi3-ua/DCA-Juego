@@ -15,7 +15,7 @@ public:
     ~DevModeState();
 
     void init() override;
-    void handleInput() override;
+    // void handleInput() override;
     void update(float deltaTime) override;
     void render() override;
     void pause() override {}
@@ -28,26 +28,26 @@ private:
     bool* infiniteTime_;
     bool* keyGivenByCheating_;
     int currentLevel_;
-    
+
     // UI State
     bool awaitingPassword_;
     std::string passwordInput_;
     int selectedOption_;
     bool authenticated_;
-    
+
     // Cheat flags locales (sincronizados con Player)
     bool godMode_;
     bool noClip_;
-    
+
     // Estructura para definir opciones de cheats
     struct CheatOption {
         const char* label;
         std::function<void()> action;
         std::function<const char*()> getState;
     };
-    
+
     std::vector<CheatOption> cheatOptions_;
-    
+
     // Helper methods
     void renderPasswordScreen();
     void renderDevMenu();

@@ -151,7 +151,7 @@ inline void CollisionSystem(entt::registry &registry, const Map &map) {
     auto playerView = registry.view<TransformComponent, ColliderComponent, PlayerInputComponent>();
 
     // Si no hay jugador, no hacemos nada
-    if (playerView.begin() == playerView.end()) return;
+    if (!playerView) return;
 
     entt::entity playerEntity = *playerView.begin();
     auto &playerTrans = playerView.get<TransformComponent>(playerEntity);
@@ -171,14 +171,11 @@ inline void CollisionSystem(entt::registry &registry, const Map &map) {
     // pero aquí simplemente chequeamos colisiones contra "todo lo que sea peligroso".
     auto hazardView = registry.view<TransformComponent, ColliderComponent>();
 
-    for(auto entity : hazardView) {
+    hazardView.each([&](auto entity, auto &hazardTrans, auto &hazardCol) {
         // No chequear colisión con uno mismo
-        if(entity == playerEntity) continue;
+        if(entity == playerEntity) return;
 
-        auto &hazardTrans = hazardView.get<TransformComponent>(entity);
-        auto &hazardCol = hazardView.get<ColliderComponent>(entity);
-
-        if (!hazardCol.active) continue;
+        if (!hazardCol.active) return;
 
         // Calcular caja absoluta del peligro
         Rectangle hazardBox = {
@@ -214,5 +211,52 @@ inline void CollisionSystem(entt::registry &registry, const Map &map) {
                 }
             }
         }
-    }
+    });
+}
+
+inline void EnemyAISystem(entt::registry &registry, const Map &map) {
+    // Iteramos sobre entidades que tienen Movimiento y Colisión de tipo Enemigo
+    auto view = registry.view<TransformComponent, MovementComponent, ColliderComponent>();
+
+    view.each([&map](auto &transform, auto &move, auto &col) {
+        // Solo procesar enemigos
+        if (col.type != CollisionType::Enemy) return;
+
+        // Si ya se mueve, esperar a que termine
+        if (move.isMoving) return;
+
+        // --- Lógica Simple de Patrulla Aleatoria ---
+        // 1% de probabilidad por frame de intentar moverse (para que no sean frenéticos)
+        if (GetRandomValue(0, 100) < 5) {
+            int dir = GetRandomValue(0, 3); // 0:Arriba, 1:Abajo, 2:Izq, 3:Der
+            int dx = 0, dy = 0;
+
+            if (dir == 0) dy = -1;
+            else if (dir == 1) dy = 1;
+            else if (dir == 2) dx = -1;
+            else if (dir == 3) dx = 1;
+
+            // Calcular destino
+            float tileSize = (float)map.tile();
+            int cellX = static_cast<int>((transform.position.x - tileSize/2) / tileSize);
+            int cellY = static_cast<int>((transform.position.y - tileSize/2) / tileSize);
+            int targetX = cellX + dx;
+            int targetY = cellY + dy;
+
+            // Verificar si es caminable (copiado de InputSystem)
+            if (targetX >= 0 && targetX < map.width() && targetY >= 0 && targetY < map.height()) {
+                if (map.at(targetX, targetY) != '#') {
+                    // Mover
+                    move.startPos = transform.position;
+                    move.targetPos = {
+                        targetX * tileSize + tileSize / 2.0f,
+                        targetY * tileSize + tileSize / 2.0f
+                    };
+                    move.duration = tileSize / move.speed;
+                    move.progress = 0.0f;
+                    move.isMoving = true;
+                }
+            }
+        }
+    });
 }

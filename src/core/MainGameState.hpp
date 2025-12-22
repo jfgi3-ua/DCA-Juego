@@ -28,6 +28,7 @@ class MainGameState : public GameState
 
         void activeMechanisms();
 
+        void loadLevelEntities();
 
     private:
         char entered_key;
@@ -37,13 +38,13 @@ class MainGameState : public GameState
         int level_ = 1;
 
         // Jugador
-        Player player_;
+        // Player player_; // --- CÓDIGO ANTIGUO  ---
 
         // Enemigo
-        std::vector<Vector2> enemiesPos_;
+        // std::vector<Vector2> enemiesPos_; // --- CÓDIGO ANTIGUO  ---
 
         //Pinchos
-        Spikes spikes_;
+        // Spikes spikes_; // --- CÓDIGO ANTIGUO  ---
 
         //Mecanismos
         std::vector<Mechanism> mechanisms_;

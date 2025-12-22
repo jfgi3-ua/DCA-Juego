@@ -35,21 +35,23 @@ void MainGameState::init()
     IVec2 p = map_.playerStart();
     Vector2 startPos = { p.x * (float)tile_ + tile_ / 2.0f,
                          p.y * (float)tile_ + tile_ / 2.0f };
-    player_.init(startPos, tile_ * 0.35f, 5, "sprites/player/Musketeer"); //inicializamos el jugador con la carpeta de sprites
+    // player_.init(startPos, tile_ * 0.35f, 5, "sprites/player/Musketeer"); //inicializamos el jugador con la carpeta de sprites // !! --- CÓDIGO ANTIGUO  ---
 
-    enemiesPos_.clear();
-    enemies.clear();
-    for (auto e : map_.enemyStarts()) {
-        enemiesPos_.push_back({ e.x * (float)tile_ + tile_ / 2.0f,
-                                e.y * (float)tile_ + tile_ / 2.0f });
-        // crear un único Enemy usando el constructor que necesita tile_
-        enemies.emplace_back(e.x, e.y, tile_);
-    }
+    // !! --- CÓDIGO ANTIGUO  ---
+    // enemiesPos_.clear();
+    // enemies.clear();
+    // for (auto e : map_.enemyStarts()) {
+    //     enemiesPos_.push_back({ e.x * (float)tile_ + tile_ / 2.0f,
+    //                             e.y * (float)tile_ + tile_ / 2.0f }); // !! --- CÓDIGO ANTIGUO  ---
+    //     // crear un único Enemy usando el constructor que necesita tile_
+    //     enemies.emplace_back(e.x, e.y, tile_);
+    // }
 
-    for (auto s : map_.spikesStarts()) {
-        spikes_.addSpike(s.x, s.y);
-    }
+    // for (auto s : map_.spikesStarts()) {
+    //     spikes_.addSpike(s.x, s.y);
+    // }
 
+    // ?? Cargar mecanismos desde el mapa (AUN NO ESTÁ EN ECS)
     for (auto m : map_.getMechanisms()) {
         //m es un MechanismPair
         mechanisms_.emplace_back(m.id, m.trigger, m.target);
@@ -97,35 +99,22 @@ void MainGameState::init()
         CollisionType::Player
     );
 
-    // 2. Crear un PINCHO DE PRUEBA (Entidad ECS)
-    auto spikeEntity = registry.create();
+    // 2. Crear ENEMIGOS y PINCHOS
+    loadLevelEntities();
 
-    float spikeX = (startGridPos.x + 2) * tile_ + tile_ / 2.0f;
-    float spikeY = startGridPos.y * tile_ + tile_ / 2.0f;
-
-    registry.emplace<TransformComponent>(spikeEntity, Vector2{spikeX, spikeY}, Vector2{(float)tile_, (float)tile_});
-
-    // Cargar textura de pinchos
-    Texture2D spikeTex = ResourceManager::Get().GetTexture("assets/sprites/spikes.png");
-    registry.emplace<SpriteComponent>(spikeEntity, spikeTex); // Imagen estática ahora mismo... ya veremos si animarla luego
-
-    // Añadir Collider al pincho
-    // hitbox un poco más pequeña para dar margen
-    registry.emplace<ColliderComponent>(spikeEntity,
-        Rectangle{ -hitSize/2, -hitSize/2, hitSize, hitSize },
-        CollisionType::Spike
-    );
+    std::cout << "Nivel cargado. Entidades generadas via ECS." << std::endl;
 }
 
+// !! --- CÓDIGO ANTIGUO  ---
 void MainGameState::handleInput()
 {
     // Activar menú de desarrollador con CTRL+D
-    if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_D)) {
-        this->state_machine->add_overlay_state(
-            std::make_unique<DevModeState>(&player_, &levelTime_, &freezeEnemies_, &infiniteTime_, &keyGivenByCheating_, level_)
-        );
-        return;
-    }
+    // if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_D)) {
+    //     this->state_machine->add_overlay_state(
+    //         std::make_unique<DevModeState>(&player_, &levelTime_, &freezeEnemies_, &infiniteTime_, &keyGivenByCheating_, level_)
+    //     );
+    //     return;
+    // }
 }
 
 void MainGameState::update(float deltaTime)
@@ -146,96 +135,105 @@ void MainGameState::update(float deltaTime)
     // 1) Actualizar (movimiento) jugador con colisiones de mapa
     // player_.update(deltaTime, map_, activeMechanisms_); // LOGICA ANTIGUA
 
+    // LOGICA NUEVA CON ECS
     // Primero Input (decide destino), luego Movimiento (mueve)
     InputSystem(registry, map_);
+    EnemyAISystem(registry, map_);
     MovementSystem(registry, deltaTime);
-
-    // Chequeo de colisiones
-    CollisionSystem(registry, map_);
+    CollisionSystem(registry, map_); // Chequeo de colisiones
 
     // 2) Celda actual del jugador
-    int cellX = (int)(player_.getPosition().x) / tile_;
-    int cellY = (int)(player_.getPosition().y) / tile_;
+    // !! --- CÓDIGO ANTIGUO  ---
+    // int cellX = (int)(player_.getPosition().x) / tile_;
+    // int cellY = (int)(player_.getPosition().y) / tile_;
 
     // 3) ¿Está sobre una llave 'K'? -> Recogerla
-    try {
-        if (map_.at(cellX, cellY) == 'K') {
-            player_.addKey();
-            map_.clearCell(cellX, cellY); // Reemplaza 'K' por '.', es decir, retira la llave del mapa.
-            std::cout << "Llave recogida! (" << player_.getKeyCount() << "/" << totalKeysInMap_ << ")" << std::endl;
-            // TODO:Aquí podríamos reproducir un sonido o mostrar un mensaje en pantalla si se desea.
-        }
-    } catch (const std::out_of_range& e) {
-        // Ignorar fuera de rango (no debería ocurrir aquí). Fuera de rango no debería ocurrir si los cálculos de celda son correctos.
-        std::cerr << "Error: " << e.what() << std::endl;
-    }
+    // !! --- CÓDIGO ANTIGUO  ---
+    // try {
+    //     if (map_.at(cellX, cellY) == 'K') {
+    //         player_.addKey();
+    //         map_.clearCell(cellX, cellY); // Reemplaza 'K' por '.', es decir, retira la llave del mapa.
+    //         std::cout << "Llave recogida! (" << player_.getKeyCount() << "/" << totalKeysInMap_ << ")" << std::endl;
+    //         // TODO:Aquí podríamos reproducir un sonido o mostrar un mensaje en pantalla si se desea.
+    //     }
+    // } catch (const std::out_of_range& e) {
+    //     // Ignorar fuera de rango (no debería ocurrir aquí). Fuera de rango no debería ocurrir si los cálculos de celda son correctos.
+    //     std::cerr << "Error: " << e.what() << std::endl;
+    // }
 
     // 4) ¿Está sobre la salida 'X' y tiene todas las llaves? -> Nivel completado
-    if (player_.isOnExit(map_) && player_.hasAllKeys(totalKeysInMap_)) {
-        std::cout << "Nivel completado" << std::endl;
-        // Si es el nivel 6 (último), mostrar pantalla de victoria directamente
-        if (level_ >= 6) {
-            this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, true), true);
-        } else {
-            // Pasar a pantalla de nivel completado (dead = false)
-            this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, false), true);
-        }
-        return;
-    }
+    // !! --- CÓDIGO ANTIGUO  ---
+    // if (player_.isOnExit(map_) && player_.hasAllKeys(totalKeysInMap_)) {
+    //     std::cout << "Nivel completado" << std::endl;
+    //     // Si es el nivel 6 (último), mostrar pantalla de victoria directamente
+    //     if (level_ >= 6) {
+    //         this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, true), true);
+    //     } else {
+    //         // Pasar a pantalla de nivel completado (dead = false)
+    //         this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, false), true);
+    //     }
+    //     return;
+    // }
 
     // 5) IA enemigos y colisiones con jugador
     // Pasar la posición del jugador a los enemigos para el árbol de decisiones
-    Vector2 playerPos = player_.getPosition();
+    // Vector2 playerPos = player_.getPosition(); // !! --- CÓDIGO ANTIGUO  ---
 
     // Solo actualizar enemigos si no están congelados
-    if (!freezeEnemies_) {
-        for (auto &e : enemies) {
-            e.update(map_, deltaTime, tile_, playerPos.x, playerPos.y);
-        }
-    }
+    // if (!freezeEnemies_) {
+    //     for (auto &e : enemies) {
+    //         // e.update(map_, deltaTime, tile_, playerPos.x, playerPos.y); // !! --- CÓDIGO ANTIGUO  ---
+    //     }
+    // }
 
-    enemiesPos_.clear();
-    for (auto &e : enemies) {
-        enemiesPos_.push_back({ e.x * (float)tile_ + tile_ / 2.0f,
-                                e.y * (float)tile_ + tile_ / 2.0f });
-    }
+    // !! --- CÓDIGO ANTIGUO  ---
+    // enemiesPos_.clear();
+    // for (auto &e : enemies) {
+    //     enemiesPos_.push_back({ e.x * (float)tile_ + tile_ / 2.0f,
+    //                             e.y * (float)tile_ + tile_ / 2.0f });
+    // }
 
-    for (auto &e : enemies) {
-        if (e.collidesWithPlayer(playerPos.x, playerPos.y, player_.getRadius()) && !player_.isInvulnerable()) {
-            // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
-            player_.onHit(map_);
-            // Notificar al enemigo que golpeó (solo los que persiguen se alejarán)
-            e.onHitPlayer();
-            std::cout << "El jugador ha sido golpeado por un enemigo. Vidas: " << player_.getLives() << std::endl;
-        }
-    }
+    // !! --- CÓDIGO ANTIGUO  ---
+    // for (auto &e : enemies) {
+    //     if (e.collidesWithPlayer(playerPos.x, playerPos.y, player_.getRadius()) && !player_.isInvulnerable()) {
+    //         // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
+    //         player_.onHit(map_);
+    //         // Notificar al enemigo que golpeó (solo los que persiguen se alejarán)
+    //         e.onHitPlayer();
+    //         std::cout << "El jugador ha sido golpeado por un enemigo. Vidas: " << player_.getLives() << std::endl;
+    //     }
+    // }
 
 
     // 6) Pinchos y colisiones si activo
-    spikes_.update(deltaTime);
+    // spikes_.update(deltaTime); // !! --- CÓDIGO ANTIGUO  ---
+
     // Si el jugador está sobre un pincho activo
-    if (spikes_.isActiveAt(cellX, cellY) && !player_.isInvulnerable()) {
-    // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
-    player_.onHit(map_);
-        std::cout << "El jugador ha sido golpeado por pinchos. " << player_.getLives() << std::endl;
-    }
+    // !! --- CÓDIGO ANTIGUO  ---
+    // if (spikes_.isActiveAt(cellX, cellY) && !player_.isInvulnerable()) {
+    //     // Si colisiona, quitar una vida y empujar al jugador a la casilla previa
+    //     player_.onHit(map_);
+    //         std::cout << "El jugador ha sido golpeado por pinchos. " << player_.getLives() << std::endl;
+    // }
 
     // 7) Si el jugador no tiene vidas, cambiar al estado de Game Over
-    if (player_.getLives() <= 0) {
-        std::cout << "Game Over: El jugador no tiene más vidas." << std::endl;
-        // Game Over por muerte (dead = true)
-        this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, levelTime_, false), true);
-        return;
-    }
+    // !! --- CÓDIGO ANTIGUO  ---
+    // if (player_.getLives() <= 0) {
+    //     std::cout << "Game Over: El jugador no tiene más vidas." << std::endl;
+    //     // Game Over por muerte (dead = true)
+    //     this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, levelTime_, false), true);
+    //     return;
+    // }
 
     //7 Mecanismos, cmprobar si el jugador está sobre un trigger q no este activo
-    for (auto& mech : mechanisms_) {
-        IVec2 trigPos = mech.getTriggerPos();
+    // !! --- CÓDIGO ANTIGUO  ---
+    // for (auto& mech : mechanisms_) {
+    //     IVec2 trigPos = mech.getTriggerPos();
 
-         if (mech.isActive() && cellX == trigPos.x && cellY == trigPos.y) {
-            mech.deactivate();
-        }
-    }
+    //      if (mech.isActive() && cellX == trigPos.x && cellY == trigPos.y) {
+    //         mech.deactivate();
+    //     }
+    // }
 }
 
 void MainGameState::render()
@@ -262,7 +260,7 @@ void MainGameState::render()
         mech.render(ox, oy);
     }
     // 2) Jugador
-    player_.render(ox, oy);
+    // player_.render(ox, oy); // !! --- CÓDIGO ANTIGUO  ---
     RenderSystem(registry, (float)ox, (float)oy, (float)map_.tile());
 
     // 3) Enemigos (cuadrados)
@@ -270,7 +268,7 @@ void MainGameState::render()
         e.draw(tile_, ox, oy, RED);
     }
 
-    spikes_.render(ox, oy);
+    // spikes_.render(ox, oy); // !! --- CÓDIGO ANTIGUO  ---
 
 
     // 4) HUD inferior - se coloca en la parte inferior de la ventana
@@ -314,22 +312,24 @@ void MainGameState::render()
     int startX = (int)hud.x + 12;
     int startY = (int)hud.y + 30;
 
-    for (int i = 0; i < player_.getKeyCount(); ++i) {
-        Rectangle destRect = {
-            (float)(startX + i * (iconDisplaySize + 4)), // Separación de 4px entre llaves
-            (float)startY,
-            (float)iconDisplaySize,
-            (float)iconDisplaySize
-        };
-        DrawTexturePro(atlasTex, keySourceRect, destRect, {0,0}, 0.0f, WHITE);
-    }
+    // !! --- CÓDIGO ANTIGUO  ---
+    // for (int i = 0; i < player_.getKeyCount(); ++i) {
+    //     Rectangle destRect = {
+    //         (float)(startX + i * (iconDisplaySize + 4)), // Separación de 4px entre llaves
+    //         (float)startY,
+    //         (float)iconDisplaySize,
+    //         (float)iconDisplaySize
+    //     };
+    //     DrawTexturePro(atlasTex, keySourceRect, destRect, {0,0}, 0.0f, WHITE);
+    // }
 
     // Mostrar contador numérico (ej: "2/3") si hay llaves en el nivel,
     // útil para saber cuántas faltan de un vistazo.
-    if (totalKeysInMap_ > 0) {
-        std::string keyCountText = std::to_string(player_.getKeyCount()) + "/" + std::to_string(totalKeysInMap_);
-        DrawText(keyCountText.c_str(), (int)hud.x + 130, (int)hud.y + 35, 16, DARKGRAY);
-    }
+    // !! --- CÓDIGO ANTIGUO  ---
+    // if (totalKeysInMap_ > 0) {
+    //     std::string keyCountText = std::to_string(player_.getKeyCount()) + "/" + std::to_string(totalKeysInMap_);
+    //     DrawText(keyCountText.c_str(), (int)hud.x + 130, (int)hud.y + 35, 16, DARKGRAY);
+    // }
 
     // ----------------------------------------
 
@@ -338,11 +338,12 @@ void MainGameState::render()
     DrawRectangleRoundedLinesEx(Rectangle{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad }, 0.25f, 6, 1.0f, DARKGRAY);
     DrawText("Vidas", (int)((float)GetScreenWidth() - 190.0f) + 10, (int)(baseY + pad) + 6, 16, DARKGRAY);
 
-    if (player_.getLives() > 0) {
-        for (int i = 0; i < player_.getLives(); ++i) {
-            DrawCircleV(Vector2{ (float)GetScreenWidth() - 190.0f + 12.0f + i * 20.0f + 6.0f, baseY + pad + 28.0f + 6.0f }, 5.0f, RED);
-        }
-    }
+    // !! --- CÓDIGO ANTIGUO  ---
+    // if (player_.getLives() > 0) {
+    //     for (int i = 0; i < player_.getLives(); ++i) {
+    //         DrawCircleV(Vector2{ (float)GetScreenWidth() - 190.0f + 12.0f + i * 20.0f + 6.0f, baseY + pad + 28.0f + 6.0f }, 5.0f, RED);
+    //     }
+    // }
 
     // Mostrar temporizador centrado encima del HUD (formato mm:ss)
     int timerFont = 22;
@@ -358,24 +359,25 @@ void MainGameState::render()
     DrawText(levelText.c_str(), 10, 10, 24, DARKGRAY);
 
     // 5) Mensaje contextual por encima del HUD
-    const int cx = (int)(player_.getPosition().x / tile_);
-    const int cy = (int)(player_.getPosition().y / tile_);
-    if (cx >= 0 && cy >= 0 && cx < map_.width() && cy < map_.height()) {
-        if (map_.at(cx, cy) == 'X' && !player_.hasAllKeys(totalKeysInMap_)) {
-            std::string msg;
-            if (totalKeysInMap_ == 1) {
-                msg = "Necesitas la llave para salir";
-            } else {
-                int remaining = totalKeysInMap_ - player_.getKeyCount();
-                msg = "Necesitas " + std::to_string(remaining) + " llave" + (remaining > 1 ? "s" : "") + " más";
-            }
-            const int font = 18;
-            const int textW = MeasureText(msg.c_str(), font);
-            // 10 px de margen por encima del HUD
-            const int textY = (int)baseY - font - 10;
-            DrawText(msg.c_str(), (GetScreenWidth()-textW)/2, textY, font, MAROON);
-        }
-    }
+    // !! --- CÓDIGO ANTIGUO  ---
+    // const int cx = (int)(player_.getPosition().x / tile_);
+    // const int cy = (int)(player_.getPosition().y / tile_);
+    // if (cx >= 0 && cy >= 0 && cx < map_.width() && cy < map_.height()) {
+    //     if (map_.at(cx, cy) == 'X' && !player_.hasAllKeys(totalKeysInMap_)) {
+    //         std::string msg;
+    //         if (totalKeysInMap_ == 1) {
+    //             msg = "Necesitas la llave para salir";
+    //         } else {
+    //             int remaining = totalKeysInMap_ - player_.getKeyCount();
+    //             msg = "Necesitas " + std::to_string(remaining) + " llave" + (remaining > 1 ? "s" : "") + " más";
+    //         }
+    //         const int font = 18;
+    //         const int textW = MeasureText(msg.c_str(), font);
+    //         // 10 px de margen por encima del HUD
+    //         const int textY = (int)baseY - font - 10;
+    //         DrawText(msg.c_str(), (GetScreenWidth()-textW)/2, textY, font, MAROON);
+    //     }
+    // }
 
     EndDrawing();
 }
@@ -386,6 +388,64 @@ void MainGameState::activeMechanisms() {
         if (mech.isActive()) {
             Vector2 target = { (float)mech.getTargetPos().x, (float)mech.getTargetPos().y };
             activeMechanisms_.push_back(target);
+        }
+    }
+}
+
+void MainGameState::loadLevelEntities() {
+    auto& rm = ResourceManager::Get();
+
+    // Texturas precargadas
+    Texture2D spikeTex = rm.GetTexture("assets/sprites/spikes.png");
+    // Usamos el Mosquetero como skin por defecto para el enemigo por ahora
+    Texture2D enemyTex = rm.GetTexture("assets/sprites/player/Musketeer/Idle.png");
+
+    for (int y = 0; y < map_.height(); y++) {
+        for (int x = 0; x < map_.width(); x++) {
+            char cell = map_.at(x, y);
+
+            // Calculamos posición central del tile en píxeles
+            float centerX = x * map_.tile() + map_.tile() / 2.0f;
+            float centerY = y * map_.tile() + map_.tile() / 2.0f;
+            Vector2 pos = {centerX, centerY};
+            Vector2 size = {(float)map_.tile(), (float)map_.tile()};
+            Vector2 manualOffset = {0.0f, 0.0f};
+
+            // --- CASO 1: PINCHOS (^) ---
+            if (cell == '^') {
+                auto entity = registry.create();
+                registry.emplace<TransformComponent>(entity, pos, size);
+
+                // Ajuste visual para el pincho (si es necesario)
+                registry.emplace<SpriteComponent>(entity, spikeTex);
+
+                // Hitbox un poco más pequeña que el tile (90%)
+                float hitSize = map_.tile() * 0.9f;
+                registry.emplace<ColliderComponent>(entity,
+                    Rectangle{-hitSize/2, -hitSize/2, hitSize, hitSize},
+                    CollisionType::Spike
+                );
+            }
+
+            // --- CASO 2: ENEMIGOS (E) ---
+            else if (cell == 'E') {
+                auto entity = registry.create();
+                registry.emplace<TransformComponent>(entity, pos, size);
+
+                // Configuración visual del enemigo (igual que el player: 6 frames, offset 8,-8)
+                manualOffset = Vector2{-3.0f, -10.0f};
+                registry.emplace<SpriteComponent>(entity, enemyTex, 6, manualOffset);
+
+                // Movimiento (IA)
+                registry.emplace<MovementComponent>(entity, 100.0f); // Velocidad un poco más lenta que el jugador
+
+                // Collider (90% del tile)
+                float hitSize = map_.tile() * 0.9f;
+                registry.emplace<ColliderComponent>(entity,
+                    Rectangle{-hitSize/2, -hitSize/2, hitSize, hitSize},
+                    CollisionType::Enemy
+                );
+            }
         }
     }
 }

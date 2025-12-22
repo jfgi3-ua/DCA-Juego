@@ -19,9 +19,9 @@ struct SpriteComponent {
     Vector2 visualOffset; // Ajuste visual (Offset) - Para renderizar correctamente si la textura no encaja bien
     bool flipX;           // Para girar el sprite
 
-  SpriteComponent(Texture2D tex, int frames = 1, Vector2 offset = {0.0f, 0.0f})
-          : texture(tex), numFrames(frames), currentFrame(0), frameTime(0.1f), timer(0.0f),
-            visualOffset(offset), flipX(false) {} // Inicializamos flipX en false
+    SpriteComponent(Texture2D tex, int frames = 1, Vector2 offset = {0.0f, 0.0f})
+            : texture(tex), numFrames(frames), currentFrame(0), frameTime(0.1f), timer(0.0f),
+              visualOffset(offset), flipX(false) {} // Inicializamos flipX en false
 };
 
 
@@ -56,7 +56,7 @@ struct ColliderComponent {
     // x, y son offsets; width, height son el tamaño de la caja
     Rectangle rect;
     CollisionType type;
-    bool active; // Para desactivar colisiones temporalmente (ej: invulnerabilidad)
+    bool active; // Para desactivar colisiones temporalmente (ej: invulnerabilidad del modo GOD ese que tenemos)
 
     ColliderComponent(Rectangle r, CollisionType t) : rect(r), type(t), active(true) {}
 };
