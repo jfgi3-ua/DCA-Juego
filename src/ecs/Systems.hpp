@@ -3,6 +3,7 @@
 #include <entt/entt.hpp>
 #include "objects/Map.hpp"
 #include <cmath>
+#include <algorithm>
 #include <iostream> // Para debug
 extern "C" {
     #include <raylib.h>
@@ -17,6 +18,51 @@ inline bool IsMechanismBlockingCell(entt::registry &registry, int cellX, int cel
         if (target.x == cellX && target.y == cellY) return true;
     }
     return false;
+}
+
+inline void ShuffledNeighbors(int out[4]) {
+    out[0]=0; out[1]=1; out[2]=2; out[3]=3;
+    for (int i = 3; i > 0; --i) {
+        int j = GetRandomValue(0, i);
+        std::swap(out[i], out[j]);
+    }
+}
+
+inline bool HasLineOfSight(const Map &map, int x0, int y0, int x1, int y1) {
+    int dx = std::abs(x1 - x0);
+    int dy = std::abs(y1 - y0);
+    int sx = (x0 < x1) ? 1 : -1;
+    int sy = (y0 < y1) ? 1 : -1;
+    int err = dx - dy;
+
+    int currentX = x0;
+    int currentY = y0;
+
+    while (true) {
+        if (currentX == x1 && currentY == y1) {
+            return true;
+        }
+
+        if (!(currentX == x0 && currentY == y0)) {
+            if (currentX < 0 || currentX >= map.width() || currentY < 0 || currentY >= map.height()) {
+                return false;
+            }
+            char cell = map.at(currentX, currentY);
+            if (cell == '#') {
+                return false;
+            }
+        }
+
+        int e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            currentX += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            currentY += sy;
+        }
+    }
 }
 
 /**
@@ -182,8 +228,14 @@ inline void InputSystem(entt::registry &registry, const Map &map) {
 
         // Calcular casilla actual (basado en la posición actual)
         // Nota: Asumimos que transform.position está en el CENTRO del tile (AQUI HAY QUE TENER CUIDADO)
-        int cellX = static_cast<int>((transform.position.x - tileSize/2) / tileSize);
-        int cellY = static_cast<int>((transform.position.y - tileSize/2) / tileSize);
+        int cellX = (int)std::round((transform.position.x - tileSize / 2.0f) / tileSize);
+        int cellY = (int)std::round((transform.position.y - tileSize / 2.0f) / tileSize);
+
+        if (!move.isMoving) {
+            float snapX = cellX * tileSize + tileSize / 2.0f;
+            float snapY = cellY * tileSize + tileSize / 2.0f;
+            transform.position = {snapX, snapY};
+        }
 
         int targetX = cellX + dx;
         int targetY = cellY + dy;
@@ -294,6 +346,18 @@ inline void CollisionSystem(entt::registry &registry, Map &map) {
                     const auto &spike = registry.get<SpikeComponent>(entity);
                     if (!spike.active) return;
                 }
+                if (hazardCol.type == CollisionType::Enemy && registry.all_of<EnemyAIComponent>(entity)) {
+                    auto &ai = registry.get<EnemyAIComponent>(entity);
+                    if (ai.state == EnemyAIState::Chase) {
+                        ai.state = EnemyAIState::Retreat;
+                        ai.retreatTimer = ai.retreatDuration;
+                        if (registry.all_of<MovementComponent>(entity)) {
+                            auto &move = registry.get<MovementComponent>(entity);
+                            move.isMoving = false;
+                            move.progress = 0.0f;
+                        }
+                    }
+                }
                 std::cout << "¡COLISIÓN DETECTADA! Reiniciando jugador..." << std::endl;
 
                 // Lógica de Respawn simple: Volver al inicio del mapa
@@ -357,52 +421,197 @@ inline void CollisionSystem(entt::registry &registry, Map &map) {
     });
 }
 
-inline void EnemyAISystem(entt::registry &registry, const Map &map) {
-    // Iteramos sobre entidades que tienen Movimiento y Colisión de tipo Enemigo
-    auto view = registry.view<TransformComponent, MovementComponent, ColliderComponent>();
+inline void EnemyAISystem(entt::registry &registry, const Map &map, float deltaTime) {
+    auto playerView = registry.view<const TransformComponent, PlayerInputComponent>();
+    if (!playerView) return;
 
-    view.each([&map, &registry](auto &transform, auto &move, auto &col) {
-        // Solo procesar enemigos
-        if (col.type != CollisionType::Enemy) return;
+    auto playerEntity = *playerView.begin();
+    const auto &playerTrans = playerView.get<const TransformComponent>(playerEntity);
 
-        // Si ya se mueve, esperar a que termine
-        if (move.isMoving) return;
+    auto view = registry.view<TransformComponent, MovementComponent, ColliderComponent, EnemyAIComponent>();
 
-        // --- Lógica Simple de Patrulla Aleatoria ---
-        // 1% de probabilidad por frame de intentar moverse (para que no sean frenéticos)
-        if (GetRandomValue(0, 100) < 5) {
-            int dir = GetRandomValue(0, 3); // 0:Arriba, 1:Abajo, 2:Izq, 3:Der
-            int dx = 0, dy = 0;
+    for (auto entity : view) {
+        auto &transform = view.get<TransformComponent>(entity);
+        auto &move = view.get<MovementComponent>(entity);
+        auto &col = view.get<ColliderComponent>(entity);
+        auto &ai = view.get<EnemyAIComponent>(entity);
 
-            if (dir == 0) dy = -1;
-            else if (dir == 1) dy = 1;
-            else if (dir == 2) dx = -1;
-            else if (dir == 3) dx = 1;
+        if (col.type != CollisionType::Enemy) continue;
 
-            // Calcular destino
-            float tileSize = (float)map.tile();
-            int cellX = static_cast<int>((transform.position.x - tileSize/2) / tileSize);
-            int cellY = static_cast<int>((transform.position.y - tileSize/2) / tileSize);
-            int targetX = cellX + dx;
-            int targetY = cellY + dy;
+        ai.timer += deltaTime;
 
-            // Verificar si es caminable (copiado de InputSystem)
-            if (targetX >= 0 && targetX < map.width() && targetY >= 0 && targetY < map.height()) {
-                if (map.at(targetX, targetY) != '#') {
-                    if (IsMechanismBlockingCell(registry, targetX, targetY)) {
-                        return;
+        float tileSize = (float)map.tile();
+        int cellX = (int)std::round((transform.position.x - tileSize / 2.0f) / tileSize);
+        int cellY = (int)std::round((transform.position.y - tileSize / 2.0f) / tileSize);
+
+        int playerCellX = (int)std::round((playerTrans.position.x - tileSize / 2.0f) / tileSize);
+        int playerCellY = (int)std::round((playerTrans.position.y - tileSize / 2.0f) / tileSize);
+
+        float dxp = transform.position.x - playerTrans.position.x;
+        float dyp = transform.position.y - playerTrans.position.y;
+        float distToPlayer = std::sqrt(dxp * dxp + dyp * dyp);
+        float distInTiles = distToPlayer / tileSize;
+
+        bool hasLos = HasLineOfSight(map, cellX, cellY, playerCellX, playerCellY);
+
+        switch (ai.state) {
+            case EnemyAIState::Patrol: {
+                if (distInTiles <= ai.detectionRange && hasLos) {
+                    ai.state = EnemyAIState::Chase;
+                    ai.timer = 0.0f;
+                } else if (!move.isMoving && (ai.moveCooldown == 0.0f || ai.timer >= ai.moveCooldown)) {
+                    const int dx[4] = {0, 0, 1, -1};
+                    const int dy[4] = {1, -1, 0, 0};
+
+                    int order[4];
+                    ShuffledNeighbors(order);
+
+                    bool found = false;
+                    for (int k = 0; k < 4; ++k) {
+                        int i = order[k];
+                        int nx = cellX + dx[i];
+                        int ny = cellY + dy[i];
+                        if (map.isWalkableForEnemy(nx, ny) && !IsMechanismBlockingCell(registry, nx, ny)) {
+                            move.startPos = transform.position;
+                            move.targetPos = { nx * tileSize + tileSize / 2.0f, ny * tileSize + tileSize / 2.0f };
+                            move.duration = (move.speed > 0) ? (tileSize / move.speed) : 0.12f;
+                            move.progress = 0.0f;
+                            move.isMoving = true;
+                            ai.timer = 0.0f;
+                            found = true;
+                            break;
+                        }
                     }
-                    // Mover
-                    move.startPos = transform.position;
-                    move.targetPos = {
-                        targetX * tileSize + tileSize / 2.0f,
-                        targetY * tileSize + tileSize / 2.0f
-                    };
-                    move.duration = tileSize / move.speed;
-                    move.progress = 0.0f;
-                    move.isMoving = true;
+                    if (!found) {
+                        move.isMoving = false;
+                    }
                 }
+                break;
+            }
+            case EnemyAIState::Chase: {
+                if (distInTiles > ai.detectionRange * 1.5f || !hasLos) {
+                    ai.state = EnemyAIState::Patrol;
+                    ai.timer = 0.0f;
+                } else if (!move.isMoving && ai.timer >= 0.05f) {
+                    int deltaX = playerCellX - cellX;
+                    int deltaY = playerCellY - cellY;
+
+                    int priorities[4];
+                    if (std::abs(deltaX) > std::abs(deltaY)) {
+                        if (deltaX > 0) {
+                            priorities[0] = 2;
+                            priorities[1] = (deltaY > 0) ? 0 : 1;
+                            priorities[2] = (deltaY > 0) ? 1 : 0;
+                            priorities[3] = 3;
+                        } else {
+                            priorities[0] = 3;
+                            priorities[1] = (deltaY > 0) ? 0 : 1;
+                            priorities[2] = (deltaY > 0) ? 1 : 0;
+                            priorities[3] = 2;
+                        }
+                    } else {
+                        if (deltaY > 0) {
+                            priorities[0] = 0;
+                            priorities[1] = (deltaX > 0) ? 2 : 3;
+                            priorities[2] = (deltaX > 0) ? 3 : 2;
+                            priorities[3] = 1;
+                        } else {
+                            priorities[0] = 1;
+                            priorities[1] = (deltaX > 0) ? 2 : 3;
+                            priorities[2] = (deltaX > 0) ? 3 : 2;
+                            priorities[3] = 0;
+                        }
+                    }
+
+                    const int dx[4] = {0, 0, 1, -1};
+                    const int dy[4] = {1, -1, 0, 0};
+
+                    bool found = false;
+                    for (int k = 0; k < 4; ++k) {
+                        int i = priorities[k];
+                        int nx = cellX + dx[i];
+                        int ny = cellY + dy[i];
+                        if (map.isWalkableForEnemy(nx, ny) && !IsMechanismBlockingCell(registry, nx, ny)) {
+                            move.startPos = transform.position;
+                            move.targetPos = { nx * tileSize + tileSize / 2.0f, ny * tileSize + tileSize / 2.0f };
+                            float speedMul = 1.1f;
+                            move.duration = (move.speed > 0) ? (tileSize / (move.speed * speedMul)) : 0.12f;
+                            move.progress = 0.0f;
+                            move.isMoving = true;
+                            ai.timer = 0.0f;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        move.isMoving = false;
+                    }
+                }
+                break;
+            }
+            case EnemyAIState::Retreat: {
+                ai.retreatTimer -= deltaTime;
+                if (ai.retreatTimer <= 0.0f) {
+                    ai.state = EnemyAIState::Patrol;
+                    ai.retreatTimer = 0.0f;
+                    ai.timer = 0.0f;
+                } else if (!move.isMoving && ai.timer >= 0.1f) {
+                    int deltaX = cellX - playerCellX;
+                    int deltaY = cellY - playerCellY;
+
+                    int priorities[4];
+                    if (std::abs(deltaX) > std::abs(deltaY)) {
+                        if (deltaX > 0) {
+                            priorities[0] = 2;
+                            priorities[1] = (deltaY > 0) ? 0 : 1;
+                            priorities[2] = (deltaY > 0) ? 1 : 0;
+                            priorities[3] = 3;
+                        } else {
+                            priorities[0] = 3;
+                            priorities[1] = (deltaY > 0) ? 0 : 1;
+                            priorities[2] = (deltaY > 0) ? 1 : 0;
+                            priorities[3] = 2;
+                        }
+                    } else {
+                        if (deltaY > 0) {
+                            priorities[0] = 0;
+                            priorities[1] = (deltaX > 0) ? 2 : 3;
+                            priorities[2] = (deltaX > 0) ? 3 : 2;
+                            priorities[3] = 1;
+                        } else {
+                            priorities[0] = 1;
+                            priorities[1] = (deltaX > 0) ? 2 : 3;
+                            priorities[2] = (deltaX > 0) ? 3 : 2;
+                            priorities[3] = 0;
+                        }
+                    }
+
+                    const int dx[4] = {0, 0, 1, -1};
+                    const int dy[4] = {1, -1, 0, 0};
+
+                    bool found = false;
+                    for (int k = 0; k < 4; ++k) {
+                        int i = priorities[k];
+                        int nx = cellX + dx[i];
+                        int ny = cellY + dy[i];
+                        if (map.isWalkableForEnemy(nx, ny) && !IsMechanismBlockingCell(registry, nx, ny)) {
+                            move.startPos = transform.position;
+                            move.targetPos = { nx * tileSize + tileSize / 2.0f, ny * tileSize + tileSize / 2.0f };
+                            float speedMul = 1.2f;
+                            move.duration = (move.speed > 0) ? (tileSize / (move.speed * speedMul)) : 0.12f;
+                            move.progress = 0.0f;
+                            move.isMoving = true;
+                            ai.timer = 0.0f;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        move.isMoving = false;
+                    }
+                }
+                break;
             }
         }
-    });
+    }
 }

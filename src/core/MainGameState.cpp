@@ -139,7 +139,7 @@ void MainGameState::update(float deltaTime)
     // LOGICA NUEVA CON ECS
     // Primero Input (decide destino), luego Movimiento (mueve)
     InputSystem(registry, map_);
-    EnemyAISystem(registry, map_);
+    EnemyAISystem(registry, map_, deltaTime);
     MovementSystem(registry, deltaTime);
     SpikeSystem(registry, deltaTime);
     CollisionSystem(registry, map_); // Chequeo de colisiones
@@ -558,7 +558,8 @@ void MainGameState::loadLevelEntities() {
                 registry.emplace<SpriteComponent>(entity, enemyTex, 6, manualOffset);
 
                 // Movimiento (IA)
-                registry.emplace<MovementComponent>(entity, 100.0f); // Velocidad un poco más lenta que el jugador
+                registry.emplace<MovementComponent>(entity, 80.0f); // Velocidad más lenta que el jugador
+                registry.emplace<EnemyAIComponent>(entity);
 
                 // Collider (90% del tile)
                 float hitSize = map_.tile() * 0.9f;
