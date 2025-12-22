@@ -4,29 +4,32 @@
 #include <string>
 #include <functional>
 #include <vector>
-
-class Player; // Forward declaration
+#include <entt/entt.hpp>
 class MainGameState; // Forward declaration
 
 class DevModeState : public GameState
 {
 public:
-    DevModeState(Player* player, float* levelTime, bool* freezeEnemies, bool* infiniteTime, bool* keyGivenByCheating, int currentLevel);
+    DevModeState(entt::registry* registry, float* levelTime, bool* freezeEnemies,
+                 bool* infiniteTime, bool* keyGivenByCheating, int* totalKeysInMap,
+                 int currentLevel);
     ~DevModeState();
 
     void init() override;
-    // void handleInput() override;
+    void handleInput() override;
     void update(float deltaTime) override;
     void render() override;
     void pause() override {}
     void resume() override {}
 
 private:
-    Player* player_;
+    entt::registry* registry_;
+    entt::entity playerEntity_;
     float* levelTime_;
     bool* freezeEnemies_;
     bool* infiniteTime_;
     bool* keyGivenByCheating_;
+    int* totalKeysInMap_;
     int currentLevel_;
 
     // UI State
@@ -52,4 +55,5 @@ private:
     void renderPasswordScreen();
     void renderDevMenu();
     void setupCheatOptions();
+    bool resolvePlayerEntity();
 };

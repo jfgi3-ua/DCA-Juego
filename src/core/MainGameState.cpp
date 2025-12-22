@@ -5,8 +5,7 @@
 #include "StateMachine.hpp"
 #include "ResourceManager.hpp"
 #include "objects/Enemy.hpp"
-#include "ecs/Components.hpp"
-#include "ecs/Systems.hpp"
+#include "ecs/Ecs.hpp"
 extern "C" {
   #include <raylib.h>
 }
@@ -85,13 +84,16 @@ void MainGameState::init()
     registry.emplace<SpriteComponent>(playerEntity, playerTex, 6, manualOffset);
 
     // 6. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
-    registry.emplace<MovementComponent>(playerEntity, 150.0f);
+    registry.emplace<MovementComponent>(playerEntity, 75.0f);
 
     // 7. Etiqueta de Input (para que sepa que ESTE es el jugador controlable) <-- // ?? Esta parte tengo que estudiarmela mejor
     registry.emplace<PlayerInputComponent>(playerEntity);
 
     // 8. Estado de jugador (invulnerabilidad y retroceso)
     registry.emplace<PlayerStateComponent>(playerEntity, Vector2{centerX, centerY}, 1.5f);
+
+    // 9. Cheats del jugador (god/no-clip)
+    registry.emplace<PlayerCheatComponent>(playerEntity, false, false);
 
     // -- Colisiones --
     // 1. Añadir ColliderComponent al JUGADOR
@@ -115,12 +117,13 @@ void MainGameState::init()
 void MainGameState::handleInput()
 {
     // Activar menú de desarrollador con CTRL+D
-    // if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_D)) {
-    //     this->state_machine->add_overlay_state(
-    //         std::make_unique<DevModeState>(&player_, &levelTime_, &freezeEnemies_, &infiniteTime_, &keyGivenByCheating_, level_)
-    //     );
-    //     return;
-    // }
+    if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_D)) {
+        this->state_machine->add_overlay_state(
+            std::make_unique<DevModeState>(&registry, &levelTime_, &freezeEnemies_, &infiniteTime_,
+                                           &keyGivenByCheating_, &totalKeysInMap_, level_)
+        );
+        return;
+    }
 }
 
 void MainGameState::update(float deltaTime)
@@ -142,7 +145,9 @@ void MainGameState::update(float deltaTime)
     // LOGICA NUEVA CON ECS
     // Primero Input (decide destino), luego Movimiento (mueve)
     InputSystem(registry, map_);
-    EnemyAISystem(registry, map_, deltaTime);
+    if (!freezeEnemies_) {
+        EnemyAISystem(registry, map_, deltaTime);
+    }
     MovementSystem(registry, deltaTime);
     SpikeSystem(registry, deltaTime);
     InvulnerabilitySystem(registry, deltaTime);
@@ -273,7 +278,6 @@ void MainGameState::update(float deltaTime)
 
 void MainGameState::render()
 {
-    BeginDrawing();
     ClearBackground(RAYWHITE);
     auto& rm = ResourceManager::Get();
 
@@ -481,7 +485,6 @@ void MainGameState::render()
     //     }
     // }
 
-    EndDrawing();
 }
 
 // void MainGameState::activeMechanisms() {
@@ -562,7 +565,7 @@ void MainGameState::loadLevelEntities() {
                 registry.emplace<SpriteComponent>(entity, enemyTex, 6, manualOffset);
 
                 // Movimiento (IA)
-                registry.emplace<MovementComponent>(entity, 80.0f); // Velocidad más lenta que el jugador
+                registry.emplace<MovementComponent>(entity, 40.0f); // Velocidad más lenta que el jugador
                 registry.emplace<EnemyAIComponent>(entity);
 
                 // Collider (90% del tile)
