@@ -241,7 +241,9 @@ void MainGameState::update(float deltaTime)
 
 void MainGameState::render()
 {
+    BeginDrawing();
     ClearBackground(RAYWHITE);
+    auto& rm = ResourceManager::Get();
 
     // Dimensiones
     const int mapWpx = map_.width()  * tile_;
@@ -293,41 +295,72 @@ void MainGameState::render()
     // DrawRectangleRoundedLinesEx(hud, 0.25f, 6, 1.0f, DARKGRAY);
     // DrawText("Mochila", (int)hud.x + 10, (int)hud.y + 6, 16, DARKGRAY);
 
-    // --- HUD LOGIC (ECS) ---
-    // Buscar al jugador para leer sus stats
-    auto view = registry.view<StatsComponent, PlayerInputComponent>();
+    // --------------------------------------------------------
+    // 2. HUD - INTERFAZ DE USUARIO (Lectura desde ECS)
+    // --------------------------------------------------------
+
+    // Obtenemos la textura de iconos (Corazones y Llaves)
+    Texture2D iconsTex = rm.GetTexture("assets/sprites/icons/Icons.png");
+
+    // Buscamos la entidad que sea JUGADOR (tiene Stats y Input)
+    auto view = registry.view<StatsComponent, TransformComponent, PlayerInputComponent>();
+
     for(auto entity : view) {
         const auto &stats = view.get<StatsComponent>(entity);
+        const auto &trans = view.get<TransformComponent>(entity);
 
-        // 1. Dibujar Vidas (// TODO:Texto simple por ahora)
-        std::string livesText = "Vidas: " + std::to_string(stats.lives);
-        DrawText(livesText.c_str(), 10, GetScreenHeight() - 40, 24, RED);
+        // --- A. MOSTRAR VIDAS (CORAZONES) ---
+        // Asumimos que el Corazón es el primer icono del atlas (0,0) de 16x16
+        Rectangle heartSrc = {80, 0, 16, 16};
 
-        // 2. Dibujar Llaves
-        std::string keysText = "Llaves: " + std::to_string(stats.keysCollected) + " / " + std::to_string(totalKeysInMap_);
-        DrawText(keysText.c_str(), 150, GetScreenHeight() - 40, 24, GOLD);
+        for (int i = 0; i < stats.lives; i++) {
+            // Dibujamos un corazón por cada vida, separados 30px
+            Rectangle destRect = {
+                10.0f + (30.0f * i), // X: Se desplaza a la derecha
+                10.0f,               // Y: Arriba
+                32.0f, 32.0f         // Tamaño escalado (x2) para que se vea bien
+            };
+            DrawTexturePro(iconsTex, heartSrc, destRect, {0,0}, 0.0f, WHITE);
+        }
 
-        // 3. Lógica de Salida (Mensaje Contextual)
-        if(registry.all_of<TransformComponent>(entity)) {
-            auto &trans = registry.get<TransformComponent>(entity);
-            int cx = (int)(trans.position.x / map_.tile());
-            int cy = (int)(trans.position.y / map_.tile());
+        // --- B. MOSTRAR LLAVES ---
+        // La llave es el 5º icono (índice 4). X = 16 * 4 = 64.
+        Rectangle keySrc = {64, 0, 16, 16};
+        Rectangle keyDest = {10.0f, 50.0f, 32.0f, 32.0f}; // Debajo de los corazones
 
-            // Si está sobre la salida 'X'
-            if (cx >= 0 && cx < map_.width() && cy >= 0 && cy < map_.height()) {
-                if (map_.at(cx, cy) == 'X') {
-                    if (stats.keysCollected >= totalKeysInMap_) {
-                        DrawText("¡Pulsa ENTER para Salir!", GetScreenWidth()/2 - 100, 50, 20, GREEN);
+        DrawTexturePro(iconsTex, keySrc, keyDest, {0,0}, 0.0f, WHITE);
 
-                        // Lógica rápida de salida (esto debería ir en Update, pero vale para probar visualmente)
-                        if (IsKeyPressed(KEY_ENTER)) {
-                            std::cout << "NIVEL COMPLETADO" << std::endl;
-                            // finishLevel();
-                        }
-                    } else {
-                        DrawText("Necesitas todas las llaves...", GetScreenWidth()/2 - 100, 50, 20, RED);
-                    }
+        // Texto del contador: "0 / 3"
+        std::string keyText = std::to_string(stats.keysCollected) + " / " + std::to_string(totalKeysInMap_);
+        DrawText(keyText.c_str(), 50, 56, 24, WHITE); // Texto blanco, un poco desplazado a la derecha del icono
+
+        // --- C. MENSAJE DE SALIDA (Contextual) ---
+        // Calcular en qué casilla del mapa está el jugador
+        int cx = (int)(trans.position.x / tile_);
+        int cy = (int)(trans.position.y / tile_);
+
+        // Verificamos límites del mapa para no leer memoria inválida
+        if (cx >= 0 && cx < map_.width() && cy >= 0 && cy < map_.height()) {
+
+            // Si la casilla actual es la SALIDA ('X')
+            if (map_.at(cx, cy) == 'X') {
+                std::string msg;
+                Color msgColor;
+
+                if (stats.keysCollected < totalKeysInMap_) {
+                    // Caso: Faltan llaves
+                    int remaining = totalKeysInMap_ - stats.keysCollected;
+                    msg = "Necesitas " + std::to_string(remaining) + " llave" + (remaining > 1 ? "s" : "") + " más";
+                    msgColor = RED;
+                } else {
+                    // Caso: Nivel completado
+                    msg = "¡Presiona ENTER para Siguiente Nivel!";
+                    msgColor = GREEN;
                 }
+
+                // Centrar el texto en la pantalla
+                int textWidth = MeasureText(msg.c_str(), 24);
+                DrawText(msg.c_str(), (GetScreenWidth() - textWidth) / 2, GetScreenHeight() - 100, 24, msgColor);
             }
         }
     }
