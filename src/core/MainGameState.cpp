@@ -302,24 +302,29 @@ void MainGameState::render()
 
     // spikes_.render(ox, oy); // !! --- CÓDIGO ANTIGUO  ---
 
-    // !! --- CÓDIGO ANTIGUO  ---
     // 4) HUD inferior - se coloca en la parte inferior de la ventana
     const float baseY = (float)(GetScreenHeight() - HUD_HEIGHT); // HUD siempre abajo
-    // // Fondo del HUD a lo ancho de la ventana
-    // Rectangle hudBg{ 0.0f, baseY, (float)GetScreenWidth(), (float)HUD_HEIGHT };
-    // DrawRectangleRec(hudBg, Fade(BLACK, 0.06f));
-    // // sombreado sutil encima del HUD
-    // for (int i=0; i<6; ++i) {
-    //     Color c = Fade(BLACK, 0.05f * (6 - i));
-    //     DrawLine(0, (int)baseY - i, GetScreenWidth(), (int)baseY - i, c);
-    // }
+    // Fondo del HUD a lo ancho de la ventana
+    Rectangle hudBg{ 0.0f, baseY, (float)GetScreenWidth(), (float)HUD_HEIGHT };
+    DrawRectangleRec(hudBg, Fade(BLACK, 0.06f));
+    // sombreado sutil encima del HUD
+    for (int i=0; i<6; ++i) {
+        Color c = Fade(BLACK, 0.05f * (6 - i));
+        DrawLine(0, (int)baseY - i, GetScreenWidth(), (int)baseY - i, c);
+    }
 
-    // // Panel de mochila (alineado a la izquierda dentro del HUD)
-    // const int pad = 10;
-    // Rectangle hud{ (float)pad, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad };
-    // DrawRectangleRounded(hud, 0.25f, 6, Fade(BLACK, 0.10f));
-    // DrawRectangleRoundedLinesEx(hud, 0.25f, 6, 1.0f, DARKGRAY);
-    // DrawText("Mochila", (int)hud.x + 10, (int)hud.y + 6, 16, DARKGRAY);
+    // Panel de mochila (alineado a la izquierda dentro del HUD)
+    const int pad = 10;
+    Rectangle bagHud{ (float)pad, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad };
+    DrawRectangleRounded(bagHud, 0.25f, 6, Fade(BLACK, 0.10f));
+    DrawRectangleRoundedLinesEx(bagHud, 0.25f, 6, 1.0f, DARKGRAY);
+    DrawText("Mochila", (int)bagHud.x + 10, (int)bagHud.y + 6, 16, DARKGRAY);
+
+    // Panel de vidas (alineado a la derecha dentro del HUD)
+    Rectangle livesHud{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad };
+    DrawRectangleRounded(livesHud, 0.25f, 6, Fade(BLACK, 0.10f));
+    DrawRectangleRoundedLinesEx(livesHud, 0.25f, 6, 1.0f, DARKGRAY);
+    DrawText("Vidas", (int)livesHud.x + 10, (int)livesHud.y + 6, 16, DARKGRAY);
 
     // --------------------------------------------------------
     // 2. HUD - INTERFAZ DE USUARIO (Lectura desde ECS)
@@ -335,30 +340,22 @@ void MainGameState::render()
         const auto &stats = view.get<StatsComponent>(entity);
         const auto &trans = view.get<TransformComponent>(entity);
 
-        // --- A. MOSTRAR VIDAS (CORAZONES) ---
-        // Asumimos que el Corazón es el primer icono del atlas (0,0) de 16x16
-        Rectangle heartSrc = {80, 0, 16, 16};
-
-        for (int i = 0; i < stats.lives; i++) {
-            // Dibujamos un corazón por cada vida, separados 30px
-            Rectangle destRect = {
-                10.0f + (30.0f * i), // X: Se desplaza a la derecha
-                10.0f,               // Y: Arriba
-                32.0f, 32.0f         // Tamaño escalado (x2) para que se vea bien
-            };
-            DrawTexturePro(iconsTex, heartSrc, destRect, {0,0}, 0.0f, WHITE);
-        }
-
-        // --- B. MOSTRAR LLAVES ---
-        // La llave es el 5º icono (índice 4). X = 16 * 4 = 64.
+        // --- A. MOSTRAR LLAVES (MOCHILA) ---
         Rectangle keySrc = {64, 0, 16, 16};
-        Rectangle keyDest = {10.0f, 50.0f, 32.0f, 32.0f}; // Debajo de los corazones
-
+        Rectangle keyDest = {bagHud.x + 10.0f, bagHud.y + 28.0f, 24.0f, 24.0f};
         DrawTexturePro(iconsTex, keySrc, keyDest, {0,0}, 0.0f, WHITE);
-
-        // Texto del contador: "0 / 3"
         std::string keyText = std::to_string(stats.keysCollected) + " / " + std::to_string(totalKeysInMap_);
-        DrawText(keyText.c_str(), 50, 56, 24, WHITE); // Texto blanco, un poco desplazado a la derecha del icono
+        DrawText(keyText.c_str(), (int)bagHud.x + 42, (int)bagHud.y + 30, 20, DARKGRAY);
+
+        // --- B. MOSTRAR VIDAS ---
+        Rectangle heartSrc = {80, 0, 16, 16};
+        for (int i = 0; i < stats.lives; i++) {
+            float hX = livesHud.x + 10.0f + (i * 24.0f);
+            float hY = livesHud.y + 28.0f;
+            DrawTexturePro(iconsTex, heartSrc,
+                Rectangle{hX, hY, 20.0f, 20.0f},
+                {0,0}, 0.0f, WHITE);
+        }
 
         // --- C. MENSAJE DE SALIDA (Contextual) ---
         // Calcular en qué casilla del mapa está el jugador
@@ -386,7 +383,7 @@ void MainGameState::render()
 
                 // Centrar el texto en la pantalla
                 int textWidth = MeasureText(msg.c_str(), 24);
-                DrawText(msg.c_str(), (GetScreenWidth() - textWidth) / 2, GetScreenHeight() - 100, 24, msgColor);
+                DrawText(msg.c_str(), (GetScreenWidth() - textWidth) / 2, (int)baseY - 30, 24, msgColor);
             }
         }
     }
