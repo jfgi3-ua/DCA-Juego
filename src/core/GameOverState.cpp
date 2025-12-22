@@ -37,7 +37,7 @@ void GameOverState::init() {
     } else {
         // Nivel completado - cargar background y botones
         background = &rm.GetTexture("sprites/menus/background_pasar_nivel.png");
-        rm.GetTexture("sprites/icons/bonton_siguiente_nivel.png");
+        rm.GetTexture("sprites/icons/boton_siguiente_nivel.png");
         rm.GetTexture("sprites/icons/boton_salir.png");
     }
 }
@@ -297,7 +297,7 @@ void GameOverState::render()
     // --- Botones ---
     if (!dead && !isVictory_) {
         // Botones con sprites para nivel completado
-        const Texture2D& botonSiguiente = rm.GetTexture("sprites/icons/bonton_siguiente_nivel.png");
+        const Texture2D& botonSiguiente = rm.GetTexture("sprites/icons/boton_siguiente_nivel.png");
         const Texture2D& botonSalir = rm.GetTexture("sprites/icons/boton_salir.png");
         
         float buttonWidth = 400;
