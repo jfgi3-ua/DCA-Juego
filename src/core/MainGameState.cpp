@@ -90,6 +90,9 @@ void MainGameState::init()
     // 7. Etiqueta de Input (para que sepa que ESTE es el jugador controlable) <-- // ?? Esta parte tengo que estudiarmela mejor
     registry.emplace<PlayerInputComponent>(playerEntity);
 
+    // 8. Estado de jugador (invulnerabilidad y retroceso)
+    registry.emplace<PlayerStateComponent>(playerEntity, Vector2{centerX, centerY}, 1.5f);
+
     // -- Colisiones --
     // 1. Añadir ColliderComponent al JUGADOR
     // Ajustamos la caja para que sea un poco más pequeña que el tile (hitbox permisiva... de momento)
@@ -142,6 +145,7 @@ void MainGameState::update(float deltaTime)
     EnemyAISystem(registry, map_, deltaTime);
     MovementSystem(registry, deltaTime);
     SpikeSystem(registry, deltaTime);
+    InvulnerabilitySystem(registry, deltaTime);
     CollisionSystem(registry, map_); // Chequeo de colisiones
     MechanismSystem(registry, map_);
 

@@ -107,6 +107,15 @@ struct SpikeComponent {
           inactiveOffsetY(inactiveOffset) {}
 };
 
+struct PlayerStateComponent {
+    Vector2 lastTilePos;
+    float invulnerableTimer;
+    float invulnerableDuration;
+
+    PlayerStateComponent(Vector2 startPos = {0.0f, 0.0f}, float duration = 1.5f)
+        : lastTilePos(startPos), invulnerableTimer(0.0f), invulnerableDuration(duration) {}
+};
+
 enum class EnemyAIState {
     Patrol,
     Chase,

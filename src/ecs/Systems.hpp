@@ -202,11 +202,15 @@ inline void MechanismSystem(entt::registry &registry, const Map &map) {
 
 // Sistema de Entrada: Detecta teclas e inicia el movimiento
 inline void InputSystem(entt::registry &registry, const Map &map) {
-    auto view = registry.view<TransformComponent, MovementComponent, SpriteComponent, PlayerInputComponent>();
+    auto view = registry.view<TransformComponent, MovementComponent, SpriteComponent, PlayerInputComponent, PlayerStateComponent>();
 
-    view.each([&map, &registry](auto &transform, auto &move, auto &sprite) {
+    for (auto entity : view) {
+        auto &transform = view.get<TransformComponent>(entity);
+        auto &move = view.get<MovementComponent>(entity);
+        auto &sprite = view.get<SpriteComponent>(entity);
+        auto &playerState = view.get<PlayerStateComponent>(entity);
         // Si ya se está moviendo, no aceptamos nuevo input
-        if (move.isMoving) return;
+        if (move.isMoving) continue;
 
         int dx = 0;
         int dy = 0;
@@ -217,7 +221,7 @@ inline void InputSystem(entt::registry &registry, const Map &map) {
         else if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) dx = 1;
 
         // Si no hay input, salir
-        if (dx == 0 && dy == 0) return;
+        if (dx == 0 && dy == 0) continue;
 
         // --- Lógica de Dirección Visual (Flip) ---
         if (dx > 0) sprite.flipX = false;      // Derecha
@@ -242,20 +246,23 @@ inline void InputSystem(entt::registry &registry, const Map &map) {
 
         // 1. Verificar límites del mapa
         if (targetX < 0 || targetX >= map.width() || targetY < 0 || targetY >= map.height()) {
-            return;
+            continue;
         }
 
         // 2. Verificar paredes (Map::at lanza excepción si fuera de rango, pero ya comprobamos límites)
         if (map.at(targetX, targetY) == '#') {
-            return; // Bloqueado
+            continue; // Bloqueado
         }
 
         // 3. Verificar bloqueo por mecanismo activo
         if (IsMechanismBlockingCell(registry, targetX, targetY)) {
-            return;
+            continue;
         }
 
         // --- Iniciar Transición ---
+        // Guardar última posición segura antes de moverse
+        playerState.lastTilePos = transform.position;
+
         move.startPos = transform.position;
 
         // El destino es el CENTRO del tile objetivo
@@ -270,7 +277,20 @@ inline void InputSystem(entt::registry &registry, const Map &map) {
 
         move.progress = 0.0f;
         move.isMoving = true;
-    });
+    }
+}
+
+inline void InvulnerabilitySystem(entt::registry &registry, float deltaTime) {
+    auto view = registry.view<PlayerStateComponent>();
+    for (auto entity : view) {
+        auto &state = view.get<PlayerStateComponent>(entity);
+        if (state.invulnerableTimer > 0.0f && state.invulnerableTimer < state.invulnerableDuration) {
+            state.invulnerableTimer += deltaTime;
+            if (state.invulnerableTimer > state.invulnerableDuration) {
+                state.invulnerableTimer = state.invulnerableDuration;
+            }
+        }
+    }
 }
 
 // Sistema de Movimiento: Interpola la posición
@@ -300,7 +320,7 @@ inline void MovementSystem(entt::registry &registry, float deltaTime) {
 
 inline void CollisionSystem(entt::registry &registry, Map &map) {
     // 1. Obtener al jugador (asumimos que solo hay uno con PlayerInputComponent y Collider)
-    auto playerView = registry.view<TransformComponent, ColliderComponent, PlayerInputComponent>();
+    auto playerView = registry.view<TransformComponent, ColliderComponent, PlayerInputComponent, PlayerStateComponent>();
 
     // Si no hay jugador, no hacemos nada
     if (!playerView) return;
@@ -308,6 +328,7 @@ inline void CollisionSystem(entt::registry &registry, Map &map) {
     entt::entity playerEntity = *playerView.begin();
     auto &playerTrans = playerView.get<TransformComponent>(playerEntity);
     auto &playerCol = playerView.get<ColliderComponent>(playerEntity);
+    auto &playerState = playerView.get<PlayerStateComponent>(playerEntity);
 
     // Calcular la caja absoluta del jugador en el mundo
     // Sumamos la posición de la entidad al offset del collider
@@ -346,6 +367,9 @@ inline void CollisionSystem(entt::registry &registry, Map &map) {
                     const auto &spike = registry.get<SpikeComponent>(entity);
                     if (!spike.active) return;
                 }
+                if (playerState.invulnerableTimer > 0.0f && playerState.invulnerableTimer < playerState.invulnerableDuration) {
+                    return;
+                }
                 if (hazardCol.type == CollisionType::Enemy && registry.all_of<EnemyAIComponent>(entity)) {
                     auto &ai = registry.get<EnemyAIComponent>(entity);
                     if (ai.state == EnemyAIState::Chase) {
@@ -360,15 +384,30 @@ inline void CollisionSystem(entt::registry &registry, Map &map) {
                 }
                 std::cout << "¡COLISIÓN DETECTADA! Reiniciando jugador..." << std::endl;
 
-                // Lógica de Respawn simple: Volver al inicio del mapa
-                IVec2 startGrid = map.playerStart();
+                // Lógica de retroceso: volver a la última casilla segura
                 float tileSize = (float)map.tile();
+                int prevCellX = (int)(playerState.lastTilePos.x / tileSize);
+                int prevCellY = (int)(playerState.lastTilePos.y / tileSize);
 
-                // Reiniciar posición física
-                playerTrans.position = {
-                    startGrid.x * tileSize + tileSize / 2.0f,
-                    startGrid.y * tileSize + tileSize / 2.0f
-                };
+                bool validRespawn = true;
+                if (prevCellX < 0 || prevCellX >= map.width() || prevCellY < 0 || prevCellY >= map.height()) {
+                    validRespawn = false;
+                } else if (map.at(prevCellX, prevCellY) == '#') {
+                    validRespawn = false;
+                }
+
+                if (!validRespawn) {
+                    IVec2 startGrid = map.playerStart();
+                    playerTrans.position = {
+                        startGrid.x * tileSize + tileSize / 2.0f,
+                        startGrid.y * tileSize + tileSize / 2.0f
+                    };
+                } else {
+                    playerTrans.position = {
+                        prevCellX * tileSize + tileSize / 2.0f,
+                        prevCellY * tileSize + tileSize / 2.0f
+                    };
+                }
 
                 // IMPORTANTE: Reiniciar lógica de movimiento para evitar que siga interpolando
                 if (registry.all_of<MovementComponent>(playerEntity)) {
@@ -382,11 +421,10 @@ inline void CollisionSystem(entt::registry &registry, Map &map) {
                     auto &stats = registry.get<StatsComponent>(playerEntity);
                     stats.lives--;
                     std::cout << "Vidas restantes: " << stats.lives << std::endl;
-                    if (stats.lives <= 0) {
-                        // TODO: Llevar al Game Over State
-                        std::cout << "GAME OVER" << std::endl;
-                    }
                 }
+
+                // Iniciar invulnerabilidad
+                playerState.invulnerableTimer = 0.0001f;
             }
             // CASO B: ITEMS (Llaves)
             else if (hazardCol.type == CollisionType::Item) {
