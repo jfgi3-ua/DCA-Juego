@@ -8,6 +8,17 @@ extern "C" {
     #include <raylib.h>
 }
 
+inline bool IsMechanismBlockingCell(entt::registry &registry, int cellX, int cellY) {
+    auto view = registry.view<const MechanismComponent>();
+    for (auto entity : view) {
+        const auto &mech = view.get<const MechanismComponent>(entity).mechanism;
+        if (!mech.isActive()) continue;
+        IVec2 target = mech.getTargetPos();
+        if (target.x == cellX && target.y == cellY) return true;
+    }
+    return false;
+}
+
 /**
  * @brief Sistema encargado de dibujar todas las entidades renderizables.
  * Itera sobre todas las entidades que tienen TransformComponent Y SpriteComponent.
@@ -73,11 +84,40 @@ inline void RenderSystem(entt::registry &registry, float offset_x, float offset_
     });
 }
 
+inline void RenderMechanismSystem(entt::registry &registry, int offset_x, int offset_y) {
+    auto view = registry.view<const MechanismComponent>();
+    for (auto entity : view) {
+        view.get<const MechanismComponent>(entity).mechanism.render(offset_x, offset_y);
+    }
+}
+
+inline void MechanismSystem(entt::registry &registry, const Map &map) {
+    auto playerView = registry.view<const TransformComponent, PlayerInputComponent>();
+    if (!playerView) return;
+
+    auto playerEntity = *playerView.begin();
+    const auto &trans = playerView.get<const TransformComponent>(playerEntity);
+
+    float tileSize = (float)map.tile();
+    int cellX = (int)(trans.position.x / tileSize);
+    int cellY = (int)(trans.position.y / tileSize);
+
+    auto mechView = registry.view<MechanismComponent>();
+    for (auto entity : mechView) {
+        auto &mech = mechView.get<MechanismComponent>(entity).mechanism;
+        if (!mech.isActive()) continue;
+        IVec2 trigger = mech.getTriggerPos();
+        if (trigger.x == cellX && trigger.y == cellY) {
+            mech.deactivate();
+        }
+    }
+}
+
 // Sistema de Entrada: Detecta teclas e inicia el movimiento
 inline void InputSystem(entt::registry &registry, const Map &map) {
     auto view = registry.view<TransformComponent, MovementComponent, SpriteComponent, PlayerInputComponent>();
 
-    view.each([&map](auto &transform, auto &move, auto &sprite) {
+    view.each([&map, &registry](auto &transform, auto &move, auto &sprite) {
         // Si ya se está moviendo, no aceptamos nuevo input
         if (move.isMoving) return;
 
@@ -115,6 +155,11 @@ inline void InputSystem(entt::registry &registry, const Map &map) {
         // 2. Verificar paredes (Map::at lanza excepción si fuera de rango, pero ya comprobamos límites)
         if (map.at(targetX, targetY) == '#') {
             return; // Bloqueado
+        }
+
+        // 3. Verificar bloqueo por mecanismo activo
+        if (IsMechanismBlockingCell(registry, targetX, targetY)) {
+            return;
         }
 
         // --- Iniciar Transición ---
@@ -160,7 +205,7 @@ inline void MovementSystem(entt::registry &registry, float deltaTime) {
     });
 }
 
-inline void CollisionSystem(entt::registry &registry, const Map &map) {
+inline void CollisionSystem(entt::registry &registry, Map &map) {
     // 1. Obtener al jugador (asumimos que solo hay uno con PlayerInputComponent y Collider)
     auto playerView = registry.view<TransformComponent, ColliderComponent, PlayerInputComponent>();
 
@@ -252,6 +297,12 @@ inline void CollisionSystem(entt::registry &registry, const Map &map) {
                             }
                         }
 
+                        // Reflejar la recogida en el mapa (grid + vector de llaves)
+                        float tileSize = (float)map.tile();
+                        int cellX = (int)(hazardTrans.position.x / tileSize);
+                        int cellY = (int)(hazardTrans.position.y / tileSize);
+                        map.clearCell(cellX, cellY);
+
                         // Destruir la entidad del item inmediatamente
                         registry.destroy(entity);
                     }
@@ -265,7 +316,7 @@ inline void EnemyAISystem(entt::registry &registry, const Map &map) {
     // Iteramos sobre entidades que tienen Movimiento y Colisión de tipo Enemigo
     auto view = registry.view<TransformComponent, MovementComponent, ColliderComponent>();
 
-    view.each([&map](auto &transform, auto &move, auto &col) {
+    view.each([&map, &registry](auto &transform, auto &move, auto &col) {
         // Solo procesar enemigos
         if (col.type != CollisionType::Enemy) return;
 
@@ -293,6 +344,9 @@ inline void EnemyAISystem(entt::registry &registry, const Map &map) {
             // Verificar si es caminable (copiado de InputSystem)
             if (targetX >= 0 && targetX < map.width() && targetY >= 0 && targetY < map.height()) {
                 if (map.at(targetX, targetY) != '#') {
+                    if (IsMechanismBlockingCell(registry, targetX, targetY)) {
+                        return;
+                    }
                     // Mover
                     move.startPos = transform.position;
                     move.targetPos = {

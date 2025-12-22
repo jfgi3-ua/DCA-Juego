@@ -6,7 +6,6 @@
 #include "objects/Map.hpp"
 #include "objects/Player.hpp"
 #include "objects/Spikes.hpp"
-#include "objects/Mechanism.hpp"
 extern "C" {
   #include <raylib.h>
 }
@@ -26,8 +25,6 @@ class MainGameState : public GameState
         void pause(){};
         void resume(){};
 
-        void activeMechanisms();
-
         void loadLevelEntities();
 
     private:
@@ -46,9 +43,6 @@ class MainGameState : public GameState
         //Pinchos
         // Spikes spikes_; // --- CÓDIGO ANTIGUO  ---
 
-        //Mecanismos
-        std::vector<Mechanism> mechanisms_;
-        std::vector<Vector2> activeMechanisms_;
         // Temporizador del nivel (segundos). 30s base + 30s por nivel
         float levelTime_ = 30.0f;
 

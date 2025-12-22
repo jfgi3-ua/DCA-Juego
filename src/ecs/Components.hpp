@@ -2,6 +2,7 @@
 extern "C" {
   #include <raylib.h>
 }
+#include "objects/Mechanism.hpp"
 
 // Componente de Transformación (Posición y Escala)
 struct TransformComponent {
@@ -83,3 +84,10 @@ struct ColliderComponent {
 
 // Etiqueta para el jugador
 struct PlayerInputComponent {};
+
+// Componente de Mecanismo (puertas, trampas, etc.)
+struct MechanismComponent {
+    Mechanism mechanism;
+
+    explicit MechanismComponent(const Mechanism &mech) : mechanism(mech) {}
+};

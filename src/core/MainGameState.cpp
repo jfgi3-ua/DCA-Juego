@@ -51,10 +51,10 @@ void MainGameState::init()
     //     spikes_.addSpike(s.x, s.y);
     // }
 
-    // ?? Cargar mecanismos desde el mapa (AUN NO ESTÁ EN ECS)
+    // Cargar mecanismos desde el mapa (ECS)
     for (auto m : map_.getMechanisms()) {
-        //m es un MechanismPair
-        mechanisms_.emplace_back(m.id, m.trigger, m.target);
+        auto entity = registry.create();
+        registry.emplace<MechanismComponent>(entity, Mechanism(m.id, m.trigger, m.target));
     }
 
     // Inicializar temporizador: 30s base + 30s por cada nivel adicional
@@ -122,8 +122,6 @@ void MainGameState::handleInput()
 
 void MainGameState::update(float deltaTime)
 {
-    activeMechanisms(); //actualizamos un vector con todos los mecanismos activos
-
     // Reducir temporizador de nivel (excepto si está en modo tiempo infinito)
     if (!infiniteTime_) {
         levelTime_ -= deltaTime;
@@ -144,6 +142,7 @@ void MainGameState::update(float deltaTime)
     EnemyAISystem(registry, map_);
     MovementSystem(registry, deltaTime);
     CollisionSystem(registry, map_); // Chequeo de colisiones
+    MechanismSystem(registry, map_);
 
     // --- FLUJO DE JUEGO ECS: derrota/victoria ---
     auto playerView = registry.view<TransformComponent, StatsComponent, PlayerInputComponent>();
@@ -288,10 +287,8 @@ void MainGameState::render()
     // 1) Mapa (dibujado en la zona superior, desde y=0 hasta y=MAP_H_PX)
     map_.render(ox, oy);
 
-    // Mecanismos
-    for (const auto& mech : mechanisms_) {
-        mech.render(ox, oy);
-    }
+    // Mecanismos (ECS)
+    RenderMechanismSystem(registry, ox, oy);
     // 2) Jugador
     // player_.render(ox, oy); // !! --- CÓDIGO ANTIGUO  ---
     RenderSystem(registry, (float)ox, (float)oy, (float)map_.tile());
@@ -485,15 +482,15 @@ void MainGameState::render()
     EndDrawing();
 }
 
-void MainGameState::activeMechanisms() {
-    activeMechanisms_.clear();
-    for (const auto& mech : mechanisms_) {
-        if (mech.isActive()) {
-            Vector2 target = { (float)mech.getTargetPos().x, (float)mech.getTargetPos().y };
-            activeMechanisms_.push_back(target);
-        }
-    }
-}
+// void MainGameState::activeMechanisms() {
+//     activeMechanisms_.clear();
+//     for (const auto& mech : mechanisms_) {
+//         if (mech.isActive()) {
+//             Vector2 target = { (float)mech.getTargetPos().x, (float)mech.getTargetPos().y };
+//             activeMechanisms_.push_back(target);
+//         }
+//     }
+// }
 
 void MainGameState::loadLevelEntities() {
     auto& rm = ResourceManager::Get();
