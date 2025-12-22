@@ -107,8 +107,8 @@ void Map::loadTextures() {
     _wallSrc  = { 10, 47, 32, 30 };
     _exitSrc  = { 48, 336, 32, 32 };
 
-    _keyTexture = &rm.GetTexture("sprites/icons/Icons.png");
-    _keySrc = { 64, 0, 16, 16 };
+    // _keyTexture = &rm.GetTexture("sprites/icons/Icons.png");
+    // _keySrc = { 64, 0, 16, 16 };
 
 }
 

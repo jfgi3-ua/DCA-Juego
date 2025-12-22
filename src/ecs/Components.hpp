@@ -14,6 +14,7 @@ struct SpriteComponent {
     Texture2D texture;
     int numFrames;          // Cuántos cuadros tiene la hoja
     int currentFrame;       // Cuadro actual a dibujar
+    int currentRow;         // Fila actual (para hojas con múltiples filas - ATLAS)
     float frameTime;        // Tiempo por cuadro (para animar luego)
     float timer;            // Acumulador de tiempo
     Vector2 visualOffset;   // Ajuste visual (Offset) - Para renderizar correctamente si la textura no encaja bien
@@ -22,7 +23,7 @@ struct SpriteComponent {
     float customScale;      // 0.0f = Auto (Fórmula Player), >0.0f = Manual
 
     SpriteComponent(Texture2D tex, int frames = 1, Vector2 offset = {0.0f, 0.0f})
-            : texture(tex), numFrames(frames), currentFrame(0), frameTime(0.1f), timer(0.0f),
+            : texture(tex), numFrames(frames), currentFrame(0), currentRow(0), frameTime(0.1f), timer(0.0f),
               visualOffset(offset), flipX(false), fixedFrameSize({0.0f, 0.0f}), customScale(0.0f) {}
 };
 

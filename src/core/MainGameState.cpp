@@ -458,10 +458,21 @@ void MainGameState::loadLevelEntities() {
                 auto entity = registry.create();
                 registry.emplace<TransformComponent>(entity, pos, size);
 
-                // Ajuste visual para el pincho (si es necesario)
-                registry.emplace<SpriteComponent>(entity, spikeTex);
+                auto &sprite = registry.emplace<SpriteComponent>(entity, spikeTex);
 
-                // Hitbox un poco más pequeña que el tile (90%)
+                // 1. DEFINIR TAMAÑO DEL RECORTE (GRID)
+                float realSpriteSize = 32.0f;
+                sprite.fixedFrameSize = {realSpriteSize, realSpriteSize};
+
+                // 2. SELECCIONAR SPRITE ESPECÍFICO
+                // Ahora "4" significará 4 bloques de 32px, no de 16px.
+                sprite.currentRow = 4;   // Fila 5 (empezando en 0)
+                sprite.currentFrame = 0; // Columna 1 (empezando en 0)
+
+                // 3. ESCALA PERSONALIZADA
+                sprite.customScale = (float)map_.tile() / realSpriteSize;
+
+                // Collider (ajustado)
                 float hitSize = map_.tile() * 0.9f;
                 registry.emplace<ColliderComponent>(entity,
                     Rectangle{-hitSize/2, -hitSize/2, hitSize, hitSize},

@@ -50,9 +50,8 @@ inline void RenderSystem(entt::registry &registry, float offset_x, float offset_
         // 3. Recorte (Source)
         Rectangle sourceRec = {
             frameWidth * sprite.currentFrame,
-            0.0f,
-            // Si el personaje mira a la izquierda, aquí haríamos el flip negativo
-            widthSrc,
+            frameHeight * sprite.currentRow,
+            widthSrc, // Si el personaje mira a la izquierda, aquí haríamos el flip negativo
             frameHeight
         };
 
