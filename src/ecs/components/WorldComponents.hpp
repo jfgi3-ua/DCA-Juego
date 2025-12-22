@@ -44,6 +44,27 @@ struct MovementComponent {
         : speed(spd), isMoving(false), startPos{0,0}, targetPos{0,0}, progress(0.0f), duration(0.12f) {}
 };
 
+struct AnimationComponent {
+    Texture2D idleTexture;
+    Texture2D walkTexture;
+    int idleFrames;
+    int walkFrames;
+    float idleFrameTime;
+    float walkFrameTime;
+    bool isWalking;
+
+    AnimationComponent(Texture2D idleTex = {}, Texture2D walkTex = {},
+                       int idleCount = 1, int walkCount = 1,
+                       float idleTime = 0.2f, float walkTime = 0.12f)
+        : idleTexture(idleTex),
+          walkTexture(walkTex),
+          idleFrames(idleCount),
+          walkFrames(walkCount),
+          idleFrameTime(idleTime),
+          walkFrameTime(walkTime),
+          isWalking(false) {}
+};
+
 // Componente de Item (Llaves, etc.)
 struct ItemComponent {
     bool isKey;

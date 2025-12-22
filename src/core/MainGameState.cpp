@@ -58,9 +58,11 @@ void MainGameState::init()
     registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)map_.tile(), (float)map_.tile()});
 
     // 5. Configuración del Sprite
-    Texture2D playerTex = LoadTexture("assets/sprites/player/Archer/Idle.png");
+    Texture2D playerIdleTex = rm.GetTexture("assets/sprites/player/Archer/Idle.png");
+    Texture2D playerWalkTex = rm.GetTexture("assets/sprites/player/Archer/Walk.png");
     Vector2 manualOffset = { 0.0f, -10.0f };  // Ajuste manual del sprite
-    registry.emplace<SpriteComponent>(playerEntity, playerTex, 6, manualOffset);
+    registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, 6, manualOffset);
+    registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex, 6, 8, 0.2f, 0.12f);
 
     // 6. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
     registry.emplace<MovementComponent>(playerEntity, 75.0f);
@@ -122,6 +124,7 @@ void MainGameState::update(float deltaTime)
         EnemyAISystem(registry, map_, deltaTime);
     }
     MovementSystem(registry, deltaTime);
+    AnimationSystem(registry, deltaTime);
     SpikeSystem(registry, deltaTime);
     InvulnerabilitySystem(registry, deltaTime);
     CollisionSystem(registry, map_); // Chequeo de colisiones
@@ -300,7 +303,8 @@ void MainGameState::loadLevelEntities() {
 
     // Texturas precargadas
     Texture2D spikeTex = rm.GetTexture("assets/sprites/spikes.png");
-    Texture2D enemyTex = rm.GetTexture("assets/sprites/player/Musketeer/Idle.png");
+    Texture2D enemyIdleTex = rm.GetTexture("assets/sprites/player/Musketeer/Idle.png");
+    Texture2D enemyWalkTex = rm.GetTexture("assets/sprites/player/Musketeer/Walk.png");
     Texture2D keyTex = rm.GetTexture("assets/sprites/icons/Icons.png");
 
     for (int y = 0; y < map_.height(); y++) {
@@ -360,7 +364,8 @@ void MainGameState::loadLevelEntities() {
 
                 // Configuración visual del enemigo (igual que el player: 6 frames, offset 8,-8)
                 manualOffset = Vector2{-3.0f, -10.0f};
-                registry.emplace<SpriteComponent>(entity, enemyTex, 6, manualOffset);
+                registry.emplace<SpriteComponent>(entity, enemyIdleTex, 5, manualOffset);
+                registry.emplace<AnimationComponent>(entity, enemyIdleTex, enemyWalkTex, 5, 8, 0.2f, 0.12f);
 
                 // Movimiento (IA)
                 registry.emplace<MovementComponent>(entity, 40.0f); // Velocidad más lenta que el jugador

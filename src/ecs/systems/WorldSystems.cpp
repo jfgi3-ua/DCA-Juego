@@ -1,5 +1,6 @@
 #include "ecs/systems/WorldSystems.hpp"
 #include "ecs/components/PlayerComponents.hpp"
+#include <cmath>
 
 bool IsMechanismBlockingCell(entt::registry &registry, int cellX, int cellY) {
     auto view = registry.view<const MechanismComponent>();
@@ -30,6 +31,36 @@ void MovementSystem(entt::registry &registry, float deltaTime) {
             transform.position.y = move.startPos.y + (move.targetPos.y - move.startPos.y) * t;
         }
     });
+}
+
+void AnimationSystem(entt::registry &registry, float deltaTime) {
+    auto view = registry.view<SpriteComponent, MovementComponent, AnimationComponent>();
+    for (auto entity : view) {
+        auto &sprite = view.get<SpriteComponent>(entity);
+        auto &move = view.get<MovementComponent>(entity);
+        auto &anim = view.get<AnimationComponent>(entity);
+
+        bool wantWalk = move.isMoving;
+        if (wantWalk != anim.isWalking) {
+            anim.isWalking = wantWalk;
+            sprite.texture = anim.isWalking ? anim.walkTexture : anim.idleTexture;
+            sprite.numFrames = anim.isWalking ? anim.walkFrames : anim.idleFrames;
+            sprite.currentFrame = 0;
+            sprite.currentRow = 0;
+            sprite.timer = 0.0f;
+            sprite.frameTime = anim.isWalking ? anim.walkFrameTime : anim.idleFrameTime;
+        }
+
+        if (sprite.numFrames <= 1) continue;
+        if (sprite.frameTime <= 0.0f) continue;
+
+        sprite.timer += deltaTime;
+        if (sprite.timer >= sprite.frameTime) {
+            int steps = (int)std::floor(sprite.timer / sprite.frameTime);
+            sprite.timer -= steps * sprite.frameTime;
+            sprite.currentFrame = (sprite.currentFrame + steps) % sprite.numFrames;
+        }
+    }
 }
 
 void SpikeSystem(entt::registry &registry, float deltaTime) {
