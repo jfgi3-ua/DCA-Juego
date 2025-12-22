@@ -1,4 +1,5 @@
 #include "ecs/systems/RenderSystems.hpp"
+#include <cmath>
 
 extern "C" {
     #include <raylib.h>
@@ -49,6 +50,16 @@ void RenderSystem(entt::registry &registry, float offset_x, float offset_y, floa
             };
             DrawTexturePro(sprite.texture, sourceRec, destRec, {0.0f, 0.0f}, 0.0f, WHITE);
             continue;
+        }
+
+        if (registry.all_of<PlayerStateComponent>(entity)) {
+            const auto &state = registry.get<PlayerStateComponent>(entity);
+            if (state.invulnerableTimer > 0.0f && state.invulnerableTimer < state.invulnerableDuration) {
+                float blink = std::fmod(state.invulnerableTimer, 0.2f);
+                if (blink < 0.1f) {
+                    continue;
+                }
+            }
         }
 
         Rectangle destRec = {

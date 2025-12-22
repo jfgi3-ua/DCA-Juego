@@ -107,9 +107,6 @@ void Map::loadTextures() {
     _wallSrc  = { 10, 47, 32, 30 };
     _exitSrc  = { 48, 336, 32, 32 };
 
-    // _keyTexture = &rm.GetTexture("sprites/icons/Icons.png");
-    // _keySrc = { 64, 0, 16, 16 };
-
 }
 
 /**
@@ -266,10 +263,6 @@ void Map::render(int ox, int oy) const {
             else if (c == 'X') {
                 DrawTexturePro(*_mapTexture, _exitSrc, destRect, {0,0}, 0.0f, WHITE);
             }
-            // 4) Dibujar llave
-            // else if (c == 'K') {
-            //     DrawTexturePro(*_keyTexture, _keySrc, destRect, {0,0}, 0.0f, WHITE);
-            // }
         }
     }
 }

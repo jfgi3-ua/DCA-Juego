@@ -34,15 +34,6 @@ class MainGameState : public GameState
         int tile_ = 32;
         int level_ = 1;
 
-        // Jugador
-        // Player player_; // --- CÓDIGO ANTIGUO  ---
-
-        // Enemigo
-        // std::vector<Vector2> enemiesPos_; // --- CÓDIGO ANTIGUO  ---
-
-        //Pinchos
-        // Spikes spikes_; // --- CÓDIGO ANTIGUO  ---
-
         // Temporizador del nivel (segundos). 30s base + 30s por nivel
         float levelTime_ = 30.0f;
 
