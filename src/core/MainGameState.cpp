@@ -73,18 +73,21 @@ void MainGameState::init()
     float centerY = (startGridPos.y * map_.tile()) + (map_.tile() / 2.0f);
     auto playerEntity = registry.create();
 
-    // 3. Guardamos la posición central.
+    // 3. Componente de Stats
+    registry.emplace<StatsComponent>(playerEntity, 5); // 5 vidas iniciales
+
+    // 4. Guardamos la posición central.
     registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)map_.tile(), (float)map_.tile()});
 
-    // 4. Configuración del Sprite
+    // 5. Configuración del Sprite
     Texture2D playerTex = LoadTexture("assets/sprites/player/Archer/Idle.png");
     Vector2 manualOffset = { 0.0f, -10.0f };  // Ajuste manual del sprite
     registry.emplace<SpriteComponent>(playerEntity, playerTex, 6, manualOffset);
 
-    // 5. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
+    // 6. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
     registry.emplace<MovementComponent>(playerEntity, 150.0f);
 
-    // 6. Etiqueta de Input (para que sepa que ESTE es el jugador controlable)
+    // 7. Etiqueta de Input (para que sepa que ESTE es el jugador controlable) <-- // ?? Esta parte tengo que estudiarmela mejor
     registry.emplace<PlayerInputComponent>(playerEntity);
 
     // -- Colisiones --
@@ -263,54 +266,93 @@ void MainGameState::render()
     // player_.render(ox, oy); // !! --- CÓDIGO ANTIGUO  ---
     RenderSystem(registry, (float)ox, (float)oy, (float)map_.tile());
 
+    // !! --- CÓDIGO ANTIGUO  ---
     // 3) Enemigos (cuadrados)
-    for (auto &e : enemies) {
-        e.draw(tile_, ox, oy, RED);
-    }
+    // for (auto &e : enemies) {
+    //     e.draw(tile_, ox, oy, RED);
+    // }
 
     // spikes_.render(ox, oy); // !! --- CÓDIGO ANTIGUO  ---
 
-
+    // !! --- CÓDIGO ANTIGUO  ---
     // 4) HUD inferior - se coloca en la parte inferior de la ventana
     const float baseY = (float)(GetScreenHeight() - HUD_HEIGHT); // HUD siempre abajo
-    // Fondo del HUD a lo ancho de la ventana
-    Rectangle hudBg{ 0.0f, baseY, (float)GetScreenWidth(), (float)HUD_HEIGHT };
-    DrawRectangleRec(hudBg, Fade(BLACK, 0.06f));
-    // sombreado sutil encima del HUD
-    for (int i=0; i<6; ++i) {
-        Color c = Fade(BLACK, 0.05f * (6 - i));
-        DrawLine(0, (int)baseY - i, GetScreenWidth(), (int)baseY - i, c);
+    // // Fondo del HUD a lo ancho de la ventana
+    // Rectangle hudBg{ 0.0f, baseY, (float)GetScreenWidth(), (float)HUD_HEIGHT };
+    // DrawRectangleRec(hudBg, Fade(BLACK, 0.06f));
+    // // sombreado sutil encima del HUD
+    // for (int i=0; i<6; ++i) {
+    //     Color c = Fade(BLACK, 0.05f * (6 - i));
+    //     DrawLine(0, (int)baseY - i, GetScreenWidth(), (int)baseY - i, c);
+    // }
+
+    // // Panel de mochila (alineado a la izquierda dentro del HUD)
+    // const int pad = 10;
+    // Rectangle hud{ (float)pad, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad };
+    // DrawRectangleRounded(hud, 0.25f, 6, Fade(BLACK, 0.10f));
+    // DrawRectangleRoundedLinesEx(hud, 0.25f, 6, 1.0f, DARKGRAY);
+    // DrawText("Mochila", (int)hud.x + 10, (int)hud.y + 6, 16, DARKGRAY);
+
+    // --- HUD LOGIC (ECS) ---
+    // Buscar al jugador para leer sus stats
+    auto view = registry.view<StatsComponent, PlayerInputComponent>();
+    for(auto entity : view) {
+        const auto &stats = view.get<StatsComponent>(entity);
+
+        // 1. Dibujar Vidas (// TODO:Texto simple por ahora)
+        std::string livesText = "Vidas: " + std::to_string(stats.lives);
+        DrawText(livesText.c_str(), 10, GetScreenHeight() - 40, 24, RED);
+
+        // 2. Dibujar Llaves
+        std::string keysText = "Llaves: " + std::to_string(stats.keysCollected) + " / " + std::to_string(totalKeysInMap_);
+        DrawText(keysText.c_str(), 150, GetScreenHeight() - 40, 24, GOLD);
+
+        // 3. Lógica de Salida (Mensaje Contextual)
+        if(registry.all_of<TransformComponent>(entity)) {
+            auto &trans = registry.get<TransformComponent>(entity);
+            int cx = (int)(trans.position.x / map_.tile());
+            int cy = (int)(trans.position.y / map_.tile());
+
+            // Si está sobre la salida 'X'
+            if (cx >= 0 && cx < map_.width() && cy >= 0 && cy < map_.height()) {
+                if (map_.at(cx, cy) == 'X') {
+                    if (stats.keysCollected >= totalKeysInMap_) {
+                        DrawText("¡Pulsa ENTER para Salir!", GetScreenWidth()/2 - 100, 50, 20, GREEN);
+
+                        // Lógica rápida de salida (esto debería ir en Update, pero vale para probar visualmente)
+                        if (IsKeyPressed(KEY_ENTER)) {
+                            std::cout << "NIVEL COMPLETADO" << std::endl;
+                            // finishLevel();
+                        }
+                    } else {
+                        DrawText("Necesitas todas las llaves...", GetScreenWidth()/2 - 100, 50, 20, RED);
+                    }
+                }
+            }
+        }
     }
 
-    // Panel de mochila (alineado a la izquierda dentro del HUD)
-    const int pad = 10;
-    Rectangle hud{ (float)pad, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad };
-    DrawRectangleRounded(hud, 0.25f, 6, Fade(BLACK, 0.10f));
-    DrawRectangleRoundedLinesEx(hud, 0.25f, 6, 1.0f, DARKGRAY);
-    DrawText("Mochila", (int)hud.x + 10, (int)hud.y + 6, 16, DARKGRAY);
-
     // --- RENDERIZADO DE LLAVES EN EL HUD ---
-
     // 1. Carga del Sprite y recorte (mismos parámetros que en Map.cpp)
-    const Texture2D& atlasTex = ResourceManager::Get().GetTexture("sprites/icons/Icons.png");
-    float spriteSize = 16.0f; // Tamaño real del icono en el PNG (16x16)
-    int spriteIndex = 4;      // Índice de la llave
+    // const Texture2D& atlasTex = ResourceManager::Get().GetTexture("sprites/icons/Icons.png");
+    // float spriteSize = 16.0f; // Tamaño real del icono en el PNG (16x16)
+    // int spriteIndex = 4;      // Índice de la llave
 
     // Calcular coordenadas dentro del spritesheet
-    int iconsPerRow = atlasTex.width / (int)spriteSize;
-    if (iconsPerRow == 0) iconsPerRow = 1;
+    // int iconsPerRow = atlasTex.width / (int)spriteSize;
+    // if (iconsPerRow == 0) iconsPerRow = 1;
 
-    Rectangle keySourceRect = {
-        (float)(spriteIndex % iconsPerRow) * spriteSize, // X en el png
-        (float)(spriteIndex / iconsPerRow) * spriteSize, // Y en el png
-        spriteSize,
-        spriteSize
-    };
+    // Rectangle keySourceRect = {
+    //     (float)(spriteIndex % iconsPerRow) * spriteSize, // X en el png
+    //     (float)(spriteIndex / iconsPerRow) * spriteSize, // Y en el png
+    //     spriteSize,
+    //     spriteSize
+    // };
 
     // 2. Dibujar las llaves que tiene el jugador
-    int iconDisplaySize = 28; // Tamaño visual en el HUD (ligeramente más pequeño que en el mapa)
-    int startX = (int)hud.x + 12;
-    int startY = (int)hud.y + 30;
+    // int iconDisplaySize = 28; // Tamaño visual en el HUD (ligeramente más pequeño que en el mapa)
+    // int startX = (int)hud.x + 12;
+    // int startY = (int)hud.y + 30;
 
     // !! --- CÓDIGO ANTIGUO  ---
     // for (int i = 0; i < player_.getKeyCount(); ++i) {
@@ -334,9 +376,9 @@ void MainGameState::render()
     // ----------------------------------------
 
     // Panel de vidas (alineado a la derecha dentro del HUD)
-    DrawRectangleRounded(Rectangle{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad }, 0.25f, 6, Fade(BLACK, 0.10f));
-    DrawRectangleRoundedLinesEx(Rectangle{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad }, 0.25f, 6, 1.0f, DARKGRAY);
-    DrawText("Vidas", (int)((float)GetScreenWidth() - 190.0f) + 10, (int)(baseY + pad) + 6, 16, DARKGRAY);
+    // DrawRectangleRounded(Rectangle{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad }, 0.25f, 6, Fade(BLACK, 0.10f));
+    // DrawRectangleRoundedLinesEx(Rectangle{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad }, 0.25f, 6, 1.0f, DARKGRAY);
+    // DrawText("Vidas", (int)((float)GetScreenWidth() - 190.0f) + 10, (int)(baseY + pad) + 6, 16, DARKGRAY);
 
     // !! --- CÓDIGO ANTIGUO  ---
     // if (player_.getLives() > 0) {
@@ -397,8 +439,8 @@ void MainGameState::loadLevelEntities() {
 
     // Texturas precargadas
     Texture2D spikeTex = rm.GetTexture("assets/sprites/spikes.png");
-    // Usamos el Mosquetero como skin por defecto para el enemigo por ahora
     Texture2D enemyTex = rm.GetTexture("assets/sprites/player/Musketeer/Idle.png");
+    Texture2D keyTex = rm.GetTexture("assets/sprites/icons/Icons.png");
 
     for (int y = 0; y < map_.height(); y++) {
         for (int x = 0; x < map_.width(); x++) {
@@ -445,6 +487,36 @@ void MainGameState::loadLevelEntities() {
                     Rectangle{-hitSize/2, -hitSize/2, hitSize, hitSize},
                     CollisionType::Enemy
                 );
+            }
+
+            // --- CASO 3: LLAVES (K) ---
+            if (cell == 'K') {
+                auto entity = registry.create();
+                registry.emplace<TransformComponent>(entity, pos, size);
+
+                // 1. Creamos el componente básico
+                auto &sprite = registry.emplace<SpriteComponent>(entity, keyTex);
+
+                // 2. CONFIGURACIÓN DEL RECORTE MANUAL
+                // Forzamos a que el recorte sea de 16x16 píxeles
+                sprite.fixedFrameSize = {16.0f, 16.0f};
+
+                // 3. Seleccionamos el índice 4 (X = 16 * 4 = 64)
+                sprite.currentFrame = 4;
+
+                // La llave original es de 16px.
+                // Con escala 1.5 -> 24px (queda centrada con margen en el tile de 32)
+                sprite.customScale = 1.5f;
+
+                // Colisión (tipo Item)
+                float hitSize = map_.tile() * 0.5f;
+                registry.emplace<ColliderComponent>(entity,
+                    Rectangle{-hitSize/2, -hitSize/2, hitSize, hitSize},
+                    CollisionType::Item
+                );
+
+                // Componente lógico de Item
+                registry.emplace<ItemComponent>(entity, true); // true = es llave
             }
         }
     }

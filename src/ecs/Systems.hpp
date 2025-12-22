@@ -19,15 +19,30 @@ inline void RenderSystem(entt::registry &registry, float offset_x, float offset_
 
     view.each([offset_x, offset_y, tileSize](const auto &transform, const auto &sprite) {
 
-        // 1. Medidas del frame individual
-        float frameWidth = (float)sprite.texture.width / sprite.numFrames;
-        float frameHeight = (float)sprite.texture.height;
+        // 1. Medidas del frame individual y escala
+        float frameWidth, frameHeight;
+        float scale;
 
-        // 2. FÓRMULA ORIGINAL DE PLAYER.CPP
-        // "Escala para que quepa en el tile (con 1.5 para que se vea un poco más grande)"
-        float scale = (tileSize * 1.5f) / frameHeight;
+        // Si hay un tamaño fijo definido (ej: iconos 16x16), será el que usemos.
+        if (sprite.fixedFrameSize.x > 0 && sprite.fixedFrameSize.y > 0) {
+            frameWidth = sprite.fixedFrameSize.x;
+            frameHeight = sprite.fixedFrameSize.y;
+        } else {
+            // Lógica por defecto (Tira de animación simple)
+            frameWidth = (float)sprite.texture.width / sprite.numFrames;
+            frameHeight = (float)sprite.texture.height;
+        }
 
-        // --- CORRECCIÓN FLIP ---
+        // 2. Cálculo de escala
+        if (sprite.customScale > 0.0f) {
+            // Si hay escala manual, la usamos directamente
+            scale = sprite.customScale;
+        } else {
+            // Si es 0.0, usamos la fórmula original del JUGADOR
+            scale = (tileSize * 1.5f) / frameHeight; // Escala para que quepa en el tile (con 1.5 para que se vea un poco más grande)
+        }
+
+        // --- CORRECCIÓN FLIP (para que se invierta la textura correctamente) ---
         float widthSrc = frameWidth;
         // Si flipX es true, width debe ser negativo en sourceRec para que Raylib invierta la textura
         if (sprite.flipX) widthSrc = -frameWidth;
@@ -188,7 +203,7 @@ inline void CollisionSystem(entt::registry &registry, const Map &map) {
         // 3. Verificar Solapamiento (AABB)
         if (CheckCollisionRecs(playerBox, hazardBox)) {
 
-            // Reacción según el tipo
+            // CASO A: DAÑO (Pincho / Enemigo)
             if (hazardCol.type == CollisionType::Spike || hazardCol.type == CollisionType::Enemy) {
                 std::cout << "¡COLISIÓN DETECTADA! Reiniciando jugador..." << std::endl;
 
@@ -208,6 +223,39 @@ inline void CollisionSystem(entt::registry &registry, const Map &map) {
                     move.isMoving = false;
                     move.progress = 0.0f;
                     move.targetPos = playerTrans.position; // Cancelar destino
+                }
+                // AQUÍ deberíamos restar vidas del StatsComponent del jugador
+                if (registry.all_of<StatsComponent>(playerEntity)) {
+                    auto &stats = registry.get<StatsComponent>(playerEntity);
+                    stats.lives--;
+                    std::cout << "Vidas restantes: " << stats.lives << std::endl;
+                    if (stats.lives <= 0) {
+                        // TODO: Llevar al Game Over State
+                        std::cout << "GAME OVER" << std::endl;
+                    }
+                }
+            }
+            // CASO B: ITEMS (Llaves)
+            else if (hazardCol.type == CollisionType::Item) {
+                // Verificar si es un item válido
+                if (registry.all_of<ItemComponent>(entity)) {
+                    auto &item = registry.get<ItemComponent>(entity);
+
+                    if (!item.collected) {
+                        item.collected = true; // Marcar para borrar
+
+                        // Sumar al jugador
+                        if (registry.all_of<StatsComponent>(playerEntity)) {
+                            auto &stats = registry.get<StatsComponent>(playerEntity);
+                            if (item.isKey) {
+                                stats.keysCollected++;
+                                std::cout << "Llave recogida! Total: " << stats.keysCollected << std::endl;
+                            }
+                        }
+
+                        // Destruir la entidad del item inmediatamente
+                        registry.destroy(entity);
+                    }
                 }
             }
         }

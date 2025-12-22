@@ -12,16 +12,18 @@ struct TransformComponent {
 // Componente de Sprite (Visualización y Animación)
 struct SpriteComponent {
     Texture2D texture;
-    int numFrames;        // Cuántos cuadros tiene la hoja
-    int currentFrame;     // Cuadro actual a dibujar
-    float frameTime;      // Tiempo por cuadro (para animar luego)
-    float timer;          // Acumulador de tiempo
-    Vector2 visualOffset; // Ajuste visual (Offset) - Para renderizar correctamente si la textura no encaja bien
-    bool flipX;           // Para girar el sprite
+    int numFrames;          // Cuántos cuadros tiene la hoja
+    int currentFrame;       // Cuadro actual a dibujar
+    float frameTime;        // Tiempo por cuadro (para animar luego)
+    float timer;            // Acumulador de tiempo
+    Vector2 visualOffset;   // Ajuste visual (Offset) - Para renderizar correctamente si la textura no encaja bien
+    bool flipX;             // Para girar el sprite
+    Vector2 fixedFrameSize; // Tamaño fijo del frame (0,0) si no se usa
+    float customScale;      // 0.0f = Auto (Fórmula Player), >0.0f = Manual
 
     SpriteComponent(Texture2D tex, int frames = 1, Vector2 offset = {0.0f, 0.0f})
             : texture(tex), numFrames(frames), currentFrame(0), frameTime(0.1f), timer(0.0f),
-              visualOffset(offset), flipX(false) {} // Inicializamos flipX en false
+              visualOffset(offset), flipX(false), fixedFrameSize({0.0f, 0.0f}), customScale(0.0f) {}
 };
 
 
@@ -48,6 +50,23 @@ enum class CollisionType {
     Enemy,
     Spike,
     Item
+};
+
+// Componente de Estadísticas (Para el Jugador)
+struct StatsComponent {
+    int lives;
+    int keysCollected;
+
+    StatsComponent(int l = 5) : lives(l), keysCollected(0) {}
+};
+
+// Componente de Ítem (Para Llaves, Pociones, etc. lo que se nos ocurra si es que nos da por meter más cosas)
+struct ItemComponent {
+    bool isKey;      // true = Llave, false = Puntos/Vida/Otro
+    int value;       // Cantidad a sumar (ej: 1 llave, 100 puntos)
+    bool collected;  // Para marcar si debe ser borrado
+
+    ItemComponent(bool key = true) : isKey(key), value(1), collected(false) {}
 };
 
 // Componente de Colisión (Hitbox)
