@@ -58,8 +58,8 @@ void MainGameState::init()
     registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)map_.tile(), (float)map_.tile()});
 
     // 5. Configuración del Sprite
-    Texture2D playerIdleTex = rm.GetTexture("assets/sprites/player/Archer/Idle.png");
-    Texture2D playerWalkTex = rm.GetTexture("assets/sprites/player/Archer/Walk.png");
+    Texture2D playerIdleTex = rm.GetTexture("sprites/player/Archer/Idle.png");
+    Texture2D playerWalkTex = rm.GetTexture("sprites/player/Archer/Walk.png");
     Vector2 manualOffset = { 0.0f, -10.0f };  // Ajuste manual del sprite
     registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, 6, manualOffset);
     registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex, 6, 8, 0.2f, 0.12f);
@@ -212,7 +212,7 @@ void MainGameState::render()
     // --------------------------------------------------------
 
     // Obtenemos la textura de iconos (Corazones y Llaves)
-    Texture2D iconsTex = rm.GetTexture("assets/sprites/icons/Icons.png");
+    Texture2D iconsTex = rm.GetTexture("sprites/icons/Icons.png");
 
     // Buscamos la entidad que sea JUGADOR (tiene Stats y Input)
     auto view = registry.view<StatsComponent, TransformComponent, PlayerInputComponent, PlayerCheatComponent, PlayerStateComponent>();
@@ -302,10 +302,10 @@ void MainGameState::loadLevelEntities() {
     auto& rm = ResourceManager::Get();
 
     // Texturas precargadas
-    Texture2D spikeTex = rm.GetTexture("assets/sprites/spikes.png");
-    Texture2D enemyIdleTex = rm.GetTexture("assets/sprites/player/Musketeer/Idle.png");
-    Texture2D enemyWalkTex = rm.GetTexture("assets/sprites/player/Musketeer/Walk.png");
-    Texture2D keyTex = rm.GetTexture("assets/sprites/icons/Icons.png");
+    Texture2D spikeTex = rm.GetTexture("sprites/spikes.png");
+    Texture2D enemyIdleTex = rm.GetTexture("sprites/player/Musketeer/Idle.png");
+    Texture2D enemyWalkTex = rm.GetTexture("sprites/player/Musketeer/Walk.png");
+    Texture2D keyTex = rm.GetTexture("sprites/icons/Icons.png");
 
     for (int y = 0; y < map_.height(); y++) {
         for (int x = 0; x < map_.width(); x++) {
