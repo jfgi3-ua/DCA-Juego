@@ -81,6 +81,11 @@ void RenderSystem(entt::registry &registry, float offset_x, float offset_y, floa
             src = {0, 0, frameW, frameH};
         }
 
+        //direccion de dibujo
+        if (sprite.flipX) {
+            src.width = -src.width;
+        }
+
         //escala
         float baseScale = sprite.customScale != 0.0f ? sprite.customScale : 1.5f;
         float tileScale = (tileSize / frameH) * baseScale;
