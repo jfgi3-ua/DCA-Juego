@@ -34,9 +34,10 @@ void MovementSystem(entt::registry &registry, float deltaTime) {
 }
 
 void AnimationSystem(entt::registry &registry, float deltaTime) {
-    auto view = registry.view<SpriteComponent, MovementComponent, AnimationComponent>();
+    auto view = registry.view<SpriteComponent, GridClipComponent, MovementComponent, AnimationComponent>();
     for (auto entity : view) {
         auto &sprite = view.get<SpriteComponent>(entity);
+        auto &grid = view.get<GridClipComponent>(entity);
         auto &move = view.get<MovementComponent>(entity);
         auto &anim = view.get<AnimationComponent>(entity);
 
@@ -44,27 +45,28 @@ void AnimationSystem(entt::registry &registry, float deltaTime) {
         if (wantWalk != anim.isWalking) {
             anim.isWalking = wantWalk;
             sprite.texture = anim.isWalking ? anim.walkTexture : anim.idleTexture;
-            sprite.numFrames = anim.isWalking ? anim.walkFrames : anim.idleFrames;
-            sprite.currentFrame = 0;
-            sprite.currentRow = 0;
-            sprite.timer = 0.0f;
-            sprite.frameTime = anim.isWalking ? anim.walkFrameTime : anim.idleFrameTime;
+
+            grid.numFrames = anim.isWalking ? anim.walkFrames : anim.idleFrames;
+            grid.currentFrame = 0;
+            grid.currentRow = 0;
+            grid.timer = 0.0f;
+            grid.frameTime = anim.isWalking ? anim.walkFrameTime : anim.idleFrameTime;
         }
 
-        if (sprite.numFrames <= 1) continue;
-        if (sprite.frameTime <= 0.0f) continue;
+        if (grid.numFrames <= 1) continue;
+        if (grid.frameTime <= 0.0f) continue;
 
-        sprite.timer += deltaTime;
-        if (sprite.timer >= sprite.frameTime) {
-            int steps = (int)std::floor(sprite.timer / sprite.frameTime);
-            sprite.timer -= steps * sprite.frameTime;
-            sprite.currentFrame = (sprite.currentFrame + steps) % sprite.numFrames;
+        grid.timer += deltaTime;
+        if (grid.timer >= grid.frameTime) {
+            int steps = (int)std::floor(grid.timer / grid.frameTime);
+            grid.timer -= steps * grid.frameTime;
+            grid.currentFrame = (grid.currentFrame + steps) % grid.numFrames;
         }
     }
 }
 
 void SpikeSystem(entt::registry &registry, float deltaTime) {
-    auto view = registry.view<SpikeComponent, SpriteComponent, ColliderComponent>();
+    auto view = registry.view<SpikeComponent, ColliderComponent>();
     if (!view) return;
 
     static float timer = 0.0f;
@@ -77,12 +79,10 @@ void SpikeSystem(entt::registry &registry, float deltaTime) {
 
     for (auto entity : view) {
         auto &spike = view.get<SpikeComponent>(entity);
-        auto &sprite = view.get<SpriteComponent>(entity);
         auto &collider = view.get<ColliderComponent>(entity);
 
         spike.active = !spike.active;
         collider.active = spike.active;
-        sprite.currentRow = spike.active ? 4 : 0;
     }
 }
 
