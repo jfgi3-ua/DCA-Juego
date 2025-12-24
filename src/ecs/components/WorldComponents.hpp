@@ -11,22 +11,49 @@ struct TransformComponent {
     Vector2 size;
 };
 
-// Componente de Sprite (Visualizacion y Animacion)
+// Componente de Sprite
 struct SpriteComponent {
-    Texture2D texture;
-    int numFrames;
-    int currentFrame;
-    int currentRow;
-    float frameTime;
-    float timer;
-    Vector2 visualOffset;
-    bool flipX;
-    Vector2 fixedFrameSize;
-    float customScale;
+  Texture2D texture;
+  Vector2 visualOffset;
+  bool flipX;
+  float customScale;
 
-    SpriteComponent(Texture2D tex, int frames = 1, Vector2 offset = {0.0f, 0.0f})
-        : texture(tex), numFrames(frames), currentFrame(0), currentRow(0), frameTime(0.1f), timer(0.0f),
-          visualOffset(offset), flipX(false), fixedFrameSize({0.0f, 0.0f}), customScale(0.0f) {}
+  SpriteComponent(Texture2D tex, Vector2 offset = {0.0f, 0.0f}, float scale = 0.0f)
+      : texture(tex), visualOffset(offset), flipX(false), customScale(scale) {}
+};
+
+//componente para la animacion o estructura de filas y columnas
+struct GridClipComponent {
+  int numFrames;
+  int currentFrame;
+  int currentRow;
+  float frameTime;
+  float timer;
+  Vector2 fixedFrameSize;
+
+  GridClipComponent(int frames = 1)
+      : numFrames(frames), currentFrame(0), currentRow(0), frameTime(0.1f), timer(0.0f), fixedFrameSize({0.0f, 0.0f}) {}
+};
+
+//Componente de sprites estaticos (sin animacion)
+//calculados a mano, no en base a una rejilla
+//activo/inactivo (spikes y mecanismos) o fijo
+struct ManualSpriteComponent {
+  Rectangle src;
+  Rectangle srcActive;
+  Rectangle srcInactive;
+
+  // Constructor para sprite FIJO como mapa
+  explicit ManualSpriteComponent(Rectangle fixed)
+      : src(fixed),
+        srcActive({0,0,0,0}),
+        srcInactive({0,0,0,0}) {}
+
+  // Constructor para sprite ACTIVO / INACTIVO como spikes y mecanismos
+  ManualSpriteComponent(Rectangle active, Rectangle inactive)
+      : src({0,0,0,0}),
+        srcActive(active),
+        srcInactive(inactive) {}
 };
 
 // Logica de movimiento por casillas
