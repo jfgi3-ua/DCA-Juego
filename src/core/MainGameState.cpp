@@ -61,7 +61,8 @@ void MainGameState::init()
     Texture2D playerIdleTex = rm.GetTexture("sprites/player/Archer/Idle.png");
     Texture2D playerWalkTex = rm.GetTexture("sprites/player/Archer/Walk.png");
     Vector2 manualOffset = { 0.0f, -10.0f };  // Ajuste manual del sprite
-    registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, 6, manualOffset);
+    registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, manualOffset, 1.5f);
+    registry.emplace<GridClipComponent>(playerEntity, 6);
     registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex, 6, 8, 0.2f, 0.12f);
 
     // 6. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
@@ -323,25 +324,17 @@ void MainGameState::loadLevelEntities() {
                 auto entity = registry.create();
                 registry.emplace<TransformComponent>(entity, pos, size);
 
-                auto &sprite = registry.emplace<SpriteComponent>(entity, spikeTex);
+                manualOffset = Vector2{0.5f, 1.0f};
 
-                // 1. DEFINIR TAMAÑO DEL RECORTE (GRID)
-                float frameW = spikeTex.width / 4.0f;
-                float frameH = spikeTex.height / 8.0f;
-                sprite.fixedFrameSize = {frameW, frameH};
+                //solo textura de pinchos
+                auto &sprite = registry.emplace<SpriteComponent>(entity, spikeTex, manualOffset, 0.75f);
 
-                // 2. SELECCIONAR SPRITE ESPECÍFICO
-                // Ahora "4" significará 4 bloques de 32px, no de 16px.
-                sprite.currentRow = 4;   // Fila 5 (empezando en 0) -> activo
-                sprite.currentFrame = 1; // Columna 2 (empezando en 0) como en legacy
-
-                // 3. ESCALA PERSONALIZADA
-                // Usamos el ancho del frame para cubrir el tile completo
-                sprite.customScale = (float)map_.tile() / frameW;
-
-                // Mantener centrado el sprite en el tile
-                sprite.visualOffset = {0.0f, 0.0f};
-
+                // Configuración del recorte manual
+                registry.emplace<ManualSpriteComponent>(
+                    entity,
+                    Rectangle{28, 126, 22, 22}, // ACTIVO
+                    Rectangle{28,   0, 22, 22}  // INACTIVO
+                );
                 // Collider (ajustado)
                 float hitSize = map_.tile() * 0.9f;
                 registry.emplace<ColliderComponent>(entity,
@@ -349,12 +342,7 @@ void MainGameState::loadLevelEntities() {
                     CollisionType::Spike
                 );
 
-                // Pinchos retráctiles (intervalo por defecto = 3s)
-                // Ajuste de alineación vertical basado en el sprite actual (spikes.png)
-                float scale = (float)map_.tile() / frameW;
-                float inactiveOffsetY = (float)map_.tile() - (30.0f * scale); // fila 0: bbox bottom ~30px
-                float activeOffsetY = (float)map_.tile() - (24.0f * scale);   // fila 4: bbox bottom ~24px
-                registry.emplace<SpikeComponent>(entity, true, 3.0f, activeOffsetY, inactiveOffsetY);
+                registry.emplace<SpikeComponent>(entity, true, 3.0f);
             }
 
             // --- CASO 2: ENEMIGOS (E) ---
@@ -364,7 +352,8 @@ void MainGameState::loadLevelEntities() {
 
                 // Configuración visual del enemigo (igual que el player: 6 frames, offset 8,-8)
                 manualOffset = Vector2{-3.0f, -10.0f};
-                registry.emplace<SpriteComponent>(entity, enemyIdleTex, 5, manualOffset);
+                registry.emplace<SpriteComponent>(entity, enemyIdleTex, manualOffset, 1.5f);
+                registry.emplace<GridClipComponent>(entity, 5);
                 registry.emplace<AnimationComponent>(entity, enemyIdleTex, enemyWalkTex, 5, 8, 0.2f, 0.12f);
 
                 // Movimiento (IA)
@@ -384,20 +373,14 @@ void MainGameState::loadLevelEntities() {
                 auto entity = registry.create();
                 registry.emplace<TransformComponent>(entity, pos, size);
 
-                // 1. Creamos el componente básico
-                auto &sprite = registry.emplace<SpriteComponent>(entity, keyTex);
-
-                // 2. CONFIGURACIÓN DEL RECORTE MANUAL
-                // Forzamos a que el recorte sea de 16x16 píxeles
-                sprite.fixedFrameSize = {16.0f, 16.0f};
-
-                // 3. Seleccionamos el índice 4 (X = 16 * 4 = 64)
-                sprite.currentFrame = 4;
-
-                // La llave original es de 16px.
-                // Con escala 1.5 -> 24px (queda centrada con margen en el tile de 32)
-                sprite.customScale = 1.5f;
-
+                // solo textura de llave
+                auto &sprite = registry.emplace<SpriteComponent>(entity, keyTex, manualOffset, 0.75f);
+               
+                // Configuración del recorte manual
+                registry.emplace<ManualSpriteComponent>(
+                    entity,
+                    Rectangle{64, 0, 16, 16}  // FIJO
+                );
                 // Colisión (tipo Item)
                 float hitSize = map_.tile() * 0.5f;
                 registry.emplace<ColliderComponent>(entity,
