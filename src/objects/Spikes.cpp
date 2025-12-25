@@ -2,9 +2,14 @@
 #include <iostream>
 
 
-Spikes::Spikes() {
+Spikes::Spikes() {}
+
+void Spikes::LoadTextures() {
     auto& rm = ResourceManager::Get();
     spikeTex_ = &rm.GetTexture("sprites/spikes.png");
+    
+    srcRectActive_ = {28, 126, 22, 22};
+    srcRectInactive_ = { 28, 0, 22, 22};
 }
 
 void Spikes::addSpike(int gridX, int gridY) {
@@ -23,26 +28,13 @@ void Spikes::update(float deltaTime) {
 void Spikes::render(int ox, int oy) const {
     if (!spikeTex_) return;
 
-    int frameH = spikeTex_->height / 8;    // 5 filas → ajusta si son más/menos
-    int frameW = spikeTex_->width / 4;         // ancho completo
-
-    int activeRow   = 4;   // última fila (pinchos arriba)
-    int inactiveRow = 0;   // primera fila (pinchos abajo)
-
     for (const auto &s : spikes) {
 
-        int row = s.active ? activeRow : inactiveRow;
-
-        Rectangle src {
-            (float) (1 * frameW), // segunda columna (frame estático)
-            (float)(row * frameH),
-            (float)frameW,
-            (float)frameH
-        };
+        Rectangle src = s.active ? srcRectActive_ : srcRectInactive_;
 
         Rectangle dest {
             ox + s.x * tileSize,
-            oy + s.y * tileSize,
+            oy + s.y * tileSize ,
             (float)tileSize,
             (float)tileSize
         };
