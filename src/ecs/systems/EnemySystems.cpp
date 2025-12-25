@@ -59,13 +59,14 @@ void EnemyAISystem(entt::registry &registry, const Map &map, float deltaTime) {
     auto playerEntity = *playerView.begin();
     const auto &playerTrans = playerView.get<const TransformComponent>(playerEntity);
 
-    auto view = registry.view<TransformComponent, MovementComponent, ColliderComponent, EnemyAIComponent>();
+    auto view = registry.view<TransformComponent, MovementComponent, ColliderComponent, EnemyAIComponent, SpriteComponent>();
 
     for (auto entity : view) {
         auto &transform = view.get<TransformComponent>(entity);
         auto &move = view.get<MovementComponent>(entity);
         auto &col = view.get<ColliderComponent>(entity);
         auto &ai = view.get<EnemyAIComponent>(entity);
+        auto &sprite = view.get<SpriteComponent>(entity);
 
         if (col.type != CollisionType::Enemy) continue;
 
@@ -84,6 +85,8 @@ void EnemyAISystem(entt::registry &registry, const Map &map, float deltaTime) {
         float distInTiles = distToPlayer / tileSize;
 
         bool hasLos = HasLineOfSight(map, cellX, cellY, playerCellX, playerCellY);
+        bool startedMovementThisFrame = false;
+
 
         switch (ai.state) {
             case EnemyAIState::Patrol: {
@@ -110,6 +113,7 @@ void EnemyAISystem(entt::registry &registry, const Map &map, float deltaTime) {
                             move.isMoving = true;
                             ai.timer = 0.0f;
                             found = true;
+                            startedMovementThisFrame = true;
                             break;
                         }
                     }
@@ -171,6 +175,7 @@ void EnemyAISystem(entt::registry &registry, const Map &map, float deltaTime) {
                             move.isMoving = true;
                             ai.timer = 0.0f;
                             found = true;
+                            startedMovementThisFrame = true;
                             break;
                         }
                     }
@@ -234,6 +239,7 @@ void EnemyAISystem(entt::registry &registry, const Map &map, float deltaTime) {
                             move.isMoving = true;
                             ai.timer = 0.0f;
                             found = true;
+                            startedMovementThisFrame = true;
                             break;
                         }
                     }
@@ -244,5 +250,14 @@ void EnemyAISystem(entt::registry &registry, const Map &map, float deltaTime) {
                 break;
             }
         }
+        // Actualizar orientación del sprite según dirección de movimiento
+        if (startedMovementThisFrame) {
+            float dirX = move.targetPos.x - transform.position.x;
+            if (dirX > 0.0f) {
+                sprite.flipX = false; // der
+            } else if (dirX < 0.0f) {
+                sprite.flipX = true;  // izq
+            }
+        }    
     }
 }

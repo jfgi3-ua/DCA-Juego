@@ -304,8 +304,8 @@ void MainGameState::loadLevelEntities() {
 
     // Texturas precargadas
     Texture2D spikeTex = rm.GetTexture("sprites/spikes.png");
-    Texture2D enemyIdleTex = rm.GetTexture("sprites/player/Musketeer/Idle.png");
-    Texture2D enemyWalkTex = rm.GetTexture("sprites/player/Musketeer/Walk.png");
+    Texture2D enemyIdleTex = rm.GetTexture("sprites/enemy/Skeleton/Idle.png");
+    Texture2D enemyWalkTex = rm.GetTexture("sprites/enemy/Skeleton/Walk.png");
     Texture2D keyTex = rm.GetTexture("sprites/icons/Icons.png");
 
     for (int y = 0; y < map_.height(); y++) {
@@ -353,8 +353,8 @@ void MainGameState::loadLevelEntities() {
                 // Configuración visual del enemigo (igual que el player: 6 frames, offset 8,-8)
                 manualOffset = Vector2{-3.0f, -10.0f};
                 registry.emplace<SpriteComponent>(entity, enemyIdleTex, manualOffset, 1.5f);
-                registry.emplace<GridClipComponent>(entity, 5);
-                registry.emplace<AnimationComponent>(entity, enemyIdleTex, enemyWalkTex, 5, 8, 0.2f, 0.12f);
+                registry.emplace<GridClipComponent>(entity, 7);
+                registry.emplace<AnimationComponent>(entity, enemyIdleTex, enemyWalkTex, 7, 8, 0.2f, 0.12f);
 
                 // Movimiento (IA)
                 registry.emplace<MovementComponent>(entity, 40.0f); // Velocidad más lenta que el jugador
