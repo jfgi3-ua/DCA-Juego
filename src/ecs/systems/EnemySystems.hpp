@@ -3,6 +3,7 @@
 #include "objects/Map.hpp"
 #include "ecs/components/EnemyComponents.hpp"
 #include "ecs/components/WorldComponents.hpp"
-#include "ecs/components/PlayerComponents.hpp"
+#include "ecs/components/Player/PlayerStateComponent.hpp"
+#include "ecs/components/Player/PlayerInputComponent.hpp"
 
 void EnemyAISystem(entt::registry &registry, const Map &map, float deltaTime);

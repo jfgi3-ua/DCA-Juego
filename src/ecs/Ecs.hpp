@@ -2,8 +2,21 @@
 
 #include "ecs/Ecstypes.hpp"
 
+/**
+ * Componentes 
+*/
+
+// Componentes de World
+
 #include "ecs/components/WorldComponents.hpp"
-#include "ecs/components/PlayerComponents.hpp"
+
+// Componentes de Player
+#include "ecs/components/Player/PlayerCheatComponent.hpp"
+#include "ecs/components/Player/PlayerInputComponent.hpp"
+#include "ecs/components/Player/PlayerStateComponent.hpp"
+#include "ecs/components/Player/PlayerStatsComponent.hpp"
+
+// Componentes de Enemy
 #include "ecs/components/EnemyComponents.hpp"
 
 #include "ecs/systems/PlayerSystems.hpp"

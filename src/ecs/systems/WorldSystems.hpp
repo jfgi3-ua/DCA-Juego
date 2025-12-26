@@ -2,6 +2,7 @@
 #include <entt/entt.hpp>
 #include "objects/Map.hpp"
 #include "ecs/components/WorldComponents.hpp"
+#include "ecs/components/Player/PlayerInputComponent.hpp"
 
 bool IsMechanismBlockingCell(entt::registry &registry, int cellX, int cellY);
 void MovementSystem(entt::registry &registry, float deltaTime);
