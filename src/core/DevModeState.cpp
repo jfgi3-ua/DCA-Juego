@@ -110,8 +110,8 @@ void DevModeState::setupCheatOptions()
     cheatOptions_.push_back({
         "5. Anadir +1 Vida",
         [this]() {
-            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<StatsComponent>(playerEntity_)) {
-                auto &stats = registry_->get<StatsComponent>(playerEntity_);
+            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
+                auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
                 if (stats.lives < 10) stats.lives++;
                 std::cout << "Vida anadida. Vidas: " << stats.lives << std::endl;
             }
@@ -123,8 +123,8 @@ void DevModeState::setupCheatOptions()
     cheatOptions_.push_back({
         "6. Vidas Maximas (10)",
         [this]() {
-            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<StatsComponent>(playerEntity_)) {
-                auto &stats = registry_->get<StatsComponent>(playerEntity_);
+            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
+                auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
                 stats.lives = 10;
                 std::cout << "Vidas al maximo (10)" << std::endl;
             }
@@ -136,8 +136,8 @@ void DevModeState::setupCheatOptions()
     cheatOptions_.push_back({
         "7. Obtener Llave",
         [this]() {
-            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<StatsComponent>(playerEntity_)) {
-                auto &stats = registry_->get<StatsComponent>(playerEntity_);
+            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
+                auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
                 if (stats.keysCollected == 0) {
                     if (keyGivenByCheating_) *keyGivenByCheating_ = true;
                     int targetKeys = totalKeysInMap_ ? *totalKeysInMap_ : 1;
@@ -149,8 +149,8 @@ void DevModeState::setupCheatOptions()
             }
         },
         [this]() {
-            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<StatsComponent>(playerEntity_)) {
-                auto &stats = registry_->get<StatsComponent>(playerEntity_);
+            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
+                auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
                 return (stats.keysCollected > 0) ? "[SI]" : "[NO]";
             }
             return "[NO]";
@@ -202,15 +202,15 @@ void DevModeState::setupCheatOptions()
                     cheats.godMode = false;
                     cheats.noClip = false;
                 }
-                if (registry_->all_of<StatsComponent>(playerEntity_)) {
-                    auto &stats = registry_->get<StatsComponent>(playerEntity_);
+                if (registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
+                    auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
                     stats.lives = 5;
                 }
             }
 
             if (keyGivenByCheating_ && *keyGivenByCheating_ && registry_ && registry_->valid(playerEntity_) &&
-                registry_->all_of<StatsComponent>(playerEntity_)) {
-                auto &stats = registry_->get<StatsComponent>(playerEntity_);
+                registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
+                auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
                 stats.keysCollected = 0;
                 *keyGivenByCheating_ = false;
                 std::cout << "Llave quitada (era de cheat)" << std::endl;

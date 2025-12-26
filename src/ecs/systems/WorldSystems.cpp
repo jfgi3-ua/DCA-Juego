@@ -1,5 +1,4 @@
 #include "ecs/systems/WorldSystems.hpp"
-#include "ecs/components/PlayerComponents.hpp"
 #include <cmath>
 
 bool IsMechanismBlockingCell(entt::registry &registry, int cellX, int cellY) {

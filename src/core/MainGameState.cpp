@@ -52,7 +52,7 @@ void MainGameState::init()
     auto playerEntity = registry.create();
 
     // 3. Componente de Stats
-    registry.emplace<StatsComponent>(playerEntity, 5); // 5 vidas iniciales
+    registry.emplace<PlayerStatsComponent>(playerEntity, 5); // 5 vidas iniciales
 
     // 4. Guardamos la posición central.
     registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)map_.tile(), (float)map_.tile()});
@@ -132,10 +132,10 @@ void MainGameState::update(float deltaTime)
     MechanismSystem(registry, map_);
 
     // --- FLUJO DE JUEGO ECS: derrota/victoria ---
-    auto playerView = registry.view<TransformComponent, StatsComponent, PlayerInputComponent>();
+    auto playerView = registry.view<TransformComponent, PlayerStatsComponent, PlayerInputComponent>();
     if (playerView) {
         auto playerEntity = *playerView.begin();
-        const auto &stats = playerView.get<StatsComponent>(playerEntity);
+        const auto &stats = playerView.get<PlayerStatsComponent>(playerEntity);
         const auto &trans = playerView.get<TransformComponent>(playerEntity);
 
         // Derrota por vidas
@@ -216,10 +216,10 @@ void MainGameState::render()
     Texture2D iconsTex = rm.GetTexture("sprites/icons/Icons.png");
 
     // Buscamos la entidad que sea JUGADOR (tiene Stats y Input)
-    auto view = registry.view<StatsComponent, TransformComponent, PlayerInputComponent, PlayerCheatComponent, PlayerStateComponent>();
+    auto view = registry.view<PlayerStatsComponent, TransformComponent, PlayerInputComponent, PlayerCheatComponent, PlayerStateComponent>();
 
     for(auto entity : view) {
-        const auto &stats = view.get<StatsComponent>(entity);
+        const auto &stats = view.get<PlayerStatsComponent>(entity);
         const auto &trans = view.get<TransformComponent>(entity);
         const auto &cheats = view.get<PlayerCheatComponent>(entity);
         const auto &playerState = view.get<PlayerStateComponent>(entity);
