@@ -89,8 +89,8 @@ void CollisionSystem(entt::registry &registry, Map &map) {
                     move.targetPos = playerTrans.position;
                 }
 
-                if (registry.all_of<StatsComponent>(playerEntity)) {
-                    auto &stats = registry.get<StatsComponent>(playerEntity);
+                if (registry.all_of<PlayerStatsComponent>(playerEntity)) {
+                    auto &stats = registry.get<PlayerStatsComponent>(playerEntity);
                     stats.lives--;
                 }
 
@@ -100,8 +100,8 @@ void CollisionSystem(entt::registry &registry, Map &map) {
                     auto &item = registry.get<ItemComponent>(entity);
                     if (!item.collected) {
                         item.collected = true;
-                        if (registry.all_of<StatsComponent>(playerEntity)) {
-                            auto &stats = registry.get<StatsComponent>(playerEntity);
+                        if (registry.all_of<PlayerStatsComponent>(playerEntity)) {
+                            auto &stats = registry.get<PlayerStatsComponent>(playerEntity);
                             if (item.isKey) {
                                 stats.keysCollected++;
                             }
