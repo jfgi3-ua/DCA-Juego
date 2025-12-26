@@ -7,7 +7,6 @@
 */
 
 // Componentes de World
-
 #include "ecs/components/WorldComponents.hpp"
 
 // Componentes de Player
