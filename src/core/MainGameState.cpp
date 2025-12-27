@@ -346,7 +346,7 @@ void MainGameState::loadLevelEntities() {
             }
 
             // --- CASO 2: ENEMIGOS (E) ---
-            else if (cell == 'E') {
+            if (cell == 'E') {
                 auto entity = registry.create();
                 registry.emplace<TransformComponent>(entity, pos, size);
 
