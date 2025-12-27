@@ -327,7 +327,7 @@ void MainGameState::loadLevelEntities() {
                 manualOffset = Vector2{0.5f, 1.0f};
 
                 //solo textura de pinchos
-                auto &sprite = registry.emplace<SpriteComponent>(entity, spikeTex, manualOffset, 0.75f);
+                registry.emplace<SpriteComponent>(entity, spikeTex, manualOffset, 0.75f);
 
                 // Configuración del recorte manual
                 registry.emplace<ManualSpriteComponent>(
@@ -374,7 +374,7 @@ void MainGameState::loadLevelEntities() {
                 registry.emplace<TransformComponent>(entity, pos, size);
 
                 // solo textura de llave
-                auto &sprite = registry.emplace<SpriteComponent>(entity, keyTex, manualOffset, 0.75f);
+                registry.emplace<SpriteComponent>(entity, keyTex, manualOffset, 0.75f);
                
                 // Configuración del recorte manual
                 registry.emplace<ManualSpriteComponent>(
