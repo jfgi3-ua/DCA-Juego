@@ -33,8 +33,8 @@ void Spikes::render(int ox, int oy) const {
         Rectangle src = s.active ? srcRectActive_ : srcRectInactive_;
 
         Rectangle dest {
-            ox + s.x * tileSize,
-            oy + s.y * tileSize ,
+            (float)ox + s.x * tileSize,
+            (float)oy + s.y * tileSize,
             (float)tileSize,
             (float)tileSize
         };

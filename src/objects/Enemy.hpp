@@ -64,9 +64,9 @@ private:
     void updateAI(const Map &map, float dt, int tileSize, float playerX, float playerY);
     
     // Estados específicos
-    void patrolBehavior(const Map &map, float dt, int tileSize);
-    void chaseBehavior(const Map &map, float dt, int tileSize, float playerX, float playerY);
-    void retreatBehavior(const Map &map, float dt, int tileSize, float playerX, float playerY);
+    void patrolBehavior(const Map &map);
+    void chaseBehavior(const Map &map, int tileSize, float playerX, float playerY);
+    void retreatBehavior(const Map &map, int tileSize, float playerX, float playerY);
     
     // Utilidades
     float distanceToPlayer(float playerX, float playerY) const;
