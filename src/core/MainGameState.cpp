@@ -32,7 +32,7 @@ void MainGameState::init()
     // Cargar mecanismos desde el mapa (ECS)
     for (auto m : map_.getMechanisms()) {
         auto entity = registry.create();
-        registry.emplace<MechanismComponent>(entity, Mechanism(m.id, m.trigger, m.target));
+        registry.emplace<MechanismComponent>(entity, Mechanism(m.type, m.trigger, m.target));
     }
 
     // Inicializar temporizador: 30s base + 30s por cada nivel adicional
