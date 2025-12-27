@@ -96,11 +96,21 @@ void MainGameState::init()
 
 void MainGameState::handleInput()
 {
-    // Activar menú de desarrollador con CTRL+D
+    // 1. Activar menú de desarrollador con CTRL+D
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_D)) {
         this->state_machine->add_overlay_state(
             std::make_unique<DevModeState>(&registry, &levelTime_, &freezeEnemies_, &infiniteTime_,
                                            &keyGivenByCheating_, &totalKeysInMap_, level_)
+        );
+        return;
+    }
+
+    // 2. Salir al estado de Game Over al presionar ESPACIO (simulando derrota)
+    if (IsKeyPressed(KEY_SPACE)) {
+        // Argumentos de GameOverState: nivel actual, ha muerto (true), tiempo restante, juego terminado (false)
+        this->state_machine->add_state(
+            std::make_unique<GameOverState>(level_, true, levelTime_, false), 
+            true // Reemplazar el estado actual
         );
         return;
     }
