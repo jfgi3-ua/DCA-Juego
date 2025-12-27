@@ -23,3 +23,4 @@
 #include "ecs/systems/CollisionSystems.hpp"
 #include "ecs/systems/RenderSystems.hpp"
 #include "ecs/systems/WorldSystems.hpp"
+#include "ecs/systems/LevelSetupSystem.hpp"
