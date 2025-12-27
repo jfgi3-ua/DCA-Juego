@@ -2,7 +2,6 @@
 #include <entt/entt.hpp>
 #include "objects/Map.hpp"
 #include "ecs/components/EnemyComponents.hpp"
-#include "ecs/components/WorldComponents.hpp"
 #include "ecs/components/Player/PlayerStateComponent.hpp"
 #include "ecs/components/Player/PlayerInputComponent.hpp"
 

@@ -4,7 +4,9 @@
 #include "ecs/components/Player/PlayerStateComponent.hpp"
 #include "ecs/components/Player/PlayerInputComponent.hpp"
 #include "ecs/components/Player/PlayerCheatComponent.hpp"
-#include "ecs/components/WorldComponents.hpp"
+#include "ecs/components/World/TransformComponent.hpp"
+#include "ecs/components/World/MovementComponent.hpp"
+#include "ecs/components/World/SpriteComponent.hpp"
 
 void InputSystem(entt::registry &registry, const Map &map);
 void InvulnerabilitySystem(entt::registry &registry, float deltaTime);
