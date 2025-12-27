@@ -28,79 +28,30 @@ void MainGameState::init()
     // Guardar total de llaves del mapa (antes de que se recojan)
     totalKeysInMap_ = map_.getTotalKeys();
 
-
-    // Cargar mecanismos desde el mapa (ECS)
-    for (auto m : map_.getMechanisms()) {
-        auto entity = registry.create();
-        registry.emplace<MechanismComponent>(entity, Mechanism(m.type, m.trigger, m.target));
-    }
+    // Cargar entidades del nivel en el registry
+    LevelSetupSystem(registry, map_);
 
     // Inicializar temporizador: 30s base + 30s por cada nivel adicional
     levelTime_ = 30.0f + (level_ - 1) * 30.0f;
-
-    // ---------------------------------------------------------
-    // REFACTOR: ENTT
-    // ---------------------------------------------------------
-    // --- PLAYER ---
-    // 1. Obtener coordenadas del grid donde está la 'P' (ej: x=2, y=3)
-    IVec2 startGridPos = map_.playerStart();
-
-    // 2. Convertir a posición de mundo (píxeles)
-    // Usamos la esquina superior izquierda del tile como referencia (más fácil para ECS)
-    float centerX = (startGridPos.x * map_.tile()) + (map_.tile() / 2.0f);
-    float centerY = (startGridPos.y * map_.tile()) + (map_.tile() / 2.0f);
-    auto playerEntity = registry.create();
-
-    // 3. Componente de Stats
-    registry.emplace<PlayerStatsComponent>(playerEntity, 5); // 5 vidas iniciales
-
-    // 4. Guardamos la posición central.
-    registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)map_.tile(), (float)map_.tile()});
-
-    // 5. Configuración del Sprite
-    Texture2D playerIdleTex = rm.GetTexture("sprites/player/Archer/Idle.png");
-    Texture2D playerWalkTex = rm.GetTexture("sprites/player/Archer/Walk.png");
-    Vector2 manualOffset = { 0.0f, -10.0f };  // Ajuste manual del sprite
-    registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, manualOffset, 1.5f);
-    registry.emplace<GridClipComponent>(playerEntity, 6);
-    registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex, 6, 8, 0.2f, 0.12f);
-
-    // 6. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
-    registry.emplace<MovementComponent>(playerEntity, 75.0f);
-
-    // 7. Etiqueta de Input (para que sepa que ESTE es el jugador controlable) <-- // ?? Esta parte tengo que estudiarmela mejor
-    registry.emplace<PlayerInputComponent>(playerEntity);
-
-    // 8. Estado de jugador (invulnerabilidad y retroceso)
-    registry.emplace<PlayerStateComponent>(playerEntity, Vector2{centerX, centerY}, 1.5f);
-
-    // 9. Cheats del jugador (god/no-clip)
-    registry.emplace<PlayerCheatComponent>(playerEntity, false, false);
-
-    // -- Colisiones --
-    // 1. Añadir ColliderComponent al JUGADOR
-    // Ajustamos la caja para que sea un poco más pequeña que el tile (hitbox permisiva... de momento)
-    float hitSize = tile_ * 0.6f;
-    // Offset centrado relativo al centro del personaje (que es donde está transform.position)
-    // Como transform.position es el CENTRO, un rect en {-w/2, -h/2} estaría centrado.
-    registry.emplace<ColliderComponent>(playerEntity,
-        Rectangle{ -hitSize/2, -hitSize/2, hitSize, hitSize },
-        CollisionType::Player
-    );
-
-    // 2. Crear ENEMIGOS y PINCHOS
-    loadLevelEntities();
-
-    std::cout << "Nivel cargado. Entidades generadas via ECS." << std::endl;
 }
 
 void MainGameState::handleInput()
 {
-    // Activar menú de desarrollador con CTRL+D
+    // 1. Activar menú de desarrollador con CTRL+D
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_D)) {
         this->state_machine->add_overlay_state(
             std::make_unique<DevModeState>(&registry, &levelTime_, &freezeEnemies_, &infiniteTime_,
                                            &keyGivenByCheating_, &totalKeysInMap_, level_)
+        );
+        return;
+    }
+
+    // 2. Salir al estado de Game Over al presionar ESPACIO (simulando derrota)
+    if (IsKeyPressed(KEY_SPACE)) {
+        // Argumentos de GameOverState: nivel actual, ha muerto (true), tiempo restante, juego terminado (false)
+        this->state_machine->add_state(
+            std::make_unique<GameOverState>(level_, true, levelTime_, false), 
+            true // Reemplazar el estado actual
         );
         return;
     }
@@ -297,100 +248,4 @@ void MainGameState::render()
     std::string levelText = "Nivel: " + std::to_string(level_);
     DrawText(levelText.c_str(), 10, 10, 24, DARKGRAY);
 
-}
-
-void MainGameState::loadLevelEntities() {
-    auto& rm = ResourceManager::Get();
-
-    // Texturas precargadas
-    Texture2D spikeTex = rm.GetTexture("sprites/spikes.png");
-    Texture2D enemyIdleTex = rm.GetTexture("sprites/enemy/Skeleton/Idle.png");
-    Texture2D enemyWalkTex = rm.GetTexture("sprites/enemy/Skeleton/Walk.png");
-    Texture2D keyTex = rm.GetTexture("sprites/icons/Icons.png");
-
-    for (int y = 0; y < map_.height(); y++) {
-        for (int x = 0; x < map_.width(); x++) {
-            char cell = map_.at(x, y);
-
-            // Calculamos posición central del tile en píxeles
-            float centerX = x * map_.tile() + map_.tile() / 2.0f;
-            float centerY = y * map_.tile() + map_.tile() / 2.0f;
-            Vector2 pos = {centerX, centerY};
-            Vector2 size = {(float)map_.tile(), (float)map_.tile()};
-            Vector2 manualOffset = {0.0f, 0.0f};
-
-            // --- CASO 1: PINCHOS (^) ---
-            if (cell == '^') {
-                auto entity = registry.create();
-                registry.emplace<TransformComponent>(entity, pos, size);
-
-                manualOffset = Vector2{0.5f, 1.0f};
-
-                //solo textura de pinchos
-                auto &sprite = registry.emplace<SpriteComponent>(entity, spikeTex, manualOffset, 0.75f);
-
-                // Configuración del recorte manual
-                registry.emplace<ManualSpriteComponent>(
-                    entity,
-                    Rectangle{28, 126, 22, 22}, // ACTIVO
-                    Rectangle{28,   0, 22, 22}  // INACTIVO
-                );
-                // Collider (ajustado)
-                float hitSize = map_.tile() * 0.9f;
-                registry.emplace<ColliderComponent>(entity,
-                    Rectangle{-hitSize/2, -hitSize/2, hitSize, hitSize},
-                    CollisionType::Spike
-                );
-
-                registry.emplace<SpikeComponent>(entity, true, 3.0f);
-            }
-
-            // --- CASO 2: ENEMIGOS (E) ---
-            else if (cell == 'E') {
-                auto entity = registry.create();
-                registry.emplace<TransformComponent>(entity, pos, size);
-
-                // Configuración visual del enemigo (igual que el player: 6 frames, offset 8,-8)
-                manualOffset = Vector2{-3.0f, -10.0f};
-                registry.emplace<SpriteComponent>(entity, enemyIdleTex, manualOffset, 1.5f);
-                registry.emplace<GridClipComponent>(entity, 7);
-                registry.emplace<AnimationComponent>(entity, enemyIdleTex, enemyWalkTex, 7, 8, 0.2f, 0.12f);
-
-                // Movimiento (IA)
-                registry.emplace<MovementComponent>(entity, 40.0f); // Velocidad más lenta que el jugador
-                registry.emplace<EnemyAIComponent>(entity);
-
-                // Collider (90% del tile)
-                float hitSize = map_.tile() * 0.9f;
-                registry.emplace<ColliderComponent>(entity,
-                    Rectangle{-hitSize/2, -hitSize/2, hitSize, hitSize},
-                    CollisionType::Enemy
-                );
-            }
-
-            // --- CASO 3: LLAVES (K) ---
-            if (cell == 'K') {
-                auto entity = registry.create();
-                registry.emplace<TransformComponent>(entity, pos, size);
-
-                // solo textura de llave
-                auto &sprite = registry.emplace<SpriteComponent>(entity, keyTex, manualOffset, 0.75f);
-               
-                // Configuración del recorte manual
-                registry.emplace<ManualSpriteComponent>(
-                    entity,
-                    Rectangle{64, 0, 16, 16}  // FIJO
-                );
-                // Colisión (tipo Item)
-                float hitSize = map_.tile() * 0.5f;
-                registry.emplace<ColliderComponent>(entity,
-                    Rectangle{-hitSize/2, -hitSize/2, hitSize, hitSize},
-                    CollisionType::Item
-                );
-
-                // Componente lógico de Item
-                registry.emplace<ItemComponent>(entity, true); // true = es llave
-            }
-        }
-    }
 }

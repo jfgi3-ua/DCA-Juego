@@ -112,7 +112,9 @@ void DevModeState::setupCheatOptions()
         [this]() {
             if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
                 auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
-                if (stats.lives < 10) stats.lives++;
+                if (stats.lives < 10) {
+                    stats.lives++;
+                }
                 std::cout << "Vida anadida. Vidas: " << stats.lives << std::endl;
             }
         },
@@ -139,7 +141,10 @@ void DevModeState::setupCheatOptions()
             if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
                 auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
                 if (stats.keysCollected == 0) {
-                    if (keyGivenByCheating_) *keyGivenByCheating_ = true;
+                    // Evitar misleading-indentation: usar llaves explícitas
+                    if (keyGivenByCheating_) {
+                        *keyGivenByCheating_ = true;
+                    }
                     int targetKeys = totalKeysInMap_ ? *totalKeysInMap_ : 1;
                     stats.keysCollected = targetKeys;
                     std::cout << "Llave obtenida (por cheat)" << std::endl;
@@ -193,8 +198,13 @@ void DevModeState::setupCheatOptions()
         "0. Resetear Todos los Cheats",
         [this]() {
             godMode_ = false;
-            if (freezeEnemies_) *freezeEnemies_ = false;
-            if (infiniteTime_) *infiniteTime_ = false;
+            // Evitar misleading-indentation: usar llaves en asignaciones a punteros
+            if (freezeEnemies_) {
+                *freezeEnemies_ = false;
+            }
+            if (infiniteTime_) {
+                *infiniteTime_ = false;
+            }
             noClip_ = false;
             if (registry_ && registry_->valid(playerEntity_)) {
                 if (registry_->all_of<PlayerCheatComponent>(playerEntity_)) {
@@ -338,12 +348,17 @@ void DevModeState::update(float /*deltaTime*/)
 
 bool DevModeState::resolvePlayerEntity()
 {
-    if (!registry_) return false;
+    if (!registry_){
+        return false;
+    }
+
     auto view = registry_->view<PlayerInputComponent>();
+
     if (view.empty()) {
         playerEntity_ = entt::null;
         return false;
     }
+    
     playerEntity_ = *view.begin();
     return registry_->valid(playerEntity_);
 }
