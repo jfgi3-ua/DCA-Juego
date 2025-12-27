@@ -35,8 +35,8 @@ void MainGameState::init()
         registry.emplace<MechanismComponent>(entity, Mechanism(m.id, m.trigger, m.target));
     }
 
-    // Inicializar temporizador: 30s base + 30s por cada nivel adicional
-    levelTime_ = 30.0f + (level_ - 1) * 30.0f;
+    // Inicializar temporizador: 45s base + 60s por cada nivel adicional
+    levelTime_ = 45.0f + (level_ - 1) * 60.0f;
 
     // ---------------------------------------------------------
     // REFACTOR: ENTT

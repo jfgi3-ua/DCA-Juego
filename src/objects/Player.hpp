@@ -64,7 +64,7 @@ class Player {
         Vector2 lastMoveDir_ = {0, 0};
 
         // Velocidad
-        float speed_ = 150.0f;
+        float speed_ = 165.0f;
 
         // Tamaño
         float radius_ = 10.0f;
