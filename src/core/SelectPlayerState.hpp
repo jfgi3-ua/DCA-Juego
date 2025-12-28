@@ -37,4 +37,5 @@ private:
     bool previewHasFocus_ = false;
 
     void UpdatePreviewForSet(const PlayerSpriteSet& set);
+    const PlayerSpriteSet* ResolveValidSet(const PlayerSpriteSet& set) const;
 };

@@ -83,6 +83,12 @@ void SelectPlayerState::handleInput() {
     // Confirmar seleccion y continuar.
     if (IsKeyPressed(KEY_ENTER)) {
         if (!this->state_machine) return;
+        const auto& selected = sets_[selectedIndex_];
+        const auto* resolved = ResolveValidSet(selected);
+        if (resolved) {
+            PlayerSelection::SetSelectedSpriteSet(resolved->id, resolved->idlePath, resolved->walkPath,
+                                                 resolved->hasIdle, resolved->hasWalk);
+        }
         this->state_machine->add_state(std::make_unique<MainGameState>(), true);
         return;
     }
@@ -149,6 +155,13 @@ void SelectPlayerState::render() {
             }
             DrawText(name, listLeftX, y, 20, color);
         }
+
+        const auto& selected = sets_[selectedIndex_];
+        if (!selected.hasIdle || !selected.hasWalk) {
+            const char* warn = "Set incompleto, se usara el default";
+            DrawText(warn, (int)listPanel.x + 18, (int)(listPanel.y + listPanel.height - 32),
+                     18, MAROON);
+        }
     }
 
     // Centrar el preview dentro del panel y ajustar posicion.
@@ -172,16 +185,18 @@ void SelectPlayerState::render() {
 }
 
 void SelectPlayerState::UpdatePreviewForSet(const PlayerSpriteSet& set) {
-    if (!set.hasIdle || !set.hasWalk) return;
+    const PlayerSpriteSet* resolved = ResolveValidSet(set);
+    if (!resolved) return;
+    const PlayerSpriteSet& validSet = *resolved;
 
-    if (previewId_ == set.id && previewEntity_ != entt::null && previewRegistry_.valid(previewEntity_)) {
+    if (previewId_ == validSet.id && previewEntity_ != entt::null && previewRegistry_.valid(previewEntity_)) {
         return;
     }
-    previewId_ = set.id;
+    previewId_ = validSet.id;
 
     auto& rm = ResourceManager::Get();
-    const Texture2D& idleTex = rm.GetTexture(set.idlePath);
-    const Texture2D& walkTex = rm.GetTexture(set.walkPath);
+    const Texture2D& idleTex = rm.GetTexture(validSet.idlePath);
+    const Texture2D& walkTex = rm.GetTexture(validSet.walkPath);
 
     int idleFrames = ComputeFramesForTexture(idleTex);
     int walkFrames = ComputeFramesForTexture(walkTex);
@@ -219,4 +234,22 @@ void SelectPlayerState::UpdatePreviewForSet(const PlayerSpriteSet& set) {
 
     transform.position = previewPos_;
     transform.size = { previewTileSize_, previewTileSize_ };
+}
+
+const PlayerSpriteSet* SelectPlayerState::ResolveValidSet(const PlayerSpriteSet& set) const {
+    if (set.hasIdle && set.hasWalk) return &set;
+
+    for (const auto& candidate : sets_) {
+        if (candidate.id == defaultId_ && candidate.hasIdle && candidate.hasWalk) {
+            return &candidate;
+        }
+    }
+
+    for (const auto& candidate : sets_) {
+        if (candidate.hasIdle && candidate.hasWalk) {
+            return &candidate;
+        }
+    }
+
+    return nullptr;
 }
