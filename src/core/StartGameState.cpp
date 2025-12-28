@@ -1,7 +1,6 @@
 #include "StartGameState.hpp"
 #include "StateMachine.hpp"
 #include "ResourceManager.hpp"
-#include <iostream>
 
 extern "C" {
     #include <raylib.h>

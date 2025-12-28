@@ -1,9 +1,13 @@
 #pragma once
+
+#include <iostream>
+#include <string>
+#include <functional>  
+
 #include "GameState.hpp"
 #include "StateMachine.hpp"
 #include "MainGameState.hpp"
 #include "ResourceManager.hpp"
-#include <iostream>
 #include <deque> 
 
 extern "C" {
