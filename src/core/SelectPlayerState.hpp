@@ -1,7 +1,11 @@
 #pragma once
 #include "GameState.hpp"
 #include "PlayerSpriteCatalog.hpp"
+#include <entt/entt.hpp>
 #include <vector>
+extern "C" {
+    #include <raylib.h>
+}
 
 class SelectPlayerState : public GameState {
 public:
@@ -24,4 +28,13 @@ private:
     std::string defaultId_;
     // Top inicial para listar opciones en pantalla.
     int listStartY_ = 140;
+    // Preview animado con ECS (entidad local al estado).
+    entt::registry previewRegistry_;
+    entt::entity previewEntity_ = entt::null;
+    std::string previewId_;
+    float previewTimer_ = 0.0f;
+    float previewTileSize_ = 32.0f;
+    Vector2 previewPos_{0.0f, 0.0f};
+
+    void UpdatePreviewForSet(const PlayerSpriteSet& set);
 };
