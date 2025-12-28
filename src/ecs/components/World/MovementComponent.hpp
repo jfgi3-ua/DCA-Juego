@@ -7,6 +7,7 @@ extern "C" {
 struct MovementComponent {
     float speed;
     bool isMoving;
+    bool wantsMove;
 
     Vector2 startPos;
     Vector2 targetPos;
@@ -15,5 +16,11 @@ struct MovementComponent {
     float duration;
 
     MovementComponent(float spd = 150.0f)
-        : speed(spd), isMoving(false), startPos{0,0}, targetPos{0,0}, progress(0.0f), duration(0.12f) {}
+        : speed(spd),
+          isMoving(false),
+          wantsMove(false),
+          startPos{0,0},
+          targetPos{0,0},
+          progress(0.0f),
+          duration(0.12f) {}
 };
