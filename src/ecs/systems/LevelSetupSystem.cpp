@@ -12,63 +12,6 @@ void LevelSetupSystem(entt::registry& registry, Map& map) {
         registry.emplace<MechanismComponent>(entity, Mechanism(m.type, m.trigger, m.target));
     }
 
-    // --- PLAYER ---
-    // 1. Obtener coordenadas del grid donde está la 'P' (ej: x=2, y=3)
-    IVec2 startGridPos = map.playerStart();
-    float tile = (float)map.tile();
-
-    // 2. Convertir a posición de mundo (píxeles)
-    // Usamos la esquina superior izquierda del tile como referencia (más fácil para ECS)
-    float centerX = startGridPos.x * tile + tile / 2.0f;
-    float centerY = startGridPos.y * tile + tile / 2.0f;
-
-    auto playerEntity = registry.create();
-    
-    // 3. Componente de Stats
-    registry.emplace<PlayerStatsComponent>(playerEntity, 5);
-
-    // 4. Guardamos la posición central.
-    registry.emplace<TransformComponent>(
-        playerEntity,
-        Vector2{centerX, centerY},
-        Vector2{tile, tile}
-    );
-
-    // 5. Configuración del Sprite
-    Texture2D playerIdleTex = rm.GetTexture("sprites/player/Archer/Idle.png");
-    Texture2D playerWalkTex = rm.GetTexture("sprites/player/Archer/Walk.png");
-    
-    // Ajuste manual del sprite
-    Vector2 manualOffset = {0.0f, -10.0f};
-   
-    registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, manualOffset, 1.5f);
-    registry.emplace<GridClipComponent>(playerEntity, 6);
-    registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex, 6, 8, 0.2f, 0.12f);
-    
-    // 6. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
-    registry.emplace<MovementComponent>(playerEntity, 75.0f);
-
-    // 7. Etiqueta de Input (para que sepa que ESTE es el jugador controlable) <-- // ?? Esta parte tengo que estudiarmela mejor
-    registry.emplace<PlayerInputComponent>(playerEntity);
-    
-    // 8. Estado de jugador (invulnerabilidad y retroceso)
-    registry.emplace<PlayerStateComponent>(playerEntity, Vector2{centerX, centerY}, 1.5f);
-    
-    // 9. Cheats del jugador (god/no-clip)
-    registry.emplace<PlayerCheatComponent>(playerEntity, false, false);
-
-    // -- Colisiones --
-    // 1. Añadir ColliderComponent al JUGADOR
-    // Ajustamos la caja para que sea un poco más pequeña que el tile (hitbox permisiva... de momento)
-    float hitSize = tile * 0.6f;
-    
-    // Offset centrado relativo al centro del personaje (que es donde está transform.position)
-    // Como transform.position es el CENTRO, un rect en {-w/2, -h/2} estaría centrado.
-    registry.emplace<ColliderComponent>(playerEntity,
-        Rectangle{ -hitSize/2, -hitSize/2, hitSize, hitSize },
-        CollisionType::Player
-    );
-
     // --- ENTIDADES DEL MAPA ---
     Texture2D spikeTex = rm.GetTexture("sprites/spikes.png");
     Texture2D enemyIdleTex = rm.GetTexture("sprites/enemy/Skeleton/Idle.png");

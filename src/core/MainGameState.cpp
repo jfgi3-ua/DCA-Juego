@@ -1,4 +1,21 @@
 #include "MainGameState.hpp"
+#include "GameOverState.hpp"
+#include "DevModeState.hpp"
+#include "StateMachine.hpp"
+#include "ResourceManager.hpp"
+#include "PlayerSelection.hpp"
+#include "PlayerSpriteCatalog.hpp"
+#include "ecs/Ecs.hpp"
+#include <algorithm>
+extern "C" {
+  #include <raylib.h>
+}
+
+static int ComputeFramesForTexture(const Texture2D& tex) {
+    if (tex.height <= 0) return 1;
+    int frames = tex.width / tex.height;
+    return frames > 0 ? frames : 1;
+}
 
 MainGameState::MainGameState(int level)
 {
@@ -23,6 +40,81 @@ void MainGameState::init()
 
     // Inicializar temporizador: 30s base + 30s por cada nivel adicional
     levelTime_ = 30.0f + (level_ - 1) * 30.0f;
+
+    // ---------------------------------------------------------
+    // REFACTOR: ENTT
+    // ---------------------------------------------------------
+    // --- PLAYER ---
+    // 1. Obtener coordenadas del grid donde está la 'P' (ej: x=2, y=3)
+    IVec2 startGridPos = map_.playerStart();
+
+    // 2. Convertir a posición de mundo (píxeles)
+    // Usamos la esquina superior izquierda del tile como referencia (más fácil para ECS)
+    float centerX = (startGridPos.x * map_.tile()) + (map_.tile() / 2.0f);
+    float centerY = (startGridPos.y * map_.tile()) + (map_.tile() / 2.0f);
+    auto playerEntity = registry.create();
+
+    // 3. Componente de Stats
+    registry.emplace<PlayerStatsComponent>(playerEntity, 5); // 5 vidas iniciales
+
+    // 4. Guardamos la posición central.
+    registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)map_.tile(), (float)map_.tile()});
+
+    // 5. Configuración del Sprite
+    std::string idlePath;
+    std::string walkPath;
+    if (PlayerSelection::HasSelectedSpriteSet() &&
+        PlayerSelection::SelectedHasIdle() && PlayerSelection::SelectedHasWalk()) {
+        idlePath = PlayerSelection::GetSelectedIdlePath();
+        walkPath = PlayerSelection::GetSelectedWalkPath();
+    } else {
+        auto sets = DiscoverPlayerSpriteSets();
+        auto defaultId = ResolveDefaultPlayerSpriteSetId(sets);
+        auto it = std::find_if(sets.begin(), sets.end(),
+                               [&](const PlayerSpriteSet& set) { return set.id == defaultId; });
+        if (it != sets.end() && it->hasIdle && it->hasWalk) {
+            idlePath = it->idlePath;
+            walkPath = it->walkPath;
+        } else {
+            idlePath = "sprites/player/Archer/Idle.png";
+            walkPath = "sprites/player/Archer/Walk.png";
+        }
+    }
+
+    Texture2D playerIdleTex = rm.GetTexture(idlePath);
+    Texture2D playerWalkTex = rm.GetTexture(walkPath);
+    Vector2 manualOffset = { 0.0f, -10.0f };  // Ajuste manual del sprite
+    int idleFrames = ComputeFramesForTexture(playerIdleTex);
+    int walkFrames = ComputeFramesForTexture(playerWalkTex);
+    registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, manualOffset, 1.5f);
+    registry.emplace<GridClipComponent>(playerEntity, idleFrames);
+    registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex,
+                                         idleFrames, walkFrames, 0.2f, 0.12f);
+
+    // 6. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
+    registry.emplace<MovementComponent>(playerEntity, 75.0f);
+
+    // 7. Etiqueta de Input (para que sepa que ESTE es el jugador controlable) <-- // ?? Esta parte tengo que estudiarmela mejor
+    registry.emplace<PlayerInputComponent>(playerEntity);
+
+    // 8. Estado de jugador (invulnerabilidad y retroceso)
+    registry.emplace<PlayerStateComponent>(playerEntity, Vector2{centerX, centerY}, 1.5f);
+
+    // 9. Cheats del jugador (god/no-clip)
+    registry.emplace<PlayerCheatComponent>(playerEntity, false, false);
+
+    // -- Colisiones --
+    // 1. Añadir ColliderComponent al JUGADOR
+    // Ajustamos la caja para que sea un poco más pequeña que el tile (hitbox permisiva... de momento)
+    float hitSize = tile_ * 0.6f;
+    // Offset centrado relativo al centro del personaje (que es donde está transform.position)
+    // Como transform.position es el CENTRO, un rect en {-w/2, -h/2} estaría centrado.
+    registry.emplace<ColliderComponent>(playerEntity,
+        Rectangle{ -hitSize/2, -hitSize/2, hitSize, hitSize },
+        CollisionType::Player
+    );
+
+    std::cout << "Nivel cargado. Entidades generadas via ECS." << std::endl;
 }
 
 void MainGameState::handleInput()
@@ -40,7 +132,7 @@ void MainGameState::handleInput()
     if (IsKeyPressed(KEY_SPACE)) {
         // Argumentos de GameOverState: nivel actual, ha muerto (true), tiempo restante, juego terminado (false)
         this->state_machine->add_state(
-            std::make_unique<GameOverState>(level_, true, levelTime_, false), 
+            std::make_unique<GameOverState>(level_, true, levelTime_, false),
             true // Reemplazar el estado actual
         );
         return;
