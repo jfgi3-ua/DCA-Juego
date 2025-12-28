@@ -1,6 +1,7 @@
 #include "StartGameState.hpp"
 #include "StateMachine.hpp"
 #include "ResourceManager.hpp"
+#include "PlayerSpriteCatalog.hpp"
 #include <iostream>
 
 extern "C" {
@@ -19,11 +20,16 @@ void StartGameState::init() {
     rm.GetTexture("sprites/menus/title.png");
     rm.GetTexture("sprites/icons/boton_jugar.png");
     rm.GetTexture("sprites/icons/boton_salir.png");
+
+    // Discovery de sets de jugador (log temporal para validar).
+    auto sets = DiscoverPlayerSpriteSets();
+    auto defaultId = ResolveDefaultPlayerSpriteSetId(sets);
+    LogPlayerSpriteSets(sets, defaultId);
 }
 
 void StartGameState::handleInput() {
     Vector2 mousePos = GetMousePosition();
-    
+
     // Configurar rectángulos de botones - en horizontal
     float buttonWidth = 250;
     float buttonHeight = 80;
@@ -31,25 +37,25 @@ void StartGameState::handleInput() {
     float totalWidth = (buttonWidth * 2) + spacing;
     float startX = (WINDOW_WIDTH - totalWidth) / 2.0f;
     float startY = WINDOW_HEIGHT / 2.0f + 100;
-    
+
     // Área clickeable ajustada (compensando transparencias en el sprite)
     // Los sprites tienen mucho espacio transparente, ajustamos al área visible central
     float clickPadding = 40; // Reducir área clickeable desde los bordes
-    
+
     Rectangle playButton = {
-        startX + clickPadding, 
-        startY + clickPadding/2, 
-        buttonWidth - (clickPadding * 2), 
+        startX + clickPadding,
+        startY + clickPadding/2,
+        buttonWidth - (clickPadding * 2),
         buttonHeight - clickPadding
     };
-    
+
     Rectangle exitButton = {
-        startX + buttonWidth + spacing + clickPadding, 
-        startY + clickPadding/2, 
-        buttonWidth - (clickPadding * 2), 
+        startX + buttonWidth + spacing + clickPadding,
+        startY + clickPadding/2,
+        buttonWidth - (clickPadding * 2),
         buttonHeight - clickPadding
     };
-    
+
     // Detectar hover con ratón
     if (CheckCollisionPointRec(mousePos, playButton)) {
         selectedOption = 0;
@@ -59,7 +65,7 @@ void StartGameState::handleInput() {
             return;
         }
     }
-    
+
     if (CheckCollisionPointRec(mousePos, exitButton)) {
         selectedOption = 1;
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
@@ -68,7 +74,7 @@ void StartGameState::handleInput() {
             return;
         }
     }
-    
+
     // Cambiar selección menu con teclado
     if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
         std::cout << "Tecla izquierda/derecha presionada." << std::endl;
@@ -103,9 +109,9 @@ void StartGameState::render() {
     // Calculamos el ratio para cubrir toda la pantalla manteniendo aspecto
     float bgAspect = (float)background.width / (float)background.height;
     float screenAspect = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
-    
+
     float bgWidth, bgHeight, bgX, bgY;
-    
+
     if (bgAspect > screenAspect) {
         // Background más ancho proporcionalmente
         bgHeight = WINDOW_HEIGHT;
@@ -119,7 +125,7 @@ void StartGameState::render() {
         bgX = 0;
         bgY = -(bgHeight - WINDOW_HEIGHT) / 2.0f;
     }
-    
+
     DrawTexturePro(
         background,
         {0, 0, (float)background.width, (float)background.height},
@@ -134,7 +140,7 @@ void StartGameState::render() {
     float titleWidth = title.width * titleScale;
     float titleX = (WINDOW_WIDTH - titleWidth) / 2.0f;
     float titleY = 50.0f; // Posición fija desde arriba
-    
+
     DrawTextureEx(title, {titleX, titleY}, 0.0f, titleScale, WHITE);
 
     // Configuración de botones - MISMAS dimensiones y posiciones que en handleInput()
@@ -148,7 +154,7 @@ void StartGameState::render() {
     // Botón JUGAR
     Rectangle playButton = {startX, startY, buttonWidth, buttonHeight};
     bool playHover = CheckCollisionPointRec(mousePos, playButton);
-    
+
     DrawTexturePro(
         botonJugar,
         {0, 0, (float)botonJugar.width, (float)botonJugar.height},
@@ -161,7 +167,7 @@ void StartGameState::render() {
     // Botón SALIR
     Rectangle exitButton = {startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight};
     bool exitHover = CheckCollisionPointRec(mousePos, exitButton);
-    
+
     DrawTexturePro(
         botonSalir,
         {0, 0, (float)botonSalir.width, (float)botonSalir.height},

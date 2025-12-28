@@ -35,6 +35,7 @@ target_sources(game PRIVATE
     src/core/DevModeState.cpp
     src/core/MainGameState.cpp
     src/core/StartGameState.cpp
+    src/core/PlayerSpriteCatalog.cpp
     src/core/StateMachine.cpp
     src/core/GameState.cpp
     src/core/ResourceManager.cpp
