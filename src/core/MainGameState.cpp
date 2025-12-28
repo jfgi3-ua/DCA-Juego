@@ -19,10 +19,10 @@ void MainGameState::init()
     _totalKeysInMap = _map.getTotalKeys();
 
     // Cargar entidades del nivel en el registry
-    LevelSetupSystem(registry, map_);
+    LevelSetupSystem(_registry, _map);
 
     // Inicializar temporizador: 30s base + 30s por cada nivel adicional
-    levelTime_ = 30.0f + (level_ - 1) * 30.0f;
+    _levelTime = 30.0f + (_level - 1) * 30.0f;
 }
 
 void MainGameState::handleInput()
@@ -47,9 +47,9 @@ void MainGameState::handleInput()
     }
 }
 
-void MainGameState::checkGameEndConditions_()
+void MainGameState::_checkGameEndConditions()
 {
-    auto playerView = registry.view<TransformComponent, PlayerStatsComponent, PlayerInputComponent>();
+    auto playerView = _registry.view<TransformComponent, PlayerStatsComponent, PlayerInputComponent>();
     if (!playerView) {
         return;
     }
@@ -60,17 +60,17 @@ void MainGameState::checkGameEndConditions_()
 
     // Derrota por vidas
     if (stats.lives <= 0) {
-        this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, levelTime_, false), true);
+        this->state_machine->add_state(std::make_unique<GameOverState>(_level, true, _levelTime, false), true);
         return;
     }
 
     // Victoria por salida + llaves
-    int cellX = (int)(trans.position.x / tile_);
-    int cellY = (int)(trans.position.y / tile_);
-    if (cellX >= 0 && cellY >= 0 && cellX < map_.width() && cellY < map_.height()) {
-        if (map_.at(cellX, cellY) == 'X' && stats.keysCollected >= totalKeysInMap_) {
-            bool gameFinished = (level_ >= 6);
-            this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, gameFinished), true);
+    int cellX = (int)(trans.position.x / _tile);
+    int cellY = (int)(trans.position.y / _tile);
+    if (cellX >= 0 && cellY >= 0 && cellX < _map.width() && cellY < _map.height()) {
+        if (_map.at(cellX, cellY) == 'X' && stats.keysCollected >= _totalKeysInMap) {
+            bool gameFinished = (_level >= 6);
+            this->state_machine->add_state(std::make_unique<GameOverState>(_level, false, _levelTime, gameFinished), true);
         }
     }
 }
@@ -100,10 +100,10 @@ void MainGameState::update(float deltaTime)
     CollisionSystem(_registry, _map); // Chequeo de colisiones
     MechanismSystem(_registry, _map);
 
-    checkGameEndConditions_();
+    _checkGameEndConditions();
 }
 
-void MainGameState::renderMap_()
+void MainGameState::_renderMap()
 {
     // Dimensiones
     const int mapWpx = _map.width()  * _tile;
@@ -118,11 +118,11 @@ void MainGameState::renderMap_()
     // 1) Mapa (dibujado en la zona superior, desde y=0 hasta y=MAP_H_PX)
     _map.render(ox, oy);
 
-    RenderMechanismSystem(registry, ox, oy);
-    RenderSystem(registry, (float)ox, (float)oy, (float)map_.tile());
+    RenderMechanismSystem(_registry, ox, oy);
+    RenderSystem(_registry, (float)ox, (float)oy, (float)_map.tile());
 }
 
-void MainGameState::renderHUD_()
+void MainGameState::_renderHUD()
 {
     const float baseY = (float)(GetScreenHeight() - HUD_HEIGHT); // HUD siempre abajo
     // Fondo del HUD a lo ancho de la ventana
@@ -147,10 +147,10 @@ void MainGameState::renderHUD_()
     DrawRectangleRoundedLinesEx(livesHud, 0.25f, 6, 1.0f, DARKGRAY);
     DrawText("Vidas", (int)livesHud.x + 10, (int)livesHud.y + 6, 16, DARKGRAY);
 
-    renderPlayerHUD_(bagHud, livesHud, baseY);
+    _renderPlayerHUD(bagHud, livesHud, baseY);
 }
 
-void MainGameState::renderPlayerHUD_(const Rectangle& bagHud, const Rectangle& livesHud, float baseY)
+void MainGameState::_renderPlayerHUD(const Rectangle& bagHud, const Rectangle& livesHud, float baseY)
 {
     // --------------------------------------------------------
     // 2. HUD - INTERFAZ DE USUARIO (Lectura desde ECS)
@@ -229,7 +229,7 @@ void MainGameState::renderPlayerHUD_(const Rectangle& bagHud, const Rectangle& l
     }
 }
 
-void MainGameState::renderTimerAndLevel_()
+void MainGameState::_renderTimerAndLevel()
 {
     // Mostrar temporizador centrado encima del HUD (formato mm:ss)
     int timerFont = 22;
@@ -248,7 +248,7 @@ void MainGameState::renderTimerAndLevel_()
 void MainGameState::render()
 {
     ClearBackground(RAYWHITE);
-    renderMap_();
-    renderHUD_();
-    renderTimerAndLevel_();
+    _renderMap();
+    _renderHUD();
+    _renderTimerAndLevel();
 }
