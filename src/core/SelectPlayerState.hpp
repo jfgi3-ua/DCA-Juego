@@ -26,8 +26,6 @@ private:
     int selectedIndex_ = 0;
     // Id resuelto como default (p.ej. "Archer") si está disponible.
     std::string defaultId_;
-    // Top inicial para listar opciones en pantalla.
-    int listStartY_ = 140;
     // Preview animado con ECS (entidad local al estado).
     entt::registry previewRegistry_;
     entt::entity previewEntity_ = entt::null;
@@ -35,6 +33,8 @@ private:
     float previewTimer_ = 0.0f;
     float previewTileSize_ = 32.0f;
     Vector2 previewPos_{0.0f, 0.0f};
+    float previewIdleHold_ = 0.0f;
+    bool previewHasFocus_ = false;
 
     void UpdatePreviewForSet(const PlayerSpriteSet& set);
 };

@@ -30,7 +30,7 @@ void SelectPlayerState::init() {
     // Resuelve el set por defecto (preferimos "Archer" si existe y está completo).
     defaultId_ = ResolveDefaultPlayerSpriteSetId(sets_);
     previewTileSize_ = (float)TILE_SIZE;
-    previewPos_ = { WINDOW_WIDTH - 260.0f, 360.0f };
+    previewPos_ = { WINDOW_WIDTH - 220.0f, 360.0f };
 
     if (!defaultId_.empty()) {
         auto it = std::find_if(sets_.begin(), sets_.end(),
@@ -38,7 +38,8 @@ void SelectPlayerState::init() {
         if (it != sets_.end()) {
             selectedIndex_ = (int)std::distance(sets_.begin(), it);
             // Guardamos la selección en memoria para que el siguiente estado la consuma.
-            PlayerSelection::SetSelectedSpriteId(defaultId_);
+            const auto& set = *it;
+            PlayerSelection::SetSelectedSpriteSet(set.id, set.idlePath, set.walkPath, set.hasIdle, set.hasWalk);
             UpdatePreviewForSet(*it);
             return;
         }
@@ -47,7 +48,8 @@ void SelectPlayerState::init() {
     if (!sets_.empty()) {
         selectedIndex_ = 0;
         // Fallback: primer set válido si no hay default.
-        PlayerSelection::SetSelectedSpriteId(sets_[0].id);
+        PlayerSelection::SetSelectedSpriteSet(sets_[0].id, sets_[0].idlePath, sets_[0].walkPath,
+                                             sets_[0].hasIdle, sets_[0].hasWalk);
         UpdatePreviewForSet(sets_[0]);
     }
 }
@@ -64,12 +66,18 @@ void SelectPlayerState::handleInput() {
     // Navegacion basica con teclado.
     if (IsKeyPressed(KEY_UP)) {
         selectedIndex_ = (selectedIndex_ - 1 + (int)sets_.size()) % (int)sets_.size();
-        PlayerSelection::SetSelectedSpriteId(sets_[selectedIndex_].id);
+        const auto& set = sets_[selectedIndex_];
+        PlayerSelection::SetSelectedSpriteSet(set.id, set.idlePath, set.walkPath, set.hasIdle, set.hasWalk);
         UpdatePreviewForSet(sets_[selectedIndex_]);
+        previewIdleHold_ = 1.0f;
+        previewHasFocus_ = true;
     } else if (IsKeyPressed(KEY_DOWN)) {
         selectedIndex_ = (selectedIndex_ + 1) % (int)sets_.size();
-        PlayerSelection::SetSelectedSpriteId(sets_[selectedIndex_].id);
+        const auto& set = sets_[selectedIndex_];
+        PlayerSelection::SetSelectedSpriteSet(set.id, set.idlePath, set.walkPath, set.hasIdle, set.hasWalk);
         UpdatePreviewForSet(sets_[selectedIndex_]);
+        previewIdleHold_ = 1.0f;
+        previewHasFocus_ = true;
     }
 
     // Confirmar seleccion y continuar.
@@ -81,8 +89,14 @@ void SelectPlayerState::handleInput() {
 }
 
 void SelectPlayerState::update(float deltaTime) {
+    if (!previewHasFocus_) {
+        previewIdleHold_ = 0.0f;
+    }
+    previewHasFocus_ = false;
+    previewIdleHold_ = std::max(0.0f, previewIdleHold_ - deltaTime);
+
     previewTimer_ += deltaTime;
-    bool wantsWalk = std::fmod(previewTimer_, 2.0f) >= 1.0f;
+    bool wantsWalk = previewIdleHold_ <= 0.0f && std::fmod(previewTimer_, 2.0f) >= 1.0f;
 
     if (previewEntity_ != entt::null && previewRegistry_.valid(previewEntity_) &&
         previewRegistry_.all_of<MovementComponent>(previewEntity_)) {
@@ -95,37 +109,66 @@ void SelectPlayerState::update(float deltaTime) {
 
 void SelectPlayerState::render() {
     ClearBackground(RAYWHITE);
+    DrawRectangleGradientV(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, RAYWHITE, Color{240, 240, 240, 255});
 
-    const char* title = "Seleccion de personaje (placeholder)";
-    int titleWidth = MeasureText(title, 24);
-    DrawText(title, (WINDOW_WIDTH - titleWidth) / 2, 60, 24, DARKGRAY);
+    const int margin = 50;
+    const int panelHeight = 380;
+    const int panelWidth = (WINDOW_WIDTH - margin * 2 - 40) / 2;
+    const int panelY = 150;
+    Rectangle listPanel{ (float)margin, (float)panelY, (float)panelWidth, (float)panelHeight };
+    Rectangle previewPanel{ (float)(margin + panelWidth + 40), (float)panelY, (float)panelWidth, (float)panelHeight };
+
+    DrawRectangleRounded(listPanel, 0.18f, 6, Fade(LIGHTGRAY, 0.35f));
+    DrawRectangleRoundedLinesEx(listPanel, 0.18f, 6, 1.0f, GRAY);
+    DrawRectangleRounded(previewPanel, 0.18f, 6, Fade(LIGHTGRAY, 0.35f));
+    DrawRectangleRoundedLinesEx(previewPanel, 0.18f, 6, 1.0f, GRAY);
+
+    const char* title = "Selecciona tu personaje";
+    int titleWidth = MeasureText(title, 28);
+    DrawText(title, (WINDOW_WIDTH - titleWidth) / 2, 70, 28, DARKGRAY);
+    DrawText("Seleccion", (int)listPanel.x + 14, (int)listPanel.y + 10, 18, DARKGRAY);
+    DrawText("Preview", (int)previewPanel.x + 14, (int)previewPanel.y + 10, 18, DARKGRAY);
 
     if (sets_.empty()) {
         const char* emptyText = "Sin sets disponibles";
         int emptyWidth = MeasureText(emptyText, 20);
-        DrawText(emptyText, (WINDOW_WIDTH - emptyWidth) / 2, 110, 20, GRAY);
+        DrawText(emptyText, (WINDOW_WIDTH - emptyWidth) / 2, 120, 20, GRAY);
     } else {
         // Lista navegable simple.
         int lineHeight = 24;
+        int listStartY = (int)listPanel.y + 50;
+        int listLeftX = (int)listPanel.x + 20;
         for (int i = 0; i < (int)sets_.size(); ++i) {
-            int y = listStartY_ + (i * lineHeight);
+            int y = listStartY + (i * lineHeight);
             const char* name = sets_[i].id.c_str();
             Color color = (i == selectedIndex_) ? BLACK : DARKGRAY;
-            DrawText(name, 120, y, 20, color);
+            if (i == selectedIndex_) {
+                Rectangle hi{ (float)listLeftX - 8.0f, (float)y - 4.0f, listPanel.width - 28.0f, 24.0f };
+                DrawRectangleRounded(hi, 0.2f, 4, Fade(GRAY, 0.18f));
+                DrawRectangleRoundedLinesEx(hi, 0.2f, 4, 1.0f, Fade(GRAY, 0.4f));
+            }
+            DrawText(name, listLeftX, y, 20, color);
         }
     }
 
-    // Panel de preview a la derecha.
-    Rectangle previewPanel{ WINDOW_WIDTH - 360.0f, 140.0f, 300.0f, 360.0f };
-    DrawRectangleRounded(previewPanel, 0.2f, 6, Fade(LIGHTGRAY, 0.4f));
-    DrawRectangleRoundedLinesEx(previewPanel, 0.2f, 6, 1.0f, GRAY);
-    DrawText("Preview", (int)previewPanel.x + 12, (int)previewPanel.y + 10, 18, DARKGRAY);
+    // Centrar el preview dentro del panel y ajustar posicion.
+    previewTileSize_ = std::min(previewPanel.width, previewPanel.height) * 0.35f;
+    previewPos_ = {
+        previewPanel.x + (previewPanel.width / 2.0f),
+        previewPanel.y + (previewPanel.height * 0.62f)
+    };
+    if (previewEntity_ != entt::null && previewRegistry_.valid(previewEntity_) &&
+        previewRegistry_.all_of<TransformComponent>(previewEntity_)) {
+        auto& transform = previewRegistry_.get<TransformComponent>(previewEntity_);
+        transform.position = previewPos_;
+        transform.size = { previewTileSize_, previewTileSize_ };
+    }
 
     RenderSystem(previewRegistry_, 0.0f, 0.0f, previewTileSize_);
 
     const char* hint = "Usa ARRIBA/ABAJO y ENTER para continuar";
     int hintWidth = MeasureText(hint, 18);
-    DrawText(hint, (WINDOW_WIDTH - hintWidth) / 2, 100, 18, GRAY);
+    DrawText(hint, (WINDOW_WIDTH - hintWidth) / 2, 120, 18, GRAY);
 }
 
 void SelectPlayerState::UpdatePreviewForSet(const PlayerSpriteSet& set) {
@@ -148,7 +191,7 @@ void SelectPlayerState::UpdatePreviewForSet(const PlayerSpriteSet& set) {
         previewRegistry_.emplace<TransformComponent>(
             previewEntity_, previewPos_, Vector2{ previewTileSize_, previewTileSize_ });
         previewRegistry_.emplace<SpriteComponent>(
-            previewEntity_, idleTex, Vector2{ 0.0f, -10.0f }, 2.0f);
+            previewEntity_, idleTex, Vector2{ 0.0f, -10.0f }, 2.2f);
         previewRegistry_.emplace<GridClipComponent>(previewEntity_, idleFrames);
         previewRegistry_.emplace<AnimationComponent>(
             previewEntity_, idleTex, walkTex, idleFrames, walkFrames, 0.2f, 0.12f);

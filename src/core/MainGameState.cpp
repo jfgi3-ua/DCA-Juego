@@ -4,9 +4,18 @@
 #include "DevModeState.hpp"
 #include "StateMachine.hpp"
 #include "ResourceManager.hpp"
+#include "PlayerSelection.hpp"
+#include "PlayerSpriteCatalog.hpp"
 #include "ecs/Ecs.hpp"
+#include <algorithm>
 extern "C" {
   #include <raylib.h>
+}
+
+static int ComputeFramesForTexture(const Texture2D& tex) {
+    if (tex.height <= 0) return 1;
+    int frames = tex.width / tex.height;
+    return frames > 0 ? frames : 1;
 }
 
 MainGameState::MainGameState(int level)
@@ -58,12 +67,35 @@ void MainGameState::init()
     registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)map_.tile(), (float)map_.tile()});
 
     // 5. Configuración del Sprite
-    Texture2D playerIdleTex = rm.GetTexture("sprites/player/Archer/Idle.png");
-    Texture2D playerWalkTex = rm.GetTexture("sprites/player/Archer/Walk.png");
+    std::string idlePath;
+    std::string walkPath;
+    if (PlayerSelection::HasSelectedSpriteSet() &&
+        PlayerSelection::SelectedHasIdle() && PlayerSelection::SelectedHasWalk()) {
+        idlePath = PlayerSelection::GetSelectedIdlePath();
+        walkPath = PlayerSelection::GetSelectedWalkPath();
+    } else {
+        auto sets = DiscoverPlayerSpriteSets();
+        auto defaultId = ResolveDefaultPlayerSpriteSetId(sets);
+        auto it = std::find_if(sets.begin(), sets.end(),
+                               [&](const PlayerSpriteSet& set) { return set.id == defaultId; });
+        if (it != sets.end() && it->hasIdle && it->hasWalk) {
+            idlePath = it->idlePath;
+            walkPath = it->walkPath;
+        } else {
+            idlePath = "sprites/player/Archer/Idle.png";
+            walkPath = "sprites/player/Archer/Walk.png";
+        }
+    }
+
+    Texture2D playerIdleTex = rm.GetTexture(idlePath);
+    Texture2D playerWalkTex = rm.GetTexture(walkPath);
     Vector2 manualOffset = { 0.0f, -10.0f };  // Ajuste manual del sprite
+    int idleFrames = ComputeFramesForTexture(playerIdleTex);
+    int walkFrames = ComputeFramesForTexture(playerWalkTex);
     registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, manualOffset, 1.5f);
-    registry.emplace<GridClipComponent>(playerEntity, 6);
-    registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex, 6, 8, 0.2f, 0.12f);
+    registry.emplace<GridClipComponent>(playerEntity, idleFrames);
+    registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex,
+                                         idleFrames, walkFrames, 0.2f, 0.12f);
 
     // 6. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
     registry.emplace<MovementComponent>(playerEntity, 75.0f);
