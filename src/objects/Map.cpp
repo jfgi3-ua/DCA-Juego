@@ -78,8 +78,6 @@ bool Map::loadFromFile(const std::string& path, int tileSize) {
                 // Salida, no se necesita almacenar posición aquí?
             } else if (c == '^') {
                 _spikes.push_back({x, y});
-            } else if (c == 'X') {
-                // Salida, no se necesita almacenar posición aquí?
             }else if (std::islower(c)) {
                 triggers[c] = {x, y};
             } else if (std::isupper(c)) {
@@ -224,8 +222,23 @@ void Map::pairMechanisms(std::unordered_map<char, IVec2>& triggers, std::unorder
             throw std::runtime_error("Missing target for mechanism '" + std::string(1, targetChar) + "'");
         }
 
+        //determinamos el tipo de mecanismo segun el target
+        MechanismType type;
+
+        switch (targetChar) {
+            case 'D': type = MechanismType::DOOR;
+                break;
+            case 'T': type = MechanismType::TRAP;
+                break;
+            case 'B': type = MechanismType::BRIDGE;
+                break;
+            case 'L': type = MechanismType::LEVER;
+                break;
+            default: type = MechanismType::DOOR;
+        }
+
         //guardamos el mecanismo emparejado
-        _mechanisms.push_back({targetChar, it->second, targetIt->second});
+        _mechanisms.push_back({type, it->second, targetIt->second});
 
         //borramos el target ya emparejado para comprobar luego si quedan targets sin emparejar
         targets.erase(targetIt);
