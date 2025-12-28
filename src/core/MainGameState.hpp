@@ -25,7 +25,7 @@ class MainGameState : public GameState
         void pause(){};
         void resume(){};
 
-        void _loadLevelEntities();
+        void loadLevelEntities();
 
     private:
         char _entered_key;

@@ -89,7 +89,7 @@ void MainGameState::init()
     );
 
     // 2. Crear ENEMIGOS y PINCHOS
-    _loadLevelEntities();
+    loadLevelEntities();
 
     std::cout << "Nivel cargado. Entidades generadas via ECS." << std::endl;
 }
@@ -309,7 +309,7 @@ void MainGameState::render()
 
 }
 
-void MainGameState::_loadLevelEntities() {
+void MainGameState::loadLevelEntities() {
     auto& rm = ResourceManager::Get();
 
     // Texturas precargadas
