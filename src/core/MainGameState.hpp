@@ -54,11 +54,11 @@ class MainGameState : public GameState
         bool keyGivenByCheating_ = false; // Track si la llave fue obtenida por cheat
 
         // Métodos privados para renderizado
-        void renderMap();
-        void renderHUD();
-        void renderPlayerHUD(const Rectangle& bagHud, const Rectangle& livesHud, float baseY);
-        void renderTimerAndLevel();
+        void renderMap_();
+        void renderHUD_();
+        void renderPlayerHUD_(const Rectangle& bagHud, const Rectangle& livesHud, float baseY);
+        void renderTimerAndLevel_();
 
         // Método para verificar condiciones de fin de juego
-        void checkGameEndConditions();
+        void checkGameEndConditions_();
 };

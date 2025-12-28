@@ -47,7 +47,7 @@ void MainGameState::handleInput()
     }
 }
 
-void MainGameState::checkGameEndConditions()
+void MainGameState::checkGameEndConditions_()
 {
     auto playerView = registry.view<TransformComponent, PlayerStatsComponent, PlayerInputComponent>();
     if (!playerView) {
@@ -100,10 +100,10 @@ void MainGameState::update(float deltaTime)
     CollisionSystem(registry, map_); // Chequeo de colisiones
     MechanismSystem(registry, map_);
 
-    checkGameEndConditions();
+    checkGameEndConditions_();
 }
 
-void MainGameState::renderMap()
+void MainGameState::renderMap_()
 {
     // Dimensiones
     const int mapWpx = map_.width()  * tile_;
@@ -122,7 +122,7 @@ void MainGameState::renderMap()
     RenderSystem(registry, (float)ox, (float)oy, (float)map_.tile());
 }
 
-void MainGameState::renderHUD()
+void MainGameState::renderHUD_()
 {
     const float baseY = (float)(GetScreenHeight() - HUD_HEIGHT); // HUD siempre abajo
     // Fondo del HUD a lo ancho de la ventana
@@ -147,10 +147,10 @@ void MainGameState::renderHUD()
     DrawRectangleRoundedLinesEx(livesHud, 0.25f, 6, 1.0f, DARKGRAY);
     DrawText("Vidas", (int)livesHud.x + 10, (int)livesHud.y + 6, 16, DARKGRAY);
 
-    renderPlayerHUD(bagHud, livesHud, baseY);
+    renderPlayerHUD_(bagHud, livesHud, baseY);
 }
 
-void MainGameState::renderPlayerHUD(const Rectangle& bagHud, const Rectangle& livesHud, float baseY)
+void MainGameState::renderPlayerHUD_(const Rectangle& bagHud, const Rectangle& livesHud, float baseY)
 {
     // --------------------------------------------------------
     // 2. HUD - INTERFAZ DE USUARIO (Lectura desde ECS)
@@ -229,7 +229,7 @@ void MainGameState::renderPlayerHUD(const Rectangle& bagHud, const Rectangle& li
     }
 }
 
-void MainGameState::renderTimerAndLevel()
+void MainGameState::renderTimerAndLevel_()
 {
     // Mostrar temporizador centrado encima del HUD (formato mm:ss)
     int timerFont = 22;
@@ -248,7 +248,7 @@ void MainGameState::renderTimerAndLevel()
 void MainGameState::render()
 {
     ClearBackground(RAYWHITE);
-    renderMap();
-    renderHUD();
-    renderTimerAndLevel();
+    renderMap_();
+    renderHUD_();
+    renderTimerAndLevel_();
 }
