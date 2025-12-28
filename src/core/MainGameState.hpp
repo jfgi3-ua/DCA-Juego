@@ -36,7 +36,6 @@ class MainGameState : public GameState
         void loadLevelEntities();
 
     private:
-        char entered_key;
         // Mapa del juego
         Map map_;
         int tile_ = 32;
@@ -61,4 +60,7 @@ class MainGameState : public GameState
         void renderHUD();
         void renderPlayerHUD(const Rectangle& bagHud, const Rectangle& livesHud, float baseY);
         void renderTimerAndLevel();
+
+        // Método para verificar condiciones de fin de juego
+        void checkGameEndConditions();
 };

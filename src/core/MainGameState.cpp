@@ -47,6 +47,32 @@ void MainGameState::handleInput()
     }
 }
 
+void MainGameState::checkGameEndConditions()
+{
+    auto playerView = registry.view<TransformComponent, PlayerStatsComponent, PlayerInputComponent>();
+    if (!playerView) return;
+
+    auto playerEntity = *playerView.begin();
+    const auto &stats = playerView.get<PlayerStatsComponent>(playerEntity);
+    const auto &trans = playerView.get<TransformComponent>(playerEntity);
+
+    // Derrota por vidas
+    if (stats.lives <= 0) {
+        this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, levelTime_, false), true);
+        return;
+    }
+
+    // Victoria por salida + llaves
+    int cellX = (int)(trans.position.x / tile_);
+    int cellY = (int)(trans.position.y / tile_);
+    if (cellX >= 0 && cellY >= 0 && cellX < map_.width() && cellY < map_.height()) {
+        if (map_.at(cellX, cellY) == 'X' && stats.keysCollected >= totalKeysInMap_) {
+            bool gameFinished = (level_ >= 6);
+            this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, gameFinished), true);
+        }
+    }
+}
+
 void MainGameState::update(float deltaTime)
 {
     // Reducir temporizador de nivel (excepto si está en modo tiempo infinito)
@@ -72,34 +98,7 @@ void MainGameState::update(float deltaTime)
     CollisionSystem(registry, map_); // Chequeo de colisiones
     MechanismSystem(registry, map_);
 
-    // --- FLUJO DE JUEGO ECS: derrota/victoria ---
-    auto playerView = registry.view<TransformComponent, PlayerStatsComponent, PlayerInputComponent>();
-    if (playerView) {
-        auto playerEntity = *playerView.begin();
-        const auto &stats = playerView.get<PlayerStatsComponent>(playerEntity);
-        const auto &trans = playerView.get<TransformComponent>(playerEntity);
-
-        // Derrota por vidas
-        if (stats.lives <= 0) {
-            this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, levelTime_, false), true);
-            return;
-        }
-
-        // Victoria por salida + llaves
-        int cellX = (int)(trans.position.x / tile_);
-        int cellY = (int)(trans.position.y / tile_);
-        if (cellX >= 0 && cellY >= 0 && cellX < map_.width() && cellY < map_.height()) {
-            if (map_.at(cellX, cellY) == 'X' && stats.keysCollected >= totalKeysInMap_) {
-                if (level_ >= 6) {
-                    this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, true), true);
-                } else {
-                    this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, false), true);
-                }
-                return;
-            }
-        }
-    }
-
+    checkGameEndConditions();
 }
 
 void MainGameState::renderMap()
