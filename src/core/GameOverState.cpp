@@ -4,6 +4,11 @@ extern "C" {
     #include <raylib.h>
 }
 
+// Definiciones de constantes estáticas
+const std::string GameOverState::TEX_BUTTON_NEXT = "sprites/icons/boton_siguiente_nivel.png";
+const std::string GameOverState::TEX_BUTTON_EXIT = "sprites/icons/boton_salir.png";
+const std::string GameOverState::TEX_BUTTON_RESTART = "sprites/icons/boton_reiniciar.png";
+
 GameOverState::GameOverState(int nivel, bool die, float time, bool isVictory)
 {
     isDead_ = die;
@@ -26,12 +31,12 @@ void GameOverState::loadSprites_(const std::vector<std::string>& sprites) {
 void GameOverState::init() {
     // Cargar sprites necesarios
     if (isVictory_) {
-        loadSprites_(spritesPaths_.victorySprites_);
+        loadSprites_(spritesPaths_.victorySprites);
     } else if (isDead_) {
-        loadSprites_(spritesPaths_.deathSprites_);
+        loadSprites_(spritesPaths_.deathSprites);
     } else {
         // Nivel completado - cargar background y botones
-        loadSprites_(spritesPaths_.levelCompletedSprites_);
+        loadSprites_(spritesPaths_.levelCompletedSprites);
     }
 }
 
@@ -159,10 +164,54 @@ void GameOverState::handleInput() {
 
 void GameOverState::update(float) {}
 
+void GameOverState::renderButtons_(const ButtonConfig& config, const std::string& tex1, const std::string& tex2, bool useHover) {
+    auto& rm = ResourceManager::Get();
+
+    const Texture2D& t1 = rm.GetTexture(tex1);
+    const Texture2D& t2 = rm.GetTexture(tex2);
+
+    float totalWidth = (config.buttonWidth * 2) + config.spacing;
+    float startX = (WINDOW_WIDTH - totalWidth) / 2.0f;
+
+    Rectangle button1Rect = {startX, config.yPos, config.buttonWidth, config.buttonHeight};
+    Rectangle button2Rect = {startX + config.buttonWidth + config.spacing, config.yPos, config.buttonWidth, config.buttonHeight};
+
+    Color color1 = (selectedOption_ == 0) ? WHITE : Color{180, 180, 180, 255};
+    Color color2 = (selectedOption_ == 1) ? WHITE : Color{180, 180, 180, 255};
+
+    if (useHover) {
+        Vector2 mousePos = GetMousePosition();
+
+        Rectangle click1 = {
+            startX + config.clickPaddingX,
+            config.yPos + config.clickPaddingY,
+            config.buttonWidth - (config.clickPaddingX * 2),
+            config.buttonHeight - (config.clickPaddingY * 2)
+        };
+
+        Rectangle click2 = {
+            startX + config.buttonWidth + config.spacing + config.clickPaddingX,
+            config.yPos + config.clickPaddingY,
+            config.buttonWidth - (config.clickPaddingX * 2),
+            config.buttonHeight - (config.clickPaddingY * 2)
+        };
+
+        if (CheckCollisionPointRec(mousePos, click1)) {
+            color1 = WHITE;
+        }
+
+        if (CheckCollisionPointRec(mousePos, click2)) {
+            color2 = WHITE;
+        }
+    }
+
+    DrawTexturePro(t1, {0, 0, (float)t1.width, (float)t1.height}, button1Rect, {0, 0}, 0.0f, color1);
+    DrawTexturePro(t2, {0, 0, (float)t2.width, (float)t2.height}, button2Rect, {0, 0}, 0.0f, color2);
+}
+
 void GameOverState::render()
 {
     ClearBackground(BLACK);
-    Vector2 mousePos = GetMousePosition();
     auto& rm = ResourceManager::Get();
 
     // Dibujar background si existe (victoria, muerte o nivel completado)
@@ -175,7 +224,7 @@ void GameOverState::render()
         );
     }
 
-    // --- RENDERIZADO ESPECÍFICO SEGÚN EL ESTADO ---
+    // Dibujar información según el estado
     if (!isDead_ && !isVictory_) {
         // Mostrar solo tiempo restante en amarillo con reborde negro
         int totalSeconds = (int)remainingTime_;
@@ -183,31 +232,30 @@ void GameOverState::render()
         int seconds = totalSeconds % 60;
         char timeText[32];
         sprintf(timeText, "Tiempo restante: %02d:%02d", minutes, seconds);
-        int timeWidth = MeasureText(timeText, 35);
+        int timeWidth = MeasureText(timeText, TIME_FONT_SIZE);
         int textX = (WINDOW_WIDTH - timeWidth) / 2;
-        int textY = 250;
+        int textY = TIME_TEXT_Y;
         
         // Dibujar reborde negro (dibujando el texto desplazado en 8 direcciones)
-        int offset = 2;
+        int offset = TEXT_OFFSET;
         for (int dx = -offset; dx <= offset; dx++) {
             for (int dy = -offset; dy <= offset; dy++) {
                 if (dx != 0 || dy != 0) {
-                    DrawText(timeText, textX + dx, textY + dy, 35, BLACK);
+                    DrawText(timeText, textX + dx, textY + dy, TIME_FONT_SIZE, BLACK);
                 }
             }
         }
         
         // Dibujar texto amarillo encima
-        DrawText(timeText, textX, textY, 35, GOLD);
+        DrawText(timeText, textX, textY, TIME_FONT_SIZE, GOLD);
     } else if (isVictory_) {
-        // VICTORIA - Dibujar sprite de congratulations encima del background
         const Texture2D& congrats = rm.GetTexture("sprites/menus/items_congratulations.png");
         
-        float scale = 0.35f;
+        float scale = CONGRATS_SCALE;
         float width = congrats.width * scale;
         float height = congrats.height * scale;
         float x = (WINDOW_WIDTH - width) / 2.0f;
-        float y = 100;
+        float y = CONGRATS_Y;
         
         DrawTexturePro(
             congrats,
@@ -216,14 +264,13 @@ void GameOverState::render()
             {0, 0}, 0.0f, WHITE
         );
     } else {
-        // GAME OVER - Dibujar sprite con huesos encima del background
         const Texture2D& gameOver = rm.GetTexture("sprites/menus/game_over.png");
         
-        float scale = 0.45f;
+        float scale = GAME_OVER_SCALE;
         float width = gameOver.width * scale;
         float height = gameOver.height * scale;
         float x = (WINDOW_WIDTH - width) / 2.0f;
-        float y = 80;
+        float y = GAME_OVER_Y;
         
         DrawTexturePro(
             gameOver,
@@ -233,134 +280,12 @@ void GameOverState::render()
         );
     }
 
-    // --- Botones ---
+    // Renderizar botones según el estado
     if (!isDead_ && !isVictory_) {
-        // Botones con sprites para nivel completado
-        const Texture2D& botonSiguiente = rm.GetTexture("sprites/icons/boton_siguiente_nivel.png");
-        const Texture2D& botonSalir = rm.GetTexture("sprites/icons/boton_salir.png");
-        
-        float buttonWidth = 400;
-        float buttonHeight = 120;
-        float buttonSpacing = 100;
-        float totalWidth = (buttonWidth * 2) + buttonSpacing;
-        float startX = (WINDOW_WIDTH - totalWidth) / 2.0f;
-        float buttonY = 380;
-        
-        // Dibujar botón Siguiente Nivel
-        Rectangle siguienteButton = {startX, buttonY, buttonWidth, buttonHeight};
-        DrawTexturePro(
-            botonSiguiente,
-            {0, 0, (float)botonSiguiente.width, (float)botonSiguiente.height},
-            siguienteButton,
-            {0, 0}, 0.0f,
-            (selectedOption_ == 0) ? WHITE : Color{180, 180, 180, 255}
-        );
-        
-        // Dibujar botón Salir
-        Rectangle salirButton = {startX + buttonWidth + buttonSpacing, buttonY, buttonWidth, buttonHeight};
-        DrawTexturePro(
-            botonSalir,
-            {0, 0, (float)botonSalir.width, (float)botonSalir.height},
-            salirButton,
-            {0, 0}, 0.0f,
-            (selectedOption_ == 1) ? WHITE : Color{180, 180, 180, 255}
-        );
+        renderButtons_(levelConfig_, TEX_BUTTON_NEXT, TEX_BUTTON_EXIT, false);
     } else if (isVictory_) {
-        // Botones con sprites para victoria - horizontal como en la imagen
-        const Texture2D& botonEmpezar = rm.GetTexture("sprites/icons/boton_reiniciar.png");
-        const Texture2D& botonSalir = rm.GetTexture("sprites/icons/boton_salir.png");
-        
-        float buttonWidth = 350;
-        float buttonHeight = 100;
-        float spacing = 80;
-        float totalWidth = (buttonWidth * 2) + spacing;
-        float startX = (WINDOW_WIDTH - totalWidth) / 2.0f;
-        float startY = WINDOW_HEIGHT - 200;
-        
-        float clickPadding = 40;
-        
-        // Botón EMPEZAR DE NUEVO
-        Rectangle empezarButton = {startX, startY, buttonWidth, buttonHeight};
-        Rectangle empezarClickArea = {
-            startX + clickPadding,
-            startY + clickPadding/2,
-            buttonWidth - (clickPadding * 2),
-            buttonHeight - clickPadding
-        };
-        bool empezarHover = CheckCollisionPointRec(mousePos, empezarClickArea);
-        
-        DrawTexturePro(
-            botonEmpezar,
-            {0, 0, (float)botonEmpezar.width, (float)botonEmpezar.height},
-            empezarButton,
-            {0, 0}, 0.0f,
-            (selectedOption_ == 0 || empezarHover) ? WHITE : Color{180, 180, 180, 255}
-        );
-        
-        // Botón SALIR
-        Rectangle salirButton = {startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight};
-        Rectangle salirClickArea = {
-            startX + buttonWidth + spacing + clickPadding,
-            startY + clickPadding/2,
-            buttonWidth - (clickPadding * 2),
-            buttonHeight - clickPadding
-        };
-        bool salirHover = CheckCollisionPointRec(mousePos, salirClickArea);
-        
-        DrawTexturePro(
-            botonSalir,
-            {0, 0, (float)botonSalir.width, (float)botonSalir.height},
-            salirButton,
-            {0, 0}, 0.0f,
-            (selectedOption_ == 1 || salirHover) ? WHITE : Color{180, 180, 180, 255}
-        );
+        renderButtons_(otherConfig_, TEX_BUTTON_RESTART, TEX_BUTTON_EXIT, true);
     } else {
-        // GAME OVER - Botones horizontales con sprites
-        const Texture2D& botonReiniciar = rm.GetTexture("sprites/icons/boton_reiniciar.png");
-        const Texture2D& botonSalir = rm.GetTexture("sprites/icons/boton_salir.png");
-        
-        float buttonWidth = 350;
-        float buttonHeight = 100;
-        float spacing = 80;
-        float totalWidth = (buttonWidth * 2) + spacing;
-        float startX = (WINDOW_WIDTH - totalWidth) / 2.0f;
-        float startY = WINDOW_HEIGHT - 200;
-        float clickPadding = 40;
-        
-        // Botón REINICIAR
-        Rectangle reiniciarButton = {startX, startY, buttonWidth, buttonHeight};
-        Rectangle reiniciarClickArea = {
-            startX + clickPadding,
-            startY + clickPadding/2,
-            buttonWidth - (clickPadding * 2),
-            buttonHeight - clickPadding
-        };
-        bool reiniciarHover = CheckCollisionPointRec(mousePos, reiniciarClickArea);
-        
-        DrawTexturePro(
-            botonReiniciar,
-            {0, 0, (float)botonReiniciar.width, (float)botonReiniciar.height},
-            reiniciarButton,
-            {0, 0}, 0.0f,
-            (selectedOption_ == 0 || reiniciarHover) ? WHITE : Color{180, 180, 180, 255}
-        );
-        
-        // Botón SALIR
-        Rectangle salirButton = {startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight};
-        Rectangle salirClickArea = {
-            startX + buttonWidth + spacing + clickPadding,
-            startY + clickPadding/2,
-            buttonWidth - (clickPadding * 2),
-            buttonHeight - clickPadding
-        };
-        bool salirHover = CheckCollisionPointRec(mousePos, salirClickArea);
-        
-        DrawTexturePro(
-            botonSalir,
-            {0, 0, (float)botonSalir.width, (float)botonSalir.height},
-            salirButton,
-            {0, 0}, 0.0f,
-            (selectedOption_ == 1 || salirHover) ? WHITE : Color{180, 180, 180, 255}
-        );
+        renderButtons_(otherConfig_, TEX_BUTTON_RESTART, TEX_BUTTON_EXIT, true);
     }
 }
