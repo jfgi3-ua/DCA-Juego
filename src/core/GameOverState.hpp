@@ -30,6 +30,15 @@ struct spritesPaths {
     };
 };
 
+struct ButtonConfig {
+    float buttonWidth;
+    float buttonHeight;
+    float spacing;
+    float yPos;
+    float clickPaddingX;
+    float clickPaddingY;
+};
+
 class GameOverState : public GameState
 {
     public:
@@ -45,19 +54,28 @@ class GameOverState : public GameState
         void resume() override {}
 
     private:
+        // Variables de estado
         int currentLevel_ = 1;
         Color backgroundColor_ = GRAY;
         float remainingTime_;
         int selectedOption_ = 0;
+
         bool isDead_ = false;     // true si el jugador murió
         bool isVictory_ = false;  // true si es victoria total (completó todos los niveles)
         
+        // Struct para rutas de sprites
         spritesPaths spritesPaths_;
 
-        //para cuando tengamos sprites
+        // Configuraciones de botones
+        ButtonConfig levelConfig_ = {400, 120, 100, 380, 50, 30};
+        ButtonConfig otherConfig_ = {350, 100, 80, WINDOW_HEIGHT - 200, 40, 20};
+
+        // Para cuando tengamos sprites
         const Texture2D* titulo_ = nullptr;
         const Texture2D* background_ = nullptr;
 
         // Funciones auxiliares
         void loadSprites_(const std::vector<std::string>& sprites);
+        void handleButtons_(const Rectangle& button1Area, const Rectangle& button2Area, std::function<void()> action1, std::function<void()> action2);
+        void handleConfig_(const ButtonConfig& config, std::function<void()> action1, std::function<void()> action2);
 };
