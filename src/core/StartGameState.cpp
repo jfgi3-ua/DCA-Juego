@@ -132,7 +132,6 @@ void StartGameState::render() {
     // Dibujar título (escalado para caber en la pantalla)
     float titleScale = 0.3f; // Reducir el título más
     float titleWidth = title.width * titleScale;
-    float titleHeight = title.height * titleScale;
     float titleX = (WINDOW_WIDTH - titleWidth) / 2.0f;
     float titleY = 50.0f; // Posición fija desde arriba
     

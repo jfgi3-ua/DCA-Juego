@@ -10,6 +10,6 @@
 #include "ecs/components/World/ItemComponent.hpp"
 #include "ecs/components/World/SpikeComponent.hpp"
 #include "ecs/components/World/MovementComponent.hpp"
-#include "ecs/components/EnemyComponents.hpp"
+#include "ecs/components/Enemy/EnemyIAComponent.hpp"
 
 void CollisionSystem(entt::registry &registry, Map &map);

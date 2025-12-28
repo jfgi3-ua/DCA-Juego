@@ -21,7 +21,7 @@ void Player::init(Vector2 startPos, float radius, int lives, const std::string& 
  * Movimiento con detección de colisiones usando el mapa.
  * No se mueve por casillas: es continuo, con control por teclado.
  */
-void Player::handleInput(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles)
+void Player::handleInput(const Map& map, const std::vector<Vector2>& blockedTiles)
 {
     // Si ya estamos moviéndonos, ignorar nuevos inputs aquí
     if (moving_) return;
@@ -87,7 +87,7 @@ void Player::update(float deltaTime, const Map& map, const std::vector<Vector2>&
             position_.y = move_start_.y + (move_target_.y - move_start_.y) * t;
         }
     } else {
-        handleInput(deltaTime, map, blockedTiles);
+        handleInput(map, blockedTiles);
     }
     if (invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION) {
         invulnerableTimer_ += deltaTime;

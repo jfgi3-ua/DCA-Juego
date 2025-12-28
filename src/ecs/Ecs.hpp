@@ -25,7 +25,7 @@
 #include "ecs/components/Player/PlayerStatsComponent.hpp"
 
 // Componentes de Enemy
-#include "ecs/components/EnemyComponents.hpp"
+#include "ecs/components/Enemy/EnemyIAComponent.hpp"
 
 #include "ecs/systems/PlayerSystems.hpp"
 #include "ecs/systems/EnemySystems.hpp"
