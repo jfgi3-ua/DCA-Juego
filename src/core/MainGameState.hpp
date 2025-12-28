@@ -1,14 +1,21 @@
 #pragma once
 #include <iostream>
 #include <vector>
+
 #include "Config.hpp"
 #include "GameState.hpp"
 #include "objects/Map.hpp"
 #include "objects/Player.hpp"
-#include "objects/Spikes.hpp"
+#include "GameOverState.hpp"
+#include "DevModeState.hpp"
+#include "StateMachine.hpp"
+#include "ResourceManager.hpp"
+#include "ecs/Ecs.hpp"
+
 extern "C" {
   #include <raylib.h>
 }
+
 #include <entt/entt.hpp>  // Librería ECS
 
 class MainGameState : public GameState

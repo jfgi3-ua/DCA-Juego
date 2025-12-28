@@ -1,13 +1,4 @@
-#include <iostream>
 #include "MainGameState.hpp"
-#include "GameOverState.hpp"
-#include "DevModeState.hpp"
-#include "StateMachine.hpp"
-#include "ResourceManager.hpp"
-#include "ecs/Ecs.hpp"
-extern "C" {
-  #include <raylib.h>
-}
 
 MainGameState::MainGameState(int level)
 {
