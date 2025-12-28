@@ -11,7 +11,6 @@ void MainGameState::init()
     std::string relativePath = "maps/map_" + std::to_string(level_) + ".txt";
     std::string absolutePath = rm.GetAssetPath(relativePath);
 
-    //std::string absolutePath = "/usr/share/game/assets/maps/map_1.txt"; //probando poque da error al intentar abrilo en carpeta random
     map_.loadFromFile(absolutePath, TILE_SIZE);
     map_.loadTextures(); //lo llamamos aqui ya q tambien se llama en main y no se pueden cargar texturas antes de InitWindow
     tile_ = map_.tile();
@@ -103,9 +102,8 @@ void MainGameState::update(float deltaTime)
 
 }
 
-void MainGameState::render()
+void MainGameState::renderMap()
 {
-    ClearBackground(RAYWHITE);
     auto& rm = ResourceManager::Get();
 
     // Dimensiones
@@ -115,8 +113,6 @@ void MainGameState::render()
     const int viewH  = GetScreenHeight() - HUD_HEIGHT; // Espacio disponible sin el HUD
 
     // Offset centrado (clamp >= 0) - El mapa queda centrado en el espacio disponible
-    // const int ox = std::max(0, (viewW - mapWpx) / 2);
-    // const int oy = std::max(0, (viewH - mapHpx) / 2);
     const int ox = (viewW > mapWpx) ? (viewW - mapWpx) / 2 : 0;
     const int oy = (viewH > mapHpx) ? (viewH - mapHpx) / 2 : 0;
 
@@ -125,8 +121,10 @@ void MainGameState::render()
 
     RenderMechanismSystem(registry, ox, oy);
     RenderSystem(registry, (float)ox, (float)oy, (float)map_.tile());
+}
 
-    // 4) HUD inferior - se coloca en la parte inferior de la ventana
+void MainGameState::renderHUD()
+{
     const float baseY = (float)(GetScreenHeight() - HUD_HEIGHT); // HUD siempre abajo
     // Fondo del HUD a lo ancho de la ventana
     Rectangle hudBg{ 0.0f, baseY, (float)GetScreenWidth(), (float)HUD_HEIGHT };
@@ -150,11 +148,17 @@ void MainGameState::render()
     DrawRectangleRoundedLinesEx(livesHud, 0.25f, 6, 1.0f, DARKGRAY);
     DrawText("Vidas", (int)livesHud.x + 10, (int)livesHud.y + 6, 16, DARKGRAY);
 
+    renderPlayerHUD(bagHud, livesHud, baseY);
+}
+
+void MainGameState::renderPlayerHUD(const Rectangle& bagHud, const Rectangle& livesHud, float baseY)
+{
     // --------------------------------------------------------
     // 2. HUD - INTERFAZ DE USUARIO (Lectura desde ECS)
     // --------------------------------------------------------
 
     // Obtenemos la textura de iconos (Corazones y Llaves)
+    auto& rm = ResourceManager::Get();
     Texture2D iconsTex = rm.GetTexture("sprites/icons/Icons.png");
 
     // Buscamos la entidad que sea JUGADOR (tiene Stats y Input)
@@ -224,8 +228,10 @@ void MainGameState::render()
             }
         }
     }
+}
 
-
+void MainGameState::renderTimerAndLevel()
+{
     // Mostrar temporizador centrado encima del HUD (formato mm:ss)
     int timerFont = 22;
     int minutes = (int)levelTime_ / 60;
@@ -233,10 +239,17 @@ void MainGameState::render()
     std::string timeText = "Tiempo: " + std::to_string(minutes) + ":" +
                           (seconds < 10 ? "0" : "") + std::to_string(seconds);
     int textW = MeasureText(timeText.c_str(), timerFont);
-    DrawText(timeText.c_str(), (GetScreenWidth() - textW) / 2, (int)baseY + 8, timerFont, DARKGRAY);
+    DrawText(timeText.c_str(), (GetScreenWidth() - textW) / 2, (int)(GetScreenHeight() - HUD_HEIGHT) + 8, timerFont, DARKGRAY);
 
     // Mostrar nivel actual arriba a la izquierda
     std::string levelText = "Nivel: " + std::to_string(level_);
     DrawText(levelText.c_str(), 10, 10, 24, DARKGRAY);
+}
 
+void MainGameState::render()
+{
+    ClearBackground(RAYWHITE);
+    renderMap();
+    renderHUD();
+    renderTimerAndLevel();
 }

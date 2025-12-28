@@ -6,6 +6,7 @@
 #include "GameState.hpp"
 #include "objects/Map.hpp"
 #include "objects/Player.hpp"
+#include "objects/Spikes.hpp"
 #include "GameOverState.hpp"
 #include "DevModeState.hpp"
 #include "StateMachine.hpp"
@@ -54,4 +55,10 @@ class MainGameState : public GameState
         bool freezeEnemies_ = false;     // Enemigos congelados
         bool infiniteTime_ = false;      // Tiempo infinito
         bool keyGivenByCheating_ = false; // Track si la llave fue obtenida por cheat
+
+        // Métodos privados para renderizado
+        void renderMap();
+        void renderHUD();
+        void renderPlayerHUD(const Rectangle& bagHud, const Rectangle& livesHud, float baseY);
+        void renderTimerAndLevel();
 };
