@@ -50,7 +50,9 @@ void MainGameState::handleInput()
 void MainGameState::checkGameEndConditions()
 {
     auto playerView = registry.view<TransformComponent, PlayerStatsComponent, PlayerInputComponent>();
-    if (!playerView) return;
+    if (!playerView) {
+        return;
+    }
 
     auto playerEntity = *playerView.begin();
     const auto &stats = playerView.get<PlayerStatsComponent>(playerEntity);
