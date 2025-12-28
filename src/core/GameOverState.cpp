@@ -1,8 +1,4 @@
 #include "GameOverState.hpp"
-#include <iostream>
-#include "StateMachine.hpp"
-#include "MainGameState.hpp"
-#include "ResourceManager.hpp"
 
 extern "C" {
     #include <raylib.h>
@@ -13,35 +9,31 @@ GameOverState::GameOverState(int nivel, bool die, float time, bool isVictory)
     dead = die;
     remainingTime = time;
     isVictory_ = isVictory;
-    backgroundColor = isVictory_ ? GOLD : (dead ? RED : DARKGREEN); //si añadimos sprites eliminar color de fondo
+    backgroundColor = isVictory_ ? GOLD : (dead ? RED : DARKGREEN); // Si añadimos sprites eliminar color de fondo
     currentLevel = nivel;
 }
 
-GameOverState::~GameOverState() {
-}
-
-void GameOverState::init() {
+void GameOverState::loadSprites_(const std::vector<std::string>& sprites) {
     auto& rm = ResourceManager::Get();
-
-    // Cargar sprites necesarios
-    if (isVictory_) {
-        background = &rm.GetTexture("sprites/menus/background_congratulations.png");
-        rm.GetTexture("sprites/menus/items_congratulations.png");
-        rm.GetTexture("sprites/icons/boton_reiniciar.png"); // Para "EMPEZAR DE NUEVO"
-        rm.GetTexture("sprites/icons/boton_salir.png");
-    } else if (dead) {
-        background = &rm.GetTexture("sprites/menus/game_over_background.png");
-        rm.GetTexture("sprites/menus/game_over.png");
-        rm.GetTexture("sprites/icons/boton_reiniciar.png");
-        rm.GetTexture("sprites/icons/boton_salir.png");
-    } else {
-        // Nivel completado - cargar background y botones
-        background = &rm.GetTexture("sprites/menus/background_pasar_nivel.png");
-        rm.GetTexture("sprites/icons/boton_siguiente_nivel.png");
-        rm.GetTexture("sprites/icons/boton_salir.png");
+    if (!sprites.empty()) {
+        background = &rm.GetTexture(sprites[0]);
+        for (size_t i = 1; i < sprites.size(); ++i) {
+            rm.GetTexture(sprites[i]);
+        }
     }
 }
 
+void GameOverState::init() {
+    // Cargar sprites necesarios
+    if (isVictory_) {
+        loadSprites_(spritesPaths_.victorySprites_);
+    } else if (dead) {
+        loadSprites_(spritesPaths_.deathSprites_);
+    } else {
+        // Nivel completado - cargar background y botones
+        loadSprites_(spritesPaths_.levelCompletedSprites_);
+    }
+}
 
 void GameOverState::handleInput() {
     Vector2 mousePos = GetMousePosition();
@@ -151,6 +143,7 @@ void GameOverState::handleInput() {
             if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
                 selectedOption = !selectedOption;
             }
+
         } else {
             // Muerte: botones horizontales con sprites
             float buttonWidth = 350;
@@ -217,8 +210,7 @@ void GameOverState::handleInput() {
     }
 }
 
-void GameOverState::update(float) {
-}
+void GameOverState::update(float) {}
 
 void GameOverState::render()
 {
