@@ -2,6 +2,7 @@
 #include "StateMachine.hpp"
 #include "ResourceManager.hpp"
 #include "PlayerSpriteCatalog.hpp"
+#include "SelectPlayerState.hpp"
 #include <iostream>
 
 extern "C" {
@@ -61,7 +62,7 @@ void StartGameState::handleInput() {
         selectedOption = 0;
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             std::cout << "Clic en JUGAR" << std::endl;
-            this->state_machine->add_state(std::make_unique<MainGameState>(), true);
+            this->state_machine->add_state(std::make_unique<SelectPlayerState>(), true);
             return;
         }
     }
@@ -86,7 +87,7 @@ void StartGameState::handleInput() {
         if(selectedOption){
             this->state_machine->set_game_ending(true);
         }else{
-            this->state_machine->add_state(std::make_unique<MainGameState>(), true);
+            this->state_machine->add_state(std::make_unique<SelectPlayerState>(), true);
         }
     }
 }
