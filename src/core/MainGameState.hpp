@@ -25,26 +25,26 @@ class MainGameState : public GameState
         void pause(){};
         void resume(){};
 
-        void loadLevelEntities();
+        void _loadLevelEntities();
 
     private:
-        char entered_key;
+        char _entered_key;
         // Mapa del juego
-        Map map_;
-        int tile_ = 32;
-        int level_ = 1;
+        Map _map;
+        int _tile = 32;
+        int _level = 1;
 
         // Temporizador del nivel (segundos). 30s base + 30s por nivel
-        float levelTime_ = 30.0f;
+        float _levelTime = 30.0f;
 
         // Total de llaves en el mapa (guardado al inicio, no cambia)
-        int totalKeysInMap_ = 0;
+        int _totalKeysInMap = 0;
 
         // ECS registry
-        entt::registry registry;
+        entt::registry _registry;
 
         // ========== DEVELOPER MODE ==========
-        bool freezeEnemies_ = false;     // Enemigos congelados
-        bool infiniteTime_ = false;      // Tiempo infinito
-        bool keyGivenByCheating_ = false; // Track si la llave fue obtenida por cheat
+        bool _freezeEnemies = false;     // Enemigos congelados
+        bool _infiniteTime = false;      // Tiempo infinito
+        bool _keyGivenByCheating = false; // Track si la llave fue obtenida por cheat
 };
