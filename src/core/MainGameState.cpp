@@ -103,8 +103,6 @@ void MainGameState::update(float deltaTime)
 
 void MainGameState::renderMap()
 {
-    auto& rm = ResourceManager::Get();
-
     // Dimensiones
     const int mapWpx = map_.width()  * tile_;
     const int mapHpx = map_.height() * tile_;
