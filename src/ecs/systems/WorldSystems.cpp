@@ -40,7 +40,7 @@ void AnimationSystem(entt::registry &registry, float deltaTime) {
         auto &move = view.get<MovementComponent>(entity);
         auto &anim = view.get<AnimationComponent>(entity);
 
-        bool wantWalk = move.isMoving;
+        bool wantWalk = move.isMoving || move.wantsMove;
         if (wantWalk != anim.isWalking) {
             anim.isWalking = wantWalk;
             sprite.texture = anim.isWalking ? anim.walkTexture : anim.idleTexture;
