@@ -15,8 +15,6 @@ void InputSystem(entt::registry &registry, const Map &map) {
         auto &playerState = view.get<PlayerStateComponent>(entity);
         auto &cheats = view.get<PlayerCheatComponent>(entity);
 
-        if (move.isMoving) continue;
-
         int dx = 0;
         int dy = 0;
 
@@ -25,7 +23,8 @@ void InputSystem(entt::registry &registry, const Map &map) {
         else if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) dx = -1;
         else if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) dx = 1;
 
-        if (dx == 0 && dy == 0) continue;
+        move.wantsMove = (dx != 0 || dy != 0);
+        if (move.isMoving || !move.wantsMove) continue;
 
         if (dx > 0) sprite.flipX = false;
         else if (dx < 0) sprite.flipX = true;
