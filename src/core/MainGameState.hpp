@@ -1,14 +1,20 @@
 #pragma once
-#include <iostream>
-#include <vector>
+
 #include "Config.hpp"
 #include "GameState.hpp"
 #include "objects/Map.hpp"
 #include "objects/Player.hpp"
 #include "objects/Spikes.hpp"
+#include "GameOverState.hpp"
+#include "DevModeState.hpp"
+#include "StateMachine.hpp"
+#include "ResourceManager.hpp"
+#include "ecs/Ecs.hpp"
+
 extern "C" {
   #include <raylib.h>
 }
+
 #include <entt/entt.hpp>  // Librería ECS
 
 class MainGameState : public GameState
@@ -28,7 +34,6 @@ class MainGameState : public GameState
         void loadLevelEntities();
 
     private:
-        char entered_key;
         // Mapa del juego
         Map map_;
         int tile_ = 32;
@@ -47,4 +52,13 @@ class MainGameState : public GameState
         bool freezeEnemies_ = false;     // Enemigos congelados
         bool infiniteTime_ = false;      // Tiempo infinito
         bool keyGivenByCheating_ = false; // Track si la llave fue obtenida por cheat
+
+        // Métodos privados para renderizado
+        void renderMap_();
+        void renderHUD_();
+        void renderPlayerHUD_(const Rectangle& bagHud, const Rectangle& livesHud, float baseY);
+        void renderTimerAndLevel_();
+
+        // Método para verificar condiciones de fin de juego
+        void checkGameEndConditions_();
 };

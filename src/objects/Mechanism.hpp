@@ -7,13 +7,6 @@ extern "C" {
   #include <raylib.h>
 }
 
-enum class MechanismType {
-    DOOR,
-    TRAP,
-    BRIDGE,
-    LEVER,
-};
-
 class Mechanism {
 private:
     MechanismType type_;
@@ -35,7 +28,7 @@ private:
 
 
 public:
-    Mechanism(char type, IVec2 trigger, IVec2 target);
+    Mechanism(MechanismType type, IVec2 trigger, IVec2 target);
 
     IVec2 getTriggerPos() const { return triggerPos_; }
     IVec2 getTargetPos() const { return targetPos_; }
