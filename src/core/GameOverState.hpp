@@ -45,18 +45,18 @@ class GameOverState : public GameState
         void resume() override {}
 
     private:
-        int currentLevel = 1;
-        Color backgroundColor = GRAY;
-        bool dead;
-        float remainingTime;
-        int selectedOption = 0;
+        int currentLevel_ = 1;
+        Color backgroundColor_ = GRAY;
+        float remainingTime_;
+        int selectedOption_ = 0;
+        bool isDead_ = false;     // true si el jugador murió
         bool isVictory_ = false;  // true si es victoria total (completó todos los niveles)
         
         spritesPaths spritesPaths_;
 
         //para cuando tengamos sprites
-        const Texture2D* titulo = nullptr;
-        const Texture2D* background = nullptr;
+        const Texture2D* titulo_ = nullptr;
+        const Texture2D* background_ = nullptr;
 
         // Funciones auxiliares
         void loadSprites_(const std::vector<std::string>& sprites);

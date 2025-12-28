@@ -6,17 +6,17 @@ extern "C" {
 
 GameOverState::GameOverState(int nivel, bool die, float time, bool isVictory)
 {
-    dead = die;
-    remainingTime = time;
+    isDead_ = die;
+    remainingTime_ = time;
     isVictory_ = isVictory;
-    backgroundColor = isVictory_ ? GOLD : (dead ? RED : DARKGREEN); // Si añadimos sprites eliminar color de fondo
-    currentLevel = nivel;
+    backgroundColor_ = isVictory_ ? GOLD : (isDead_ ? RED : DARKGREEN); // Si añadimos sprites eliminar color de fondo
+    currentLevel_ = nivel;
 }
 
 void GameOverState::loadSprites_(const std::vector<std::string>& sprites) {
     auto& rm = ResourceManager::Get();
     if (!sprites.empty()) {
-        background = &rm.GetTexture(sprites[0]);
+        background_ = &rm.GetTexture(sprites[0]);
         for (size_t i = 1; i < sprites.size(); ++i) {
             rm.GetTexture(sprites[i]);
         }
@@ -27,7 +27,7 @@ void GameOverState::init() {
     // Cargar sprites necesarios
     if (isVictory_) {
         loadSprites_(spritesPaths_.victorySprites_);
-    } else if (dead) {
+    } else if (isDead_) {
         loadSprites_(spritesPaths_.deathSprites_);
     } else {
         // Nivel completado - cargar background y botones
@@ -39,7 +39,7 @@ void GameOverState::handleInput() {
     Vector2 mousePos = GetMousePosition();
     
     // Configurar rectángulos de botones según el estado
-    if (!dead && !isVictory_) {
+    if (!isDead_ && !isVictory_) {
         // Nivel completado - botones horizontales con sprites
         float buttonWidth = 400;
         float buttonHeight = 120;
@@ -69,20 +69,20 @@ void GameOverState::handleInput() {
         };
         
         if (CheckCollisionPointRec(mousePos, button1Area)) {
-            selectedOption = 0;
+            selectedOption_ = 0;
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 std::cout << "Clic en SIGUIENTE NIVEL" << std::endl;
-                if (currentLevel >= 6) {
-                    this->state_machine->add_state(std::make_unique<GameOverState>(6, false, remainingTime, true), true);
+                if (currentLevel_ >= 6) {
+                    this->state_machine->add_state(std::make_unique<GameOverState>(6, false, remainingTime_, true), true);
                 } else {
-                    this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel + 1), true);
+                    this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel_ + 1), true);
                 }
                 return;
             }
         }
         
         if (CheckCollisionPointRec(mousePos, button2Area)) {
-            selectedOption = 1;
+            selectedOption_ = 1;
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 std::cout << "Clic en SALIR" << std::endl;
                 this->state_machine->set_game_ending(true);
@@ -92,7 +92,7 @@ void GameOverState::handleInput() {
         
         // Navegación con teclado horizontal
         if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
-            selectedOption = !selectedOption;
+            selectedOption_ = !selectedOption_;
         }
         
     } else {
@@ -122,7 +122,7 @@ void GameOverState::handleInput() {
             };
             
             if (CheckCollisionPointRec(mousePos, empezarClickArea)) {
-                selectedOption = 0;
+                selectedOption_ = 0;
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                     std::cout << "Clic en EMPEZAR DE NUEVO" << std::endl;
                     this->state_machine->add_state(std::make_unique<MainGameState>(1), true);
@@ -131,7 +131,7 @@ void GameOverState::handleInput() {
             }
             
             if (CheckCollisionPointRec(mousePos, salirClickArea)) {
-                selectedOption = 1;
+                selectedOption_ = 1;
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                     std::cout << "Clic en SALIR" << std::endl;
                     this->state_machine->set_game_ending(true);
@@ -141,7 +141,7 @@ void GameOverState::handleInput() {
             
             // Navegación con teclado horizontal
             if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
-                selectedOption = !selectedOption;
+                selectedOption_ = !selectedOption_;
             }
 
         } else {
@@ -169,16 +169,16 @@ void GameOverState::handleInput() {
             };
             
             if (CheckCollisionPointRec(mousePos, reiniciarClickArea)) {
-                selectedOption = 0;
+                selectedOption_ = 0;
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                     std::cout << "Clic en REINTENTAR" << std::endl;
-                    this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel), true);
+                    this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel_), true);
                     return;
                 }
             }
             
             if (CheckCollisionPointRec(mousePos, salirClickArea)) {
-                selectedOption = 1;
+                selectedOption_ = 1;
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                     std::cout << "Clic en SALIR" << std::endl;
                     this->state_machine->set_game_ending(true);
@@ -188,23 +188,23 @@ void GameOverState::handleInput() {
             
             // Navegación con teclado horizontal
             if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
-                selectedOption = !selectedOption;
+                selectedOption_ = !selectedOption_;
             }
         }
     }
 
     if (IsKeyPressed(KEY_ENTER)) {
-        if(selectedOption){
+        if(selectedOption_){
             this->state_machine->set_game_ending(true);
         }else{
             if (isVictory_) {
                 this->state_machine->add_state(std::make_unique<MainGameState>(1), true);
-            } else if (dead) {
-                this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel), true);
-            } else if (currentLevel >= 6) {
-                this->state_machine->add_state(std::make_unique<GameOverState>(6, false, remainingTime, true), true);
+            } else if (isDead_) {
+                this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel_), true);
+            } else if (currentLevel_ >= 6) {
+                this->state_machine->add_state(std::make_unique<GameOverState>(6, false, remainingTime_, true), true);
             } else {
-                this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel + 1), true);
+                this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel_ + 1), true);
             }
         }
     }
@@ -219,19 +219,19 @@ void GameOverState::render()
     auto& rm = ResourceManager::Get();
 
     // Dibujar background si existe (victoria, muerte o nivel completado)
-    if (background) {
+    if (background_) {
         DrawTexturePro(
-            *background,
-            {0, 0, (float)background->width, (float)background->height},
+            *background_,
+            {0, 0, (float)background_->width, (float)background_->height},
             {0, 0, (float)WINDOW_WIDTH, (float)WINDOW_HEIGHT},
             {0, 0}, 0.0f, WHITE
         );
     }
 
     // --- RENDERIZADO ESPECÍFICO SEGÚN EL ESTADO ---
-    if (!dead && !isVictory_) {
+    if (!isDead_ && !isVictory_) {
         // Mostrar solo tiempo restante en amarillo con reborde negro
-        int totalSeconds = (int)remainingTime;
+        int totalSeconds = (int)remainingTime_;
         int minutes = totalSeconds / 60;
         int seconds = totalSeconds % 60;
         char timeText[32];
@@ -287,7 +287,7 @@ void GameOverState::render()
     }
 
     // --- Botones ---
-    if (!dead && !isVictory_) {
+    if (!isDead_ && !isVictory_) {
         // Botones con sprites para nivel completado
         const Texture2D& botonSiguiente = rm.GetTexture("sprites/icons/boton_siguiente_nivel.png");
         const Texture2D& botonSalir = rm.GetTexture("sprites/icons/boton_salir.png");
@@ -306,7 +306,7 @@ void GameOverState::render()
             {0, 0, (float)botonSiguiente.width, (float)botonSiguiente.height},
             siguienteButton,
             {0, 0}, 0.0f,
-            (selectedOption == 0) ? WHITE : Color{180, 180, 180, 255}
+            (selectedOption_ == 0) ? WHITE : Color{180, 180, 180, 255}
         );
         
         // Dibujar botón Salir
@@ -316,7 +316,7 @@ void GameOverState::render()
             {0, 0, (float)botonSalir.width, (float)botonSalir.height},
             salirButton,
             {0, 0}, 0.0f,
-            (selectedOption == 1) ? WHITE : Color{180, 180, 180, 255}
+            (selectedOption_ == 1) ? WHITE : Color{180, 180, 180, 255}
         );
     } else if (isVictory_) {
         // Botones con sprites para victoria - horizontal como en la imagen
@@ -347,7 +347,7 @@ void GameOverState::render()
             {0, 0, (float)botonEmpezar.width, (float)botonEmpezar.height},
             empezarButton,
             {0, 0}, 0.0f,
-            (selectedOption == 0 || empezarHover) ? WHITE : Color{180, 180, 180, 255}
+            (selectedOption_ == 0 || empezarHover) ? WHITE : Color{180, 180, 180, 255}
         );
         
         // Botón SALIR
@@ -365,7 +365,7 @@ void GameOverState::render()
             {0, 0, (float)botonSalir.width, (float)botonSalir.height},
             salirButton,
             {0, 0}, 0.0f,
-            (selectedOption == 1 || salirHover) ? WHITE : Color{180, 180, 180, 255}
+            (selectedOption_ == 1 || salirHover) ? WHITE : Color{180, 180, 180, 255}
         );
     } else {
         // GAME OVER - Botones horizontales con sprites
@@ -395,7 +395,7 @@ void GameOverState::render()
             {0, 0, (float)botonReiniciar.width, (float)botonReiniciar.height},
             reiniciarButton,
             {0, 0}, 0.0f,
-            (selectedOption == 0 || reiniciarHover) ? WHITE : Color{180, 180, 180, 255}
+            (selectedOption_ == 0 || reiniciarHover) ? WHITE : Color{180, 180, 180, 255}
         );
         
         // Botón SALIR
@@ -413,7 +413,7 @@ void GameOverState::render()
             {0, 0, (float)botonSalir.width, (float)botonSalir.height},
             salirButton,
             {0, 0}, 0.0f,
-            (selectedOption == 1 || salirHover) ? WHITE : Color{180, 180, 180, 255}
+            (selectedOption_ == 1 || salirHover) ? WHITE : Color{180, 180, 180, 255}
         );
     }
 }
