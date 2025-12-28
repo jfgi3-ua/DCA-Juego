@@ -114,9 +114,6 @@ void MainGameState::init()
         CollisionType::Player
     );
 
-    // 2. Crear ENEMIGOS y PINCHOS
-    loadLevelEntities();
-
     std::cout << "Nivel cargado. Entidades generadas via ECS." << std::endl;
 }
 
