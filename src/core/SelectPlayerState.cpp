@@ -31,12 +31,26 @@ void SelectPlayerState::init() {
 }
 
 void SelectPlayerState::handleInput() {
-    // Sin UI navegable aún. Enter continúa al juego.
-    if (IsKeyPressed(KEY_ENTER)) {
-        if (!this->state_machine) {
-            std::cerr << "[SelectPlayerState] state_machine es null al confirmar." << std::endl;
-            return;
+    if (sets_.empty()) {
+        if (IsKeyPressed(KEY_ENTER)) {
+            if (!this->state_machine) return;
+            this->state_machine->add_state(std::make_unique<MainGameState>(), true);
         }
+        return;
+    }
+
+    // Navegacion basica con teclado.
+    if (IsKeyPressed(KEY_UP)) {
+        selectedIndex_ = (selectedIndex_ - 1 + (int)sets_.size()) % (int)sets_.size();
+        PlayerSelection::SetSelectedSpriteId(sets_[selectedIndex_].id);
+    } else if (IsKeyPressed(KEY_DOWN)) {
+        selectedIndex_ = (selectedIndex_ + 1) % (int)sets_.size();
+        PlayerSelection::SetSelectedSpriteId(sets_[selectedIndex_].id);
+    }
+
+    // Confirmar seleccion y continuar.
+    if (IsKeyPressed(KEY_ENTER)) {
+        if (!this->state_machine) return;
         this->state_machine->add_state(std::make_unique<MainGameState>(), true);
         return;
     }
@@ -52,13 +66,22 @@ void SelectPlayerState::render() {
     int titleWidth = MeasureText(title, 24);
     DrawText(title, (WINDOW_WIDTH - titleWidth) / 2, 60, 24, DARKGRAY);
 
-    // Placeholder: solo mostramos el id seleccionado.
-    std::string current = sets_.empty() ? "Sin sets disponibles" : sets_[selectedIndex_].id;
-    std::string line = "Seleccion actual: " + current;
-    int lineWidth = MeasureText(line.c_str(), 20);
-    DrawText(line.c_str(), (WINDOW_WIDTH - lineWidth) / 2, 110, 20, GRAY);
+    if (sets_.empty()) {
+        const char* emptyText = "Sin sets disponibles";
+        int emptyWidth = MeasureText(emptyText, 20);
+        DrawText(emptyText, (WINDOW_WIDTH - emptyWidth) / 2, 110, 20, GRAY);
+    } else {
+        // Lista navegable simple.
+        int lineHeight = 24;
+        for (int i = 0; i < (int)sets_.size(); ++i) {
+            int y = listStartY_ + (i * lineHeight);
+            const char* name = sets_[i].id.c_str();
+            Color color = (i == selectedIndex_) ? BLACK : DARKGRAY;
+            DrawText(name, 120, y, 20, color);
+        }
+    }
 
-    const char* hint = "Pulsa ENTER para continuar";
+    const char* hint = "Usa ARRIBA/ABAJO y ENTER para continuar";
     int hintWidth = MeasureText(hint, 18);
-    DrawText(hint, (WINDOW_WIDTH - hintWidth) / 2, 160, 18, GRAY);
+    DrawText(hint, (WINDOW_WIDTH - hintWidth) / 2, 100, 18, GRAY);
 }

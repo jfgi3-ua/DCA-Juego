@@ -22,4 +22,6 @@ private:
     int selectedIndex_ = 0;
     // Id resuelto como default (p.ej. "Archer") si está disponible.
     std::string defaultId_;
+    // Top inicial para listar opciones en pantalla.
+    int listStartY_ = 140;
 };
