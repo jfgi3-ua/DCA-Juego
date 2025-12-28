@@ -7,7 +7,16 @@
 */
 
 // Componentes de World
-#include "ecs/components/WorldComponents.hpp"
+#include "ecs/components/World/AnimationComponent.hpp"
+#include "ecs/components/World/ColliderComponent.hpp"
+#include "ecs/components/World/GridClipComponent.hpp"
+#include "ecs/components/World/ItemComponent.hpp"
+#include "ecs/components/World/ManualSpriteComponent.hpp"
+#include "ecs/components/World/MechanismComponent.hpp"
+#include "ecs/components/World/MovementComponent.hpp"
+#include "ecs/components/World/SpikeComponent.hpp"
+#include "ecs/components/World/SpriteComponent.hpp"
+#include "ecs/components/World/TransformComponent.hpp"
 
 // Componentes de Player
 #include "ecs/components/Player/PlayerCheatComponent.hpp"
