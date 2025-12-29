@@ -11,16 +11,25 @@ inline constexpr int WINDOW_HEIGHT = 800;  // Altura de la ventana
  */
  struct IVec2 { int x{0}, y{0}; };
 
+ //Tipos de mecanismos
+ enum class MechanismType {
+     DOOR,
+     TRAP,
+     BRIDGE,
+     LEVER,
+ };
+ 
 /**
  * Pareja de mecanismo
- * id = char que identifica el mecanismo en el mapa
+ * type = tipo de mecanismo del enum
  * trigger = posicion del trigger
  * target = posicion del target
  */
 struct MechanismPair {
-    char id;
+    MechanismType type;
     IVec2 trigger;
     IVec2 target;
 };
+
 
 
