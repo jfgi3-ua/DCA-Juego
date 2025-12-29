@@ -46,19 +46,19 @@ void MainGameState::init()
     // ---------------------------------------------------------
     // --- PLAYER ---
     // 1. Obtener coordenadas del grid donde está la 'P' (ej: x=2, y=3)
-    IVec2 startGridPos = map_.playerStart();
+    IVec2 startGridPos = _map.playerStart();
 
     // 2. Convertir a posición de mundo (píxeles)
     // Usamos la esquina superior izquierda del tile como referencia (más fácil para ECS)
-    float centerX = (startGridPos.x * map_.tile()) + (map_.tile() / 2.0f);
-    float centerY = (startGridPos.y * map_.tile()) + (map_.tile() / 2.0f);
-    auto playerEntity = registry.create();
+    float centerX = (startGridPos.x * _map.tile()) + (_map.tile() / 2.0f);
+    float centerY = (startGridPos.y * _map.tile()) + (_map.tile() / 2.0f);
+    auto playerEntity = _registry.create();
 
     // 3. Componente de Stats
-    registry.emplace<PlayerStatsComponent>(playerEntity, 5); // 5 vidas iniciales
+    _registry.emplace<PlayerStatsComponent>(playerEntity, 5); // 5 vidas iniciales
 
     // 4. Guardamos la posición central.
-    registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)map_.tile(), (float)map_.tile()});
+    _registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)_map.tile(), (float)_map.tile()});
 
     // 5. Configuración del Sprite
     std::string idlePath;
@@ -86,30 +86,29 @@ void MainGameState::init()
     Vector2 manualOffset = { 0.0f, -10.0f };  // Ajuste manual del sprite
     int idleFrames = ComputeFramesForTexture(playerIdleTex);
     int walkFrames = ComputeFramesForTexture(playerWalkTex);
-    registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, manualOffset, 1.5f);
-    registry.emplace<GridClipComponent>(playerEntity, idleFrames);
-    registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex,
+    _registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, manualOffset, 1.5f);
+    _registry.emplace<GridClipComponent>(playerEntity, idleFrames);
+    _registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex,
                                          idleFrames, walkFrames, 0.2f, 0.12f);
 
     // 6. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
-    registry.emplace<MovementComponent>(playerEntity, 75.0f);
-
+    _registry.emplace<MovementComponent>(playerEntity, 75.0f);
     // 7. Etiqueta de Input (para que sepa que ESTE es el jugador controlable) <-- // ?? Esta parte tengo que estudiarmela mejor
-    registry.emplace<PlayerInputComponent>(playerEntity);
+    _registry.emplace<PlayerInputComponent>(playerEntity);
 
     // 8. Estado de jugador (invulnerabilidad y retroceso)
-    registry.emplace<PlayerStateComponent>(playerEntity, Vector2{centerX, centerY}, 1.5f);
+    _registry.emplace<PlayerStateComponent>(playerEntity, Vector2{centerX, centerY}, 1.5f);
 
     // 9. Cheats del jugador (god/no-clip)
-    registry.emplace<PlayerCheatComponent>(playerEntity, false, false);
+    _registry.emplace<PlayerCheatComponent>(playerEntity, false, false);
 
     // -- Colisiones --
     // 1. Añadir ColliderComponent al JUGADOR
     // Ajustamos la caja para que sea un poco más pequeña que el tile (hitbox permisiva... de momento)
-    float hitSize = tile_ * 0.6f;
+    float hitSize = _tile * 0.6f;
     // Offset centrado relativo al centro del personaje (que es donde está transform.position)
     // Como transform.position es el CENTRO, un rect en {-w/2, -h/2} estaría centrado.
-    registry.emplace<ColliderComponent>(playerEntity,
+    _registry.emplace<ColliderComponent>(playerEntity,
         Rectangle{ -hitSize/2, -hitSize/2, hitSize, hitSize },
         CollisionType::Player
     );
