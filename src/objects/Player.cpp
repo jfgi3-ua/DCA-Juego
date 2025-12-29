@@ -5,16 +5,16 @@ Player::Player() {}
 
 void Player::init(Vector2 startPos, float radius, int lives, const std::string& sprite)
 {
-    position_ = startPos;
-    radius_ = radius;
-    key_count_ = 0;
-    lives_ = lives;
-    characterFolder_ = sprite;
+    _position = startPos;
+    _radius = radius;
+    _key_count = 0;
+    _lives = lives;
+    _characterFolder = sprite;
 
     // Cargar sprites desde ResourceManager
     auto& rm = ResourceManager::Get();
-    idleTex_ = &rm.GetTexture(characterFolder_ + "/Idle.png");
-    walkTex_ = &rm.GetTexture(characterFolder_ + "/Walk.png");
+    _idleTex = &rm.GetTexture(_characterFolder + "/Idle.png");
+    _walkTex = &rm.GetTexture(_characterFolder + "/Walk.png");
 }
 
 /**
@@ -24,7 +24,7 @@ void Player::init(Vector2 startPos, float radius, int lives, const std::string& 
 void Player::handleInput(const Map& map, const std::vector<Vector2>& blockedTiles)
 {
     // Si ya estamos moviéndonos, ignorar nuevos inputs aquí
-    if (moving_) return;
+    if (_moving) return;
 
     int dx = 0, dy = 0;
     if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))    dy = -1;
@@ -37,8 +37,8 @@ void Player::handleInput(const Map& map, const std::vector<Vector2>& blockedTile
 
     // Calcular celda actual y destino
     int tileSize = map.tile();
-    int cellX = static_cast<int>(position_.x / tileSize);
-    int cellY = static_cast<int>(position_.y / tileSize);
+    int cellX = static_cast<int>(_position.x / tileSize);
+    int cellY = static_cast<int>(_position.y / tileSize);
     int targetX = cellX + dx;
     int targetY = cellY + dy;
     
@@ -51,61 +51,61 @@ void Player::handleInput(const Map& map, const std::vector<Vector2>& blockedTile
     // En modo noClip se puede atravesar paredes INTERNAS, pero no los bordes del mapa
     Vector2 centerTarget = { targetX * (float)tileSize + tileSize / 2.0f,
                              targetY * (float)tileSize + tileSize / 2.0f };
-    if (!noClip_ && checkCollisionWithWalls(centerTarget, map, blockedTiles)) return;
+    if (!_noClip && checkCollisionWithWalls(centerTarget, map, blockedTiles)) return;
 
     // Guardar última dirección de movimiento
-    lastMoveDir_ = position_;
+    _lastMoveDir = _position;
 
         // Cambiar orientación del sprite
-    if (dx > 0) isFacingRight_ = true;
-    else if (dx < 0) isFacingRight_ = false;
+    if (dx > 0) _isFacingRight = true;
+    else if (dx < 0) _isFacingRight = false;
 
     // Iniciar animación hacia la celda destino
-    move_start_ = position_;
-    move_target_ = centerTarget;
-    move_progress_ = 0.0f;
+    _move_start = _position;
+    _move_target = centerTarget;
+    _move_progress = 0.0f;
 
     // Calcular duración del movimiento en base al tamaño del tile y la velocidad
     // (más intuitivo: tiempo = distancia / velocidad). tileSize es la distancia en px.
-    move_duration_ = (tileSize > 0 && speed_ > 0.0f) ? (float)tileSize / speed_ : 0.2f;
-    if (move_duration_ <= 0.0f) move_duration_ = 0.1f;
-    moving_ = true;
+    _move_duration = (tileSize > 0 && _speed > 0.0f) ? (float)tileSize / _speed : 0.2f;
+    if (_move_duration <= 0.0f) _move_duration = 0.1f;
+    _moving = true;
 }
 
 void Player::update(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles)
 {
     // Si estamos en transición entre casillas, interpolar posición
-    if (moving_) {
-        move_progress_ += deltaTime;
-        float t = move_progress_ / move_duration_;
+    if (_moving) {
+        _move_progress += deltaTime;
+        float t = _move_progress / _move_duration;
         if (t >= 1.0f) {
-            position_ = move_target_;
-            moving_ = false;
-            move_progress_ = 0.0f;
+            _position = _move_target;
+            _moving = false;
+            _move_progress = 0.0f;
         } else {
-            position_.x = move_start_.x + (move_target_.x - move_start_.x) * t;
-            position_.y = move_start_.y + (move_target_.y - move_start_.y) * t;
+            _position.x = _move_start.x + (_move_target.x - _move_start.x) * t;
+            _position.y = _move_start.y + (_move_target.y - _move_start.y) * t;
         }
     } else {
         handleInput(map, blockedTiles);
     }
-    if (invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION) {
-        invulnerableTimer_ += deltaTime;
-        if (invulnerableTimer_ > Player::INVULNERABLE_DURATION) invulnerableTimer_ = Player::INVULNERABLE_DURATION;
+    if (_invulnerableTimer > 0.0f && _invulnerableTimer < Player::_INVULNERABLE_DURATION) {
+        _invulnerableTimer += deltaTime;
+        if (_invulnerableTimer > Player::_INVULNERABLE_DURATION) _invulnerableTimer = Player::_INVULNERABLE_DURATION;
     }
 }
 
 void Player::render(int ox, int oy) const
 {
-    if (!walkTex_) {
-        Vector2 p = { position_.x + (float)ox, position_.y + (float)oy };
-        DrawCircleV(p, radius_, hasAnyCheatsActive() ? GOLD : BLUE);
+    if (!_walkTex) {
+        Vector2 p = { _position.x + (float)ox, _position.y + (float)oy };
+        DrawCircleV(p, _radius, hasAnyCheatsActive() ? GOLD : BLUE);
         return;
     }
 
     // Tamaño del frame del sprite sheet
-    float frameHeight = (float)walkTex_->height;
-    float frameWidth  = (float)walkTex_->width / WALK_FRAMES; // 8 frames
+    float frameHeight = (float)_walkTex->height;
+    float frameWidth  = (float)_walkTex->width / _WALK_FRAMES; // 8 frames
 
     // Escala para que quepa en el tile (con 1.5 para que se vea un poco más grande)
     float scale = (TILE_SIZE * 1.5f) / frameHeight;
@@ -119,14 +119,14 @@ void Player::render(int ox, int oy) const
 
     Vector2 p;
 
-    if (isFacingRight_) {
+    if (_isFacingRight) {
         src.x = 0.0f;
         src.width = frameWidth;
-        p = { position_.x + (float)ox + 8.0f, position_.y + (float)oy - 8.0f};
+        p = { _position.x + (float)ox + 8.0f, _position.y + (float)oy - 8.0f};
     } else {
         src.x = frameWidth;     // origen invertido
         src.width = -frameWidth; // flip horizontal
-        p = { position_.x + (float)ox - 8.0f, position_.y + (float)oy - 8.0f};
+        p = { _position.x + (float)ox - 8.0f, _position.y + (float)oy - 8.0f};
 
     }
 
@@ -141,7 +141,7 @@ void Player::render(int ox, int oy) const
     Vector2 origin{ dest.width / 2.0f, dest.height / 2.0f };
 
     // --- 3) Dibujar sprite ---
-    DrawTexturePro(*walkTex_, src, dest, origin, 0.0f, WHITE);
+    DrawTexturePro(*_walkTex, src, dest, origin, 0.0f, WHITE);
 }
 
 bool Player::checkCollisionWithWalls(const Vector2& pos,
@@ -165,7 +165,7 @@ bool Player::checkCollisionWithWalls(const Vector2& pos,
                 };
 
                 // Si nuestro jugador choca contra una de estas lo detecta
-                if (CheckCollisionCircleRec(pos, radius_, wallRect)) {
+                if (CheckCollisionCircleRec(pos, _radius, wallRect)) {
                     // Hay colisión
                     return true;
                 }
@@ -180,7 +180,7 @@ bool Player::checkCollisionWithWalls(const Vector2& pos,
             (float)map.tile(),
             (float)map.tile()
         };
-        if (CheckCollisionCircleRec(pos, radius_, mechRect))
+        if (CheckCollisionCircleRec(pos, _radius, mechRect))
             return true;
     }
      // No hay colisión
@@ -192,8 +192,8 @@ bool Player::isOnExit(const Map& map) const
     int tileSize = map.tile();
 
     // Convertir la posición actual de nuestro jugador a coordenadas de celda
-    int cellX = static_cast<int>(position_.x / tileSize);
-    int cellY = static_cast<int>(position_.y / tileSize);
+    int cellX = static_cast<int>(_position.x / tileSize);
+    int cellY = static_cast<int>(_position.y / tileSize);
 
     // Comprobar si el carácter del mapa es 'X'
     return map.at(cellX, cellY) == 'X';
@@ -202,18 +202,18 @@ bool Player::isOnExit(const Map& map) const
 void Player::onHit(const Map& map) 
 {
     // En modo God, no recibe daño
-    if (godMode_) return;
+    if (_godMode) return;
     
     // Si no está en periodo de invulnerabilidad (valor >= INVULNERABLE_DURATION) o es el estado inicial (<= 0.0),
     // recibe daño y se inicia el conteo desde 0.0 hasta INVULNERABLE_DURATION.
-    if (lives_ > 0 && !isInvulnerable()) {
+    if (_lives > 0 && !isInvulnerable()) {
         // Quitar vida
-        lives_--;
+        _lives--;
 
-        // Calcular la celda previa usando la posición guardada en lastMoveDir_
+        // Calcular la celda previa usando la posición guardada en _lastMoveDir
         int tileSize = map.tile();
-        int prevCellX = static_cast<int>(lastMoveDir_.x) / tileSize;
-        int prevCellY = static_cast<int>(lastMoveDir_.y) / tileSize;
+        int prevCellX = static_cast<int>(_lastMoveDir.x) / tileSize;
+        int prevCellY = static_cast<int>(_lastMoveDir.y) / tileSize;
 
         // Validar que la posición de respawn esté dentro de los límites del mapa
         // y que no sea una pared
@@ -241,24 +241,24 @@ void Player::onHit(const Map& map)
         // (por si acaso, validación extra de seguridad)
         std::vector<Vector2> emptyBlocked; // Vector vacío para la validación
         if (!checkCollisionWithWalls(respawnPos, map, emptyBlocked)) {
-            position_ = respawnPos;
+            _position = respawnPos;
         } else {
             // Si incluso la posición inicial tiene colisión (caso muy raro),
             // colocar en la posición de spawn sin validación adicional
             IVec2 startPos = map.playerStart();
-            position_.x = startPos.x * (float)tileSize + tileSize / 2.0f;
-            position_.y = startPos.y * (float)tileSize + tileSize / 2.0f;
+            _position.x = startPos.x * (float)tileSize + tileSize / 2.0f;
+            _position.y = startPos.y * (float)tileSize + tileSize / 2.0f;
         }
 
         // Iniciar invulnerabilidad
-        invulnerableTimer_ = 0.0001f;
+        _invulnerableTimer = 0.0001f;
     }
 }
 
 bool Player::isInvulnerable() const
 {
     // God mode es invulnerabilidad permanente
-    if (godMode_) return true;
+    if (_godMode) return true;
     
-    return invulnerableTimer_ > 0.0f && invulnerableTimer_ < Player::INVULNERABLE_DURATION;
+    return _invulnerableTimer > 0.0f && _invulnerableTimer < Player::_INVULNERABLE_DURATION;
 }

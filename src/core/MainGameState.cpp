@@ -19,46 +19,46 @@ static int ComputeFramesForTexture(const Texture2D& tex) {
 
 MainGameState::MainGameState(int level)
 {
-    level_ = level > 0 ? level : 1;
+    _level = level > 0 ? level : 1;
 }
 
 void MainGameState::init()
 {
     auto& rm = ResourceManager::Get();
-    std::string relativePath = "maps/map_" + std::to_string(level_) + ".txt";
+    std::string relativePath = "maps/map_" + std::to_string(_level) + ".txt";
     std::string absolutePath = rm.GetAssetPath(relativePath);
 
-    map_.loadFromFile(absolutePath, TILE_SIZE);
-    map_.loadTextures(); //lo llamamos aqui ya q tambien se llama en main y no se pueden cargar texturas antes de InitWindow
-    tile_ = map_.tile();
+    _map.loadFromFile(absolutePath, TILE_SIZE);
+    _map.loadTextures(); //lo llamamos aqui ya q tambien se llama en main y no se pueden cargar texturas antes de InitWindow
+    _tile = _map.tile();
 
     // Guardar total de llaves del mapa (antes de que se recojan)
-    totalKeysInMap_ = map_.getTotalKeys();
+    _totalKeysInMap = _map.getTotalKeys();
 
     // Cargar entidades del nivel en el registry
-    LevelSetupSystem(registry, map_);
+    LevelSetupSystem(_registry, _map);
 
     // Inicializar temporizador: 30s base + 30s por cada nivel adicional
-    levelTime_ = 30.0f + (level_ - 1) * 30.0f;
+    _levelTime = 30.0f + (_level - 1) * 30.0f;
 
     // ---------------------------------------------------------
     // REFACTOR: ENTT
     // ---------------------------------------------------------
     // --- PLAYER ---
     // 1. Obtener coordenadas del grid donde está la 'P' (ej: x=2, y=3)
-    IVec2 startGridPos = map_.playerStart();
+    IVec2 startGridPos = _map.playerStart();
 
     // 2. Convertir a posición de mundo (píxeles)
     // Usamos la esquina superior izquierda del tile como referencia (más fácil para ECS)
-    float centerX = (startGridPos.x * map_.tile()) + (map_.tile() / 2.0f);
-    float centerY = (startGridPos.y * map_.tile()) + (map_.tile() / 2.0f);
-    auto playerEntity = registry.create();
+    float centerX = (startGridPos.x * _map.tile()) + (_map.tile() / 2.0f);
+    float centerY = (startGridPos.y * _map.tile()) + (_map.tile() / 2.0f);
+    auto playerEntity = _registry.create();
 
     // 3. Componente de Stats
-    registry.emplace<PlayerStatsComponent>(playerEntity, 5); // 5 vidas iniciales
+    _registry.emplace<PlayerStatsComponent>(playerEntity, 5); // 5 vidas iniciales
 
     // 4. Guardamos la posición central.
-    registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)map_.tile(), (float)map_.tile()});
+    _registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)_map.tile(), (float)_map.tile()});
 
     // 5. Configuración del Sprite
     std::string idlePath;
@@ -86,30 +86,29 @@ void MainGameState::init()
     Vector2 manualOffset = { 0.0f, -10.0f };  // Ajuste manual del sprite
     int idleFrames = ComputeFramesForTexture(playerIdleTex);
     int walkFrames = ComputeFramesForTexture(playerWalkTex);
-    registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, manualOffset, 1.5f);
-    registry.emplace<GridClipComponent>(playerEntity, idleFrames);
-    registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex,
+    _registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, manualOffset, 1.5f);
+    _registry.emplace<GridClipComponent>(playerEntity, idleFrames);
+    _registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex,
                                          idleFrames, walkFrames, 0.2f, 0.12f);
 
     // 6. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
-    registry.emplace<MovementComponent>(playerEntity, 75.0f);
-
+    _registry.emplace<MovementComponent>(playerEntity, 75.0f);
     // 7. Etiqueta de Input (para que sepa que ESTE es el jugador controlable) <-- // ?? Esta parte tengo que estudiarmela mejor
-    registry.emplace<PlayerInputComponent>(playerEntity);
+    _registry.emplace<PlayerInputComponent>(playerEntity);
 
     // 8. Estado de jugador (invulnerabilidad y retroceso)
-    registry.emplace<PlayerStateComponent>(playerEntity, Vector2{centerX, centerY}, 1.5f);
+    _registry.emplace<PlayerStateComponent>(playerEntity, Vector2{centerX, centerY}, 1.5f);
 
     // 9. Cheats del jugador (god/no-clip)
-    registry.emplace<PlayerCheatComponent>(playerEntity, false, false);
+    _registry.emplace<PlayerCheatComponent>(playerEntity, false, false);
 
     // -- Colisiones --
     // 1. Añadir ColliderComponent al JUGADOR
     // Ajustamos la caja para que sea un poco más pequeña que el tile (hitbox permisiva... de momento)
-    float hitSize = tile_ * 0.6f;
+    float hitSize = _tile * 0.6f;
     // Offset centrado relativo al centro del personaje (que es donde está transform.position)
     // Como transform.position es el CENTRO, un rect en {-w/2, -h/2} estaría centrado.
-    registry.emplace<ColliderComponent>(playerEntity,
+    _registry.emplace<ColliderComponent>(playerEntity,
         Rectangle{ -hitSize/2, -hitSize/2, hitSize, hitSize },
         CollisionType::Player
     );
@@ -122,8 +121,8 @@ void MainGameState::handleInput()
     // 1. Activar menú de desarrollador con CTRL+D
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_D)) {
         this->state_machine->add_overlay_state(
-            std::make_unique<DevModeState>(&registry, &levelTime_, &freezeEnemies_, &infiniteTime_,
-                                           &keyGivenByCheating_, &totalKeysInMap_, level_)
+            std::make_unique<DevModeState>(&_registry, &_levelTime, &_freezeEnemies, &_infiniteTime,
+                                           &_keyGivenByCheating, &_totalKeysInMap, _level)
         );
         return;
     }
@@ -132,16 +131,16 @@ void MainGameState::handleInput()
     if (IsKeyPressed(KEY_SPACE)) {
         // Argumentos de GameOverState: nivel actual, ha muerto (true), tiempo restante, juego terminado (false)
         this->state_machine->add_state(
-            std::make_unique<GameOverState>(level_, true, levelTime_, false),
+            std::make_unique<GameOverState>(_level, true, _levelTime, false), 
             true // Reemplazar el estado actual
         );
         return;
     }
 }
 
-void MainGameState::checkGameEndConditions_()
+void MainGameState::_checkGameEndConditions()
 {
-    auto playerView = registry.view<TransformComponent, PlayerStatsComponent, PlayerInputComponent>();
+    auto playerView = _registry.view<TransformComponent, PlayerStatsComponent, PlayerInputComponent>();
     if (!playerView) {
         return;
     }
@@ -152,17 +151,17 @@ void MainGameState::checkGameEndConditions_()
 
     // Derrota por vidas
     if (stats.lives <= 0) {
-        this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, levelTime_, false), true);
+        this->state_machine->add_state(std::make_unique<GameOverState>(_level, true, _levelTime, false), true);
         return;
     }
 
     // Victoria por salida + llaves
-    int cellX = (int)(trans.position.x / tile_);
-    int cellY = (int)(trans.position.y / tile_);
-    if (cellX >= 0 && cellY >= 0 && cellX < map_.width() && cellY < map_.height()) {
-        if (map_.at(cellX, cellY) == 'X' && stats.keysCollected >= totalKeysInMap_) {
-            bool gameFinished = (level_ >= 6);
-            this->state_machine->add_state(std::make_unique<GameOverState>(level_, false, levelTime_, gameFinished), true);
+    int cellX = (int)(trans.position.x / _tile);
+    int cellY = (int)(trans.position.y / _tile);
+    if (cellX >= 0 && cellY >= 0 && cellX < _map.width() && cellY < _map.height()) {
+        if (_map.at(cellX, cellY) == 'X' && stats.keysCollected >= _totalKeysInMap) {
+            bool gameFinished = (_level >= 6);
+            this->state_machine->add_state(std::make_unique<GameOverState>(_level, false, _levelTime, gameFinished), true);
         }
     }
 }
@@ -170,36 +169,36 @@ void MainGameState::checkGameEndConditions_()
 void MainGameState::update(float deltaTime)
 {
     // Reducir temporizador de nivel (excepto si está en modo tiempo infinito)
-    if (!infiniteTime_) {
-        levelTime_ -= deltaTime;
-        if (levelTime_ <= 0.0f) {
-            levelTime_ = 0.0f;
+    if (!_infiniteTime) {
+        _levelTime -= deltaTime;
+        if (_levelTime <= 0.0f) {
+            _levelTime = 0.0f;
             // Tiempo agotado -> Game Over (dead = true)
-            this->state_machine->add_state(std::make_unique<GameOverState>(level_, true, 0.0f, false), true);
+            this->state_machine->add_state(std::make_unique<GameOverState>(_level, true, 0.0f, false), true);
             return;
         }
     }
 
     // Primero Input (decide destino), luego Movimiento (mueve)
-    InputSystem(registry, map_);
-    if (!freezeEnemies_) {
-        EnemyAISystem(registry, map_, deltaTime);
+    InputSystem(_registry, _map);
+    if (!_freezeEnemies) {
+        EnemyAISystem(_registry, _map, deltaTime);
     }
-    MovementSystem(registry, deltaTime);
-    AnimationSystem(registry, deltaTime);
-    SpikeSystem(registry, deltaTime);
-    InvulnerabilitySystem(registry, deltaTime);
-    CollisionSystem(registry, map_); // Chequeo de colisiones
-    MechanismSystem(registry, map_);
+    MovementSystem(_registry, deltaTime);
+    AnimationSystem(_registry, deltaTime);
+    SpikeSystem(_registry, deltaTime);
+    InvulnerabilitySystem(_registry, deltaTime);
+    CollisionSystem(_registry, _map); // Chequeo de colisiones
+    MechanismSystem(_registry, _map);
 
-    checkGameEndConditions_();
+    _checkGameEndConditions();
 }
 
-void MainGameState::renderMap_()
+void MainGameState::_renderMap()
 {
     // Dimensiones
-    const int mapWpx = map_.width()  * tile_;
-    const int mapHpx = map_.height() * tile_;
+    const int mapWpx = _map.width()  * _tile;
+    const int mapHpx = _map.height() * _tile;
     const int viewW  = GetScreenWidth();
     const int viewH  = GetScreenHeight() - HUD_HEIGHT; // Espacio disponible sin el HUD
 
@@ -208,13 +207,13 @@ void MainGameState::renderMap_()
     const int oy = (viewH > mapHpx) ? (viewH - mapHpx) / 2 : 0;
 
     // 1) Mapa (dibujado en la zona superior, desde y=0 hasta y=MAP_H_PX)
-    map_.render(ox, oy);
+    _map.render(ox, oy);
 
-    RenderMechanismSystem(registry, ox, oy);
-    RenderSystem(registry, (float)ox, (float)oy, (float)map_.tile());
+    RenderMechanismSystem(_registry, ox, oy);
+    RenderSystem(_registry, (float)ox, (float)oy, (float)_map.tile());
 }
 
-void MainGameState::renderHUD_()
+void MainGameState::_renderHUD()
 {
     const float baseY = (float)(GetScreenHeight() - HUD_HEIGHT); // HUD siempre abajo
     // Fondo del HUD a lo ancho de la ventana
@@ -239,10 +238,10 @@ void MainGameState::renderHUD_()
     DrawRectangleRoundedLinesEx(livesHud, 0.25f, 6, 1.0f, DARKGRAY);
     DrawText("Vidas", (int)livesHud.x + 10, (int)livesHud.y + 6, 16, DARKGRAY);
 
-    renderPlayerHUD_(bagHud, livesHud, baseY);
+    _renderPlayerHUD(bagHud, livesHud, baseY);
 }
 
-void MainGameState::renderPlayerHUD_(const Rectangle& bagHud, const Rectangle& livesHud, float baseY)
+void MainGameState::_renderPlayerHUD(const Rectangle& bagHud, const Rectangle& livesHud, float baseY)
 {
     // --------------------------------------------------------
     // 2. HUD - INTERFAZ DE USUARIO (Lectura desde ECS)
@@ -253,7 +252,7 @@ void MainGameState::renderPlayerHUD_(const Rectangle& bagHud, const Rectangle& l
     Texture2D iconsTex = rm.GetTexture("sprites/icons/Icons.png");
 
     // Buscamos la entidad que sea JUGADOR (tiene Stats y Input)
-    auto view = registry.view<PlayerStatsComponent, TransformComponent, PlayerInputComponent, PlayerCheatComponent, PlayerStateComponent>();
+    auto view = _registry.view<PlayerStatsComponent, TransformComponent, PlayerInputComponent, PlayerCheatComponent, PlayerStateComponent>();
 
     for(auto entity : view) {
         const auto &stats = view.get<PlayerStatsComponent>(entity);
@@ -265,7 +264,7 @@ void MainGameState::renderPlayerHUD_(const Rectangle& bagHud, const Rectangle& l
         Rectangle keySrc = {64, 0, 16, 16};
         Rectangle keyDest = {bagHud.x + 10.0f, bagHud.y + 28.0f, 24.0f, 24.0f};
         DrawTexturePro(iconsTex, keySrc, keyDest, {0,0}, 0.0f, WHITE);
-        std::string keyText = std::to_string(stats.keysCollected) + " / " + std::to_string(totalKeysInMap_);
+        std::string keyText = std::to_string(stats.keysCollected) + " / " + std::to_string(_totalKeysInMap);
         DrawText(keyText.c_str(), (int)bagHud.x + 42, (int)bagHud.y + 30, 20, DARKGRAY);
 
         // --- B. MOSTRAR VIDAS ---
@@ -291,20 +290,20 @@ void MainGameState::renderPlayerHUD_(const Rectangle& bagHud, const Rectangle& l
 
         // --- D. MENSAJE DE SALIDA (Contextual) ---
         // Calcular en qué casilla del mapa está el jugador
-        int cx = (int)(trans.position.x / tile_);
-        int cy = (int)(trans.position.y / tile_);
+        int cx = (int)(trans.position.x / _tile);
+        int cy = (int)(trans.position.y / _tile);
 
         // Verificamos límites del mapa para no leer memoria inválida
-        if (cx >= 0 && cx < map_.width() && cy >= 0 && cy < map_.height()) {
+        if (cx >= 0 && cx < _map.width() && cy >= 0 && cy < _map.height()) {
 
             // Si la casilla actual es la SALIDA ('X')
-            if (map_.at(cx, cy) == 'X') {
+            if (_map.at(cx, cy) == 'X') {
                 std::string msg;
                 Color msgColor;
 
-                if (stats.keysCollected < totalKeysInMap_) {
+                if (stats.keysCollected < _totalKeysInMap) {
                     // Caso: Faltan llaves
-                    int remaining = totalKeysInMap_ - stats.keysCollected;
+                    int remaining = _totalKeysInMap - stats.keysCollected;
                     msg = "Necesitas " + std::to_string(remaining) + " llave" + (remaining > 1 ? "s" : "") + " más";
                     msgColor = RED;
                 } else {
@@ -321,26 +320,26 @@ void MainGameState::renderPlayerHUD_(const Rectangle& bagHud, const Rectangle& l
     }
 }
 
-void MainGameState::renderTimerAndLevel_()
+void MainGameState::_renderTimerAndLevel()
 {
     // Mostrar temporizador centrado encima del HUD (formato mm:ss)
     int timerFont = 22;
-    int minutes = (int)levelTime_ / 60;
-    int seconds = (int)levelTime_ % 60;
+    int minutes = (int)_levelTime / 60;
+    int seconds = (int)_levelTime % 60;
     std::string timeText = "Tiempo: " + std::to_string(minutes) + ":" +
                           (seconds < 10 ? "0" : "") + std::to_string(seconds);
     int textW = MeasureText(timeText.c_str(), timerFont);
     DrawText(timeText.c_str(), (GetScreenWidth() - textW) / 2, (int)(GetScreenHeight() - HUD_HEIGHT) + 8, timerFont, DARKGRAY);
 
     // Mostrar nivel actual arriba a la izquierda
-    std::string levelText = "Nivel: " + std::to_string(level_);
+    std::string levelText = "Nivel: " + std::to_string(_level);
     DrawText(levelText.c_str(), 10, 10, 24, DARKGRAY);
 }
 
 void MainGameState::render()
 {
     ClearBackground(RAYWHITE);
-    renderMap_();
-    renderHUD_();
-    renderTimerAndLevel_();
+    _renderMap();
+    _renderHUD();
+    _renderTimerAndLevel();
 }

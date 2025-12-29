@@ -6,46 +6,46 @@ Spikes::Spikes() {}
 
 void Spikes::LoadTextures() {
     auto& rm = ResourceManager::Get();
-    spikeTex_ = &rm.GetTexture("sprites/spikes.png");
+    _spikeTex = &rm.GetTexture("sprites/_spikes.png");
     
-    srcRectActive_ = {28, 126, 22, 22};
-    srcRectInactive_ = { 28, 0, 22, 22};
+    _srcRectActive = {28, 126, 22, 22};
+    _srcRectInactive = { 28, 0, 22, 22};
 }
 
 void Spikes::addSpike(int gridX, int gridY) {
-    spikes.push_back({gridX, gridY, true});
+    _spikes.push_back({gridX, gridY, true});
 }
 
 void Spikes::update(float deltaTime) {
-    timer += deltaTime;
-    if (timer >= interval) {
-        timer = 0.0f;
-        for (auto &s : spikes)
+    _timer += deltaTime;
+    if (_timer >= _interval) {
+        _timer = 0.0f;
+        for (auto &s : _spikes)
             s.active = !s.active;
     }
 }
 
 void Spikes::render(int ox, int oy) const {
-    if (!spikeTex_) return;
+    if (!_spikeTex) return;
 
-    for (const auto &s : spikes) {
+    for (const auto &s : _spikes) {
 
-        Rectangle src = s.active ? srcRectActive_ : srcRectInactive_;
+        Rectangle src = s.active ? _srcRectActive : _srcRectInactive;
 
         Rectangle dest {
-            (float)ox + s.x * tileSize,
-            (float)oy + s.y * tileSize,
-            (float)tileSize,
-            (float)tileSize
+            (float)ox + s.x * _tileSize,
+            (float)oy + s.y * _tileSize,
+            (float)_tileSize,
+            (float)_tileSize
         };
 
-        DrawTexturePro(*spikeTex_, src, dest, {0,0}, 0.0f, WHITE);
+        DrawTexturePro(*_spikeTex, src, dest, {0,0}, 0.0f, WHITE);
     }
 }
 
 
 bool Spikes::isActiveAt(int gridX, int gridY) const {
-    for (const auto &s : spikes) {
+    for (const auto &s : _spikes) {
         if (s.x == gridX && s.y == gridY)
             return s.active;
     }

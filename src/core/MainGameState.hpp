@@ -33,30 +33,30 @@ class MainGameState : public GameState
 
     private:
         // Mapa del juego
-        Map map_;
-        int tile_ = 32;
-        int level_ = 1;
+        Map _map;
+        int _tile = 32;
+        int _level = 1;
 
         // Temporizador del nivel (segundos). 30s base + 30s por nivel
-        float levelTime_ = 30.0f;
+        float _levelTime = 30.0f;
 
         // Total de llaves en el mapa (guardado al inicio, no cambia)
-        int totalKeysInMap_ = 0;
+        int _totalKeysInMap = 0;
 
         // ECS registry
-        entt::registry registry;
+        entt::registry _registry;
 
         // ========== DEVELOPER MODE ==========
-        bool freezeEnemies_ = false;     // Enemigos congelados
-        bool infiniteTime_ = false;      // Tiempo infinito
-        bool keyGivenByCheating_ = false; // Track si la llave fue obtenida por cheat
+        bool _freezeEnemies = false;     // Enemigos congelados
+        bool _infiniteTime = false;      // Tiempo infinito
+        bool _keyGivenByCheating = false; // Track si la llave fue obtenida por cheat
 
         // Métodos privados para renderizado
-        void renderMap_();
-        void renderHUD_();
-        void renderPlayerHUD_(const Rectangle& bagHud, const Rectangle& livesHud, float baseY);
-        void renderTimerAndLevel_();
+        void _renderMap();
+        void _renderHUD();
+        void _renderPlayerHUD(const Rectangle& bagHud, const Rectangle& livesHud, float baseY);
+        void _renderTimerAndLevel();
 
         // Método para verificar condiciones de fin de juego
-        void checkGameEndConditions_();
+        void _checkGameEndConditions();
 };

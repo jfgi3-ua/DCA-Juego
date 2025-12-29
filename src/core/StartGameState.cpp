@@ -59,7 +59,7 @@ void StartGameState::handleInput() {
 
     // Detectar hover con ratón
     if (CheckCollisionPointRec(mousePos, playButton)) {
-        selectedOption = 0;
+        _selectedOption = 0;
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             std::cout << "Clic en JUGAR" << std::endl;
             this->state_machine->add_state(std::make_unique<SelectPlayerState>(), true);
@@ -68,7 +68,7 @@ void StartGameState::handleInput() {
     }
 
     if (CheckCollisionPointRec(mousePos, exitButton)) {
-        selectedOption = 1;
+        _selectedOption = 1;
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             std::cout << "Clic en SALIR" << std::endl;
             this->state_machine->set_game_ending(true);
@@ -79,12 +79,12 @@ void StartGameState::handleInput() {
     // Cambiar selección menu con teclado
     if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
         std::cout << "Tecla izquierda/derecha presionada." << std::endl;
-        selectedOption = !selectedOption;
+        _selectedOption = !_selectedOption;
     }
 
     if (IsKeyPressed(KEY_ENTER)) {
         std::cout << "Tecla enter presionada." << std::endl;
-        if(selectedOption){
+        if(_selectedOption){
             this->state_machine->set_game_ending(true);
         }else{
             this->state_machine->add_state(std::make_unique<SelectPlayerState>(), true);
@@ -162,7 +162,7 @@ void StartGameState::render() {
         playButton,
         {0, 0},
         0.0f,
-        (selectedOption == 0 || playHover) ? WHITE : Color{180, 180, 180, 255}
+        (_selectedOption == 0 || playHover) ? WHITE : Color{180, 180, 180, 255}
     );
 
     // Botón SALIR
@@ -175,6 +175,6 @@ void StartGameState::render() {
         exitButton,
         {0, 0},
         0.0f,
-        (selectedOption == 1 || exitHover) ? WHITE : Color{180, 180, 180, 255}
+        (_selectedOption == 1 || exitHover) ? WHITE : Color{180, 180, 180, 255}
     );
 }
