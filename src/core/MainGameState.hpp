@@ -31,8 +31,6 @@ class MainGameState : public GameState
         void pause(){};
         void resume(){};
 
-        void loadLevelEntities();
-
     private:
         // Mapa del juego
         Map _map;
