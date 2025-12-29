@@ -20,5 +20,6 @@ class StartGameState : public GameState {
 
     private:
         int selectedOption = 0;               // 0 = Jugar, 1 = Salir
+        std::string lastLang_;
 
 };

@@ -1,0 +1,104 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-12-29 08:27+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/core/GameOverState.cpp:119
+msgid "Clic en SIGUIENTE NIVEL"
+msgstr ""
+
+#: src/core/GameOverState.cpp:132 src/core/GameOverState.cpp:155
+#: src/core/StartGameState.cpp:97
+msgid "Clic en SALIR"
+msgstr ""
+
+#: src/core/GameOverState.cpp:144
+msgid "Clic en EMPEZAR DE NUEVO"
+msgstr ""
+
+#: src/core/GameOverState.cpp:148
+msgid "Clic en REINTENTAR"
+msgstr ""
+
+#: src/core/GameOverState.cpp:253
+#, c-format
+msgid "Tiempo restante: %02d:%02d"
+msgstr ""
+
+#: src/core/MainGameState.cpp:236
+msgid "Mochila"
+msgstr ""
+
+#: src/core/MainGameState.cpp:242
+msgid "Vidas"
+msgstr ""
+
+#: src/core/MainGameState.cpp:285
+msgid "GOD"
+msgstr ""
+
+#: src/core/MainGameState.cpp:288
+msgid "NOCLIP"
+msgstr ""
+
+#: src/core/MainGameState.cpp:291
+msgid "INVULNERABLE"
+msgstr ""
+
+#: src/core/MainGameState.cpp:310
+msgid "Necesitas "
+msgstr ""
+
+#: src/core/MainGameState.cpp:310
+msgid "llaves"
+msgstr ""
+
+#: src/core/MainGameState.cpp:310
+msgid "más"
+msgstr ""
+
+#: src/core/MainGameState.cpp:314
+msgid "¡Presiona ENTER para Siguiente Nivel!"
+msgstr ""
+
+#: src/core/MainGameState.cpp:332
+msgid "Tiempo: "
+msgstr ""
+
+#: src/core/MainGameState.cpp:338
+msgid "Nivel: "
+msgstr ""
+
+#: src/core/SelectPlayerState.cpp:137
+msgid "Seleccion"
+msgstr ""
+
+#: src/core/SelectPlayerState.cpp:138
+msgid "Preview"
+msgstr ""
+
+#: src/core/StartGameState.cpp:88
+msgid "Clic en JUGAR"
+msgstr ""
+
+#: src/core/StartGameState.cpp:105
+msgid "Tecla izquierda/derecha presionada."
+msgstr ""
+
+#: src/core/StartGameState.cpp:112
+msgid "Tecla enter presionada."
+msgstr ""

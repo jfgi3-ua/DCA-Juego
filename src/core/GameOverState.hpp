@@ -78,6 +78,10 @@ class GameOverState : public GameState
         const Texture2D* titulo_ = nullptr;
         const Texture2D* background_ = nullptr;
 
+        // Idioma actual (para detectar cambios y recargar sprites)
+        std::string currentLang_ = "";
+        // Rectángulo destino al dibujar el background (permite mantener tamaño consistente entre idiomas)
+        Rectangle backgroundDrawRect_ = {0, 0, (float)WINDOW_WIDTH, (float)WINDOW_HEIGHT};
         // Constantes para renderizado
         static constexpr float CONGRATS_SCALE = 0.35f;
         static constexpr float GAME_OVER_SCALE = 0.45f;
