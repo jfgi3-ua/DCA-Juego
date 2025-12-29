@@ -9,7 +9,7 @@ class Player {
         Player();
 
         void init(Vector2 startPos, float radius, int lives, const std::string& sprite);
-        void handleInput(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles);
+        void handleInput(const Map& map, const std::vector<Vector2>& blockedTiles);
         void update(float deltaTime, const Map& map, const std::vector<Vector2>& blockedTiles);
         
         // Dibujado con offset (para mapa centrado)

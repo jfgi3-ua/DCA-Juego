@@ -1,7 +1,14 @@
 #pragma once
 #include <entt/entt.hpp>
 #include "objects/Map.hpp"
-#include "ecs/components/WorldComponents.hpp"
+#include "ecs/components/World/TransformComponent.hpp"
+#include "ecs/components/World/MovementComponent.hpp"
+#include "ecs/components/World/SpriteComponent.hpp"
+#include "ecs/components/World/GridClipComponent.hpp"
+#include "ecs/components/World/AnimationComponent.hpp"
+#include "ecs/components/World/SpikeComponent.hpp"
+#include "ecs/components/World/MechanismComponent.hpp"
+#include "ecs/components/World/ColliderComponent.hpp"
 #include "ecs/components/Player/PlayerInputComponent.hpp"
 
 bool IsMechanismBlockingCell(entt::registry &registry, int cellX, int cellY);
