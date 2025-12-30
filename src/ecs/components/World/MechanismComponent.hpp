@@ -1,19 +1,17 @@
 #pragma once
 #include "objects/Mechanism.hpp"
 
-/*
-// Componente de Mecanismo (puertas, trampas, etc.)
-struct MechanismComponent { 
-    IVec2 triggerPos; 
-    IVec2 targetPos; 
-    MechanismType type; 
-    bool active; 
-    
-    MechanismComponent(IVec2 trigger, IVec2 target, MechanismType mechType, bool isActive = true) 
-    : triggerPos(trigger), targetPos(target), type(mechType), active(isActive) {} 
-};
-*/
+//  - Cada mecanismo se representa con 2 entidades distintas
+//  - Ambas comparten un mismo id lógico (MechanismId)
+//  - El trigger y el target "saben" q están conectados
+//    simplemente porque tienen el mismo id
+//
+// El sistema de mecanismos se encarga de:
+//  - detectar cuándo el jugador pisa un trigger
+//  - desactivar el mecanismo (active = false)
+//  - el target reacciona a ese estado (puerta abierta, etc.)
 
+// Id lógico que comparten trigger y target
 using MechanismId = int;
 
 

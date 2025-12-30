@@ -46,7 +46,7 @@ void RenderSystem(entt::registry &registry, float offset_x, float offset_y, floa
                 if (registry.all_of<SpikeComponent>(entity)) {
                     active = registry.get<SpikeComponent>(entity).active;
                 } else if (registry.all_of<MechanismComponent>(entity)) {
-                    active = registry.get<MechanismComponent>(entity).mechanism.isActive();
+                    active = registry.get<MechanismComponent>(entity).active;
                 }
 
                 src = active ? manual.srcActive : manual.srcInactive;
@@ -100,12 +100,5 @@ void RenderSystem(entt::registry &registry, float offset_x, float offset_y, floa
         Vector2 origin = { destRec.width / 2.0f, destRec.height / 2.0f };
 
         DrawTexturePro(sprite.texture, src, destRec, origin, 0.0f, WHITE);
-    }
-}
-
-void RenderMechanismSystem(entt::registry &registry, int offset_x, int offset_y) {
-    auto view = registry.view<const MechanismComponent>();
-    for (auto entity : view) {
-        view.get<const MechanismComponent>(entity).mechanism.render(offset_x, offset_y);
     }
 }

@@ -82,6 +82,7 @@ void MainGameState::update(float deltaTime)
     CollisionSystem(registry, map_); // Chequeo de colisiones
     MechanismSystem(registry, map_);
 
+
     // --- FLUJO DE JUEGO ECS: derrota/victoria ---
     auto playerView = registry.view<TransformComponent, PlayerStatsComponent, PlayerInputComponent>();
     if (playerView) {
@@ -109,7 +110,6 @@ void MainGameState::update(float deltaTime)
             }
         }
     }
-
 }
 
 void MainGameState::render()
@@ -132,7 +132,6 @@ void MainGameState::render()
     // 1) Mapa (dibujado en la zona superior, desde y=0 hasta y=MAP_H_PX)
     map_.render(ox, oy);
 
-    RenderMechanismSystem(registry, ox, oy);
     RenderSystem(registry, (float)ox, (float)oy, (float)map_.tile());
 
     // 4) HUD inferior - se coloca en la parte inferior de la ventana
