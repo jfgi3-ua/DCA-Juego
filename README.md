@@ -218,3 +218,67 @@ flowchart TD
     E -->|🛠 Comentarios / Mejoras| C
     F --> G[🏷 Release / Tag]
 ```
+
+## 7. Pruebas de compilación y ejecución (Make)
+
+#### Compilar
+
+~~~
+make
+~~~
+
+### Ejecutar
+
+~~~
+./bin/game
+~~~
+
+#### Limpiar proyecto
+
+~~~
+make clean
+~~~
+
+## 8. Pruebas de compilación y ejecución (CMake)
+
+### Linux
+
+~~~
+cmake -S . -B build
+~~~
+- ``-S`` Indica el directorio fuente 
+- ``-B`` Indica el directorio de construcción
+
+#### Compilar
+
+~~~
+cmake --build build --config Release
+~~~
+- ``--build`` Indica el directorio donde está el proyecto a construir/compilar
+
+#### Ejecutar 
+
+~~~
+./build/bin/game
+~~~
+
+### Windows
+
+~~~
+mkdir build
+cd build
+cmake .. -G "MinGW Makefiles"
+~~~
+
+#### Compilar
+
+~~~
+cmake --build .
+~~~
+
+#### Ejecutar 
+
+~~~
+cd ..
+.\build\game.exe
+~~~
