@@ -11,12 +11,6 @@ extern "C" {
   #include <raylib.h>
 }
 
-static int ComputeFramesForTexture(const Texture2D& tex) {
-    if (tex.height <= 0) return 1;
-    int frames = tex.width / tex.height;
-    return frames > 0 ? frames : 1;
-}
-
 MainGameState::MainGameState(int level)
 {
     _level = level > 0 ? level : 1;
@@ -40,80 +34,6 @@ void MainGameState::init()
 
     // Inicializar temporizador: 30s base + 30s por cada nivel adicional
     _levelTime = 30.0f + (_level - 1) * 30.0f;
-
-    // ---------------------------------------------------------
-    // REFACTOR: ENTT
-    // ---------------------------------------------------------
-    // --- PLAYER ---
-    // 1. Obtener coordenadas del grid donde está la 'P' (ej: x=2, y=3)
-    IVec2 startGridPos = _map.playerStart();
-
-    // 2. Convertir a posición de mundo (píxeles)
-    // Usamos la esquina superior izquierda del tile como referencia (más fácil para ECS)
-    float centerX = (startGridPos.x * _map.tile()) + (_map.tile() / 2.0f);
-    float centerY = (startGridPos.y * _map.tile()) + (_map.tile() / 2.0f);
-    auto playerEntity = _registry.create();
-
-    // 3. Componente de Stats
-    _registry.emplace<PlayerStatsComponent>(playerEntity, 5); // 5 vidas iniciales
-
-    // 4. Guardamos la posición central.
-    _registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)_map.tile(), (float)_map.tile()});
-
-    // 5. Configuración del Sprite
-    std::string idlePath;
-    std::string walkPath;
-    if (PlayerSelection::HasSelectedSpriteSet() &&
-        PlayerSelection::SelectedHasIdle() && PlayerSelection::SelectedHasWalk()) {
-        idlePath = PlayerSelection::GetSelectedIdlePath();
-        walkPath = PlayerSelection::GetSelectedWalkPath();
-    } else {
-        auto sets = DiscoverPlayerSpriteSets();
-        auto defaultId = ResolveDefaultPlayerSpriteSetId(sets);
-        auto it = std::find_if(sets.begin(), sets.end(),
-                               [&](const PlayerSpriteSet& set) { return set.id == defaultId; });
-        if (it != sets.end() && it->hasIdle && it->hasWalk) {
-            idlePath = it->idlePath;
-            walkPath = it->walkPath;
-        } else {
-            idlePath = "sprites/player/Archer/Idle.png";
-            walkPath = "sprites/player/Archer/Walk.png";
-        }
-    }
-
-    Texture2D playerIdleTex = rm.GetTexture(idlePath);
-    Texture2D playerWalkTex = rm.GetTexture(walkPath);
-    Vector2 manualOffset = { 0.0f, -10.0f };  // Ajuste manual del sprite
-    int idleFrames = ComputeFramesForTexture(playerIdleTex);
-    int walkFrames = ComputeFramesForTexture(playerWalkTex);
-    _registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, manualOffset, 1.5f);
-    _registry.emplace<GridClipComponent>(playerEntity, idleFrames);
-    _registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex,
-                                         idleFrames, walkFrames, 0.2f, 0.12f);
-
-    // 6. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
-    _registry.emplace<MovementComponent>(playerEntity, 75.0f);
-    // 7. Etiqueta de Input (para que sepa que ESTE es el jugador controlable) <-- // ?? Esta parte tengo que estudiarmela mejor
-    _registry.emplace<PlayerInputComponent>(playerEntity);
-
-    // 8. Estado de jugador (invulnerabilidad y retroceso)
-    _registry.emplace<PlayerStateComponent>(playerEntity, Vector2{centerX, centerY}, 1.5f);
-
-    // 9. Cheats del jugador (god/no-clip)
-    _registry.emplace<PlayerCheatComponent>(playerEntity, false, false);
-
-    // -- Colisiones --
-    // 1. Añadir ColliderComponent al JUGADOR
-    // Ajustamos la caja para que sea un poco más pequeña que el tile (hitbox permisiva... de momento)
-    float hitSize = _tile * 0.6f;
-    // Offset centrado relativo al centro del personaje (que es donde está transform.position)
-    // Como transform.position es el CENTRO, un rect en {-w/2, -h/2} estaría centrado.
-    _registry.emplace<ColliderComponent>(playerEntity,
-        Rectangle{ -hitSize/2, -hitSize/2, hitSize, hitSize },
-        CollisionType::Player
-    );
-
-    std::cout << "Nivel cargado. Entidades generadas via ECS." << std::endl;
 }
 
 void MainGameState::handleInput()
@@ -194,8 +114,7 @@ void MainGameState::update(float deltaTime)
     _checkGameEndConditions();
 }
 
-void MainGameState::_renderMap()
-{
+void MainGameState::_renderMap(){
     // Dimensiones
     const int mapWpx = _map.width()  * _tile;
     const int mapHpx = _map.height() * _tile;
@@ -209,12 +128,11 @@ void MainGameState::_renderMap()
     // 1) Mapa (dibujado en la zona superior, desde y=0 hasta y=MAP_H_PX)
     _map.render(ox, oy);
 
-    RenderMechanismSystem(_registry, ox, oy);
     RenderSystem(_registry, (float)ox, (float)oy, (float)_map.tile());
 }
 
-void MainGameState::_renderHUD()
-{
+void MainGameState::_renderHUD(){
+    
     const float baseY = (float)(GetScreenHeight() - HUD_HEIGHT); // HUD siempre abajo
     // Fondo del HUD a lo ancho de la ventana
     Rectangle hudBg{ 0.0f, baseY, (float)GetScreenWidth(), (float)HUD_HEIGHT };
