@@ -1,5 +1,5 @@
 #include "ecs/systems/LevelSetupSystem.hpp"
-#include "ResourceManager.hpp"
+#include "core/ResourceManager.hpp"
 #include "ecs/Ecs.hpp"
 
 
