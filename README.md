@@ -259,7 +259,7 @@ cmake --build build --config Release
 #### Ejecutar 
 
 ~~~
-./build/bin/game
+./build/game
 ~~~
 
 ### Windows
