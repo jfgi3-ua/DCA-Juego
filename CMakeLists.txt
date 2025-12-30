@@ -46,6 +46,12 @@ target_sources(game PRIVATE
     src/objects/Map.cpp
     src/objects/Mechanism.cpp
     src/objects/Spikes.cpp
+    src/ecs/systems/CollisionSystems.cpp
+    src/ecs/systems/EnemySystems.cpp
+    src/ecs/systems/LevelSetupSystem.cpp
+    src/ecs/systems/PlayerSystems.cpp
+    src/ecs/systems/RenderSystems.cpp
+    src/ecs/systems/WorldSystems.cpp
 )
 
 # Para que busque los includes propios del proyecto y de vendor
