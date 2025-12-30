@@ -5,17 +5,18 @@
 
 void LevelSetupSystem(entt::registry& registry, Map& map) {
     auto& rm = ResourceManager::Get();
+    float tile = (float)map.tile();
 
+    int mecId = 0;
     // --- MECANISMOS ---
     for (auto m : map.getMechanisms()) {
-        auto entity = registry.create();
-        registry.emplace<MechanismComponent>(entity, Mechanism(m.type, m.trigger, m.target));
+        createMechanism_(registry, m, tile, mecId++);
     }
+
 
     // --- PLAYER ---
     // 1. Obtener coordenadas del grid donde está la 'P' (ej: x=2, y=3)
     IVec2 startGridPos = map.playerStart();
-    float tile = (float)map.tile();
 
     // 2. Convertir a posición de mundo (píxeles)
     // Usamos la esquina superior izquierda del tile como referencia (más fácil para ECS)
@@ -159,5 +160,85 @@ void LevelSetupSystem(entt::registry& registry, Map& map) {
                 registry.emplace<ItemComponent>(entity, true); // true = es llave
             }
         }
+    }
+}
+
+
+static void createMechanism_( entt::registry& registry, const MechanismPair& m, float tile, int mechId) {
+    auto& rm = ResourceManager::Get();
+
+    //target
+    {
+        auto entity = registry.create();
+
+        float cx = m.target.x * tile + tile / 2.0f;
+        float cy = m.target.y * tile + tile / 2.0f;
+
+        registry.emplace<TransformComponent>( entity, Vector2{cx, cy}, Vector2{tile, tile});
+
+        registry.emplace<MechanismComponent>( entity, mechId, m.type, true);
+
+        registry.emplace<MechanismTargetComponent>(entity, mechId);
+
+        const Texture2D* tex = nullptr;
+        Rectangle srcActive{};
+        Rectangle srcInactive{};
+
+        switch (m.type) {
+            case MechanismType::DOOR:
+                tex = &rm.GetTexture("sprites/mecs/doors_lever_chest_animation.png");
+                srcActive   = { 0, 95, 32, 32 };
+                srcInactive = { 64, 95, 32, 32 };
+                break;
+
+            case MechanismType::TRAP:
+                tex = &rm.GetTexture("sprites/mecs/trap_saw.png");
+                srcActive   = { 0, 26, 32, 32 };
+                srcInactive = { 336, 192, 50, 30 };
+                break;
+
+            case MechanismType::BRIDGE:
+                tex = &rm.GetTexture("sprites/mecs/fire_trap.png");
+                srcActive   = { 715, 128, 65, 65 };
+                srcInactive = { 45, 128, 65, 65 };
+                break;
+
+            case MechanismType::LEVER:
+                tex = &rm.GetTexture("sprites/mecs/doors_lever_chest_animation.png");
+                srcActive   = { 0, 64, 32, 32 };
+                srcInactive = { 64, 64, 32, 32 };
+                break;
+
+            default:
+                tex = &rm.GetTexture("sprites/mecs/doors_lever_chest_animation.png");
+                srcActive   = { 0, 95, 32, 32 };
+                srcInactive = { 64, 95, 32, 32 };
+                break;
+        }
+
+        registry.emplace<SpriteComponent>(entity, *tex, Vector2{0,0}, 1.0f);
+        registry.emplace<ManualSpriteComponent>(entity, srcActive, srcInactive);
+    }
+
+    //triger
+    {
+        auto entity = registry.create();
+
+        float cx = m.trigger.x * tile + tile / 2.0f;
+        float cy = m.trigger.y * tile + tile / 2.0f;
+
+        registry.emplace<TransformComponent>(entity, Vector2{cx, cy}, Vector2{tile, tile});
+
+        registry.emplace<MechanismComponent>(entity, mechId, m.type, true);
+
+        registry.emplace<MechanismTriggerComponent>(entity, mechId);
+
+        auto& tex = rm.GetTexture("sprites/mecs/doors_lever_chest_animation.png");
+
+        Rectangle srcActive   = { 30, 174, 18, 18 };
+        Rectangle srcInactive = { 62, 174, 18, 18 };
+
+        registry.emplace<SpriteComponent>(entity, tex, Vector2{0, 0}, 0.7f);
+        registry.emplace<ManualSpriteComponent>(entity, srcActive, srcInactive);
     }
 }
