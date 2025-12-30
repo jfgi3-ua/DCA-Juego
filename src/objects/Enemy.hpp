@@ -61,15 +61,15 @@ public:
 
 private:
     // Árbol de decisiones de IA
-    void updateAI(const Map &map, float dt, int tileSize, float playerX, float playerY);
+    void _updateAI(const Map &map, float dt, int tileSize, float playerX, float playerY);
     
     // Estados específicos
-    void patrolBehavior(const Map &map);
-    void chaseBehavior(const Map &map, int tileSize, float playerX, float playerY);
-    void retreatBehavior(const Map &map, int tileSize, float playerX, float playerY);
+    void _patrolBehavior(const Map &map);
+    void _chaseBehavior(const Map &map, int tileSize, float playerX, float playerY);
+    void _retreatBehavior(const Map &map, int tileSize, float playerX, float playerY);
     
     // Utilidades
-    float distanceToPlayer(float playerX, float playerY) const;
-    void moveTowardsTarget(float dt, int tileSize);
-    bool hasLineOfSight(const Map &map, int playerCellX, int playerCellY) const;
+    float _distanceToPlayer(float playerX, float playerY) const;
+    void _moveTowardsTarget(float dt, int tileSize);
+    bool _hasLineOfSight(const Map &map, int playerCellX, int playerCellY) const;
 };

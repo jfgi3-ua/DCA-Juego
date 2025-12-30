@@ -20,12 +20,12 @@ class Player {
         */
 
         // Posición actual del jugador
-        Vector2 getPosition() const {return position_; }
+        Vector2 getPosition() const {return _position; }
 
         // Radio del jugador (para colisiones)
-        float getRadius() const { return radius_; }
+        float getRadius() const { return _radius; }
 
-        int getLives() const { return lives_; }
+        int getLives() const { return _lives; }
 
         // Comprobar colisiones del jugador
         bool checkCollisionWithWalls(const Vector2& pos, const Map& map, const std::vector<Vector2>& blockedTiles) const;
@@ -34,73 +34,73 @@ class Player {
         bool isOnExit(const Map& map) const;
         
         // Estado de mochila - Sistema de llaves
-        int getKeyCount() const { return key_count_; }
-        void addKey() { key_count_++; }
-        void setKeyCount(int count) { key_count_ = count; }
-        bool hasAllKeys(int totalKeys) const { return key_count_ >= totalKeys; }
+        int getKeyCount() const { return _key_count; }
+        void addKey() { _key_count++; }
+        void setKeyCount(int count) { _key_count = count; }
+        bool hasAllKeys(int totalKeys) const { return _key_count >= totalKeys; }
         
         // Compatibilidad con código antiguo
-        bool hasKey() const { return key_count_ > 0; }
+        bool hasKey() const { return _key_count > 0; }
 
         // Gestionar vida al recibir daño
         void onHit(const Map& map);
         bool isInvulnerable() const;
 
         // ========== MÉTODOS PARA DEVELOPER MODE ==========
-        void setGodMode(bool enabled) { godMode_ = enabled; }
-        void setNoClip(bool enabled) { noClip_ = enabled; }
-        void addLife() { if (lives_ < 10) lives_++; }
-        void setMaxLives() { lives_ = 10; }
-        void resetLives() { lives_ = 5; }
-        bool isGodMode() const { return godMode_; }
-        bool isNoClip() const { return noClip_; }
+        void setGodMode(bool enabled) { _godMode = enabled; }
+        void setNoClip(bool enabled) { _noClip = enabled; }
+        void addLife() { if (_lives < 10) _lives++; }
+        void setMaxLives() { _lives = 10; }
+        void resetLives() { _lives = 5; }
+        bool isGodMode() const { return _godMode; }
+        bool isNoClip() const { return _noClip; }
         
         // Verificar si algún cheat está activo (para color GOD)
-        bool hasAnyCheatsActive() const { return godMode_ || noClip_; }
+        bool hasAnyCheatsActive() const { return _godMode || _noClip; }
         
     private:
         // Posición
-        Vector2 position_ = {0, 0};
-        Vector2 lastMoveDir_ = {0, 0};
+        Vector2 _position = {0, 0};
+        Vector2 _lastMoveDir = {0, 0};
 
         // Velocidad
-        float speed_ = 150.0f;
+        float _speed = 150.0f;
 
         // Tamaño
-        float radius_ = 10.0f;
+        float _radius = 10.0f;
 
         // Mochila - Sistema de llaves
-        int key_count_ = 0;
+        int _key_count = 0;
 
         // Colisiones y vidas
-        int lives_ = 5;
+        int _lives = 5;
 
         // Temporizador dinámico que cambia cuando el jugador recibe daño
         // (va de 0.0f a INVULNERABLE_DURATION)
-        float invulnerableTimer_ = 0.0f;
-        static constexpr float INVULNERABLE_DURATION = 1.5f;
+        float _invulnerableTimer = 0.0f;
+        static constexpr float _INVULNERABLE_DURATION = 1.5f;
 
         // Movimiento por casillas
-        bool moving_ = false;
-        Vector2 move_start_ = {0,0};
-        Vector2 move_target_ = {0,0};
+        bool _moving = false;
+        Vector2 _move_start = {0,0};
+        Vector2 _move_target = {0,0};
         
         // Segundos
-        float move_progress_ = 0.0f; 
+        float _move_progress = 0.0f; 
         
         // Segundos por casilla (calculado en base a tile/speed)
-        float move_duration_ = 0.12f; 
+        float _move_duration = 0.12f; 
 
         // Developer mode flags
-        bool godMode_ = false;
-        bool noClip_ = false;
+        bool _godMode = false;
+        bool _noClip = false;
 
         //sprites folder y texturas
-        std::string characterFolder_; 
-        const Texture2D* idleTex_ = nullptr;   // player/X/Idle.png
-        const Texture2D* walkTex_ = nullptr;  // player/X/Walk.png
-        static constexpr int WALK_FRAMES = 8;
+        std::string _characterFolder; 
+        const Texture2D* _idleTex = nullptr;   // player/X/Idle.png
+        const Texture2D* _walkTex = nullptr;  // player/X/Walk.png
+        static constexpr int _WALK_FRAMES = 8;
 
         //direccion del sprite
-        bool isFacingRight_ = true;
+        bool _isFacingRight = true;
 };

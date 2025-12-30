@@ -1,274 +1,261 @@
 #include "GameOverState.hpp"
-#include <iostream>
-#include "StateMachine.hpp"
-#include "MainGameState.hpp"
-#include "ResourceManager.hpp"
 
 extern "C" {
     #include <raylib.h>
 }
 
+// Definiciones de constantes estáticas
+const std::string GameOverState::_TEX_BUTTON_NEXT = "sprites/icons/boton_siguiente_nivel.png";
+const std::string GameOverState::_TEX_BUTTON_EXIT = "sprites/icons/boton_salir.png";
+const std::string GameOverState::_TEX_BUTTON_RESTART = "sprites/icons/boton_reiniciar.png";
+
 GameOverState::GameOverState(int nivel, bool die, float time, bool isVictory)
 {
-    dead = die;
-    remainingTime = time;
-    isVictory_ = isVictory;
-    backgroundColor = isVictory_ ? GOLD : (dead ? RED : DARKGREEN); //si añadimos sprites eliminar color de fondo
-    currentLevel = nivel;
+    _isDead = die;
+    _remainingTime = time;
+    _isVictory = isVictory;
+    _backgroundColor = _isVictory ? GOLD : (_isDead ? RED : DARKGREEN); // Si añadimos sprites eliminar color de fondo
+    _currentLevel = nivel;
 }
 
-GameOverState::~GameOverState() {
+void GameOverState::_loadSprites(const std::vector<std::string>& sprites) {
+    auto& rm = ResourceManager::Get();
+    if (!sprites.empty()) {
+        _background = &rm.GetTexture(sprites[0]);
+        for (size_t i = 1; i < sprites.size(); ++i) {
+            rm.GetTexture(sprites[i]);
+        }
+    }
 }
 
 void GameOverState::init() {
-    auto& rm = ResourceManager::Get();
-
     // Cargar sprites necesarios
-    if (isVictory_) {
-        background = &rm.GetTexture("sprites/menus/background_congratulations.png");
-        rm.GetTexture("sprites/menus/items_congratulations.png");
-        rm.GetTexture("sprites/icons/boton_reiniciar.png"); // Para "EMPEZAR DE NUEVO"
-        rm.GetTexture("sprites/icons/boton_salir.png");
-    } else if (dead) {
-        background = &rm.GetTexture("sprites/menus/game_over_background.png");
-        rm.GetTexture("sprites/menus/game_over.png");
-        rm.GetTexture("sprites/icons/boton_reiniciar.png");
-        rm.GetTexture("sprites/icons/boton_salir.png");
+    if (_isVictory) {
+        _loadSprites(_spritesPaths.victorySprites);
+    } else if (_isDead) {
+        _loadSprites(_spritesPaths.deathSprites);
     } else {
         // Nivel completado - cargar background y botones
-        background = &rm.GetTexture("sprites/menus/background_pasar_nivel.png");
-        rm.GetTexture("sprites/icons/boton_siguiente_nivel.png");
-        rm.GetTexture("sprites/icons/boton_salir.png");
+        _loadSprites(_spritesPaths.levelCompletedSprites);
     }
 }
 
+// Maneja la lógica de los botones y la selección (Ratón y teclado)
+void GameOverState::_handleButtons(const Rectangle& button1Area, const Rectangle& button2Area, std::function<void()> action1, std::function<void()> action2) {
+    Vector2 mousePos = GetMousePosition();
+
+    if (CheckCollisionPointRec(mousePos, button1Area)) {
+        _selectedOption = 0;
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            action1();
+            return;
+        }
+    }
+
+    if (CheckCollisionPointRec(mousePos, button2Area)) {
+        _selectedOption = 1;
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            action2();
+            return;
+        }
+    }
+
+    // Navegación con teclado horizontal
+    if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
+        _selectedOption = !_selectedOption;
+    }
+}
+
+// Configura las áreas de los botones basándose en la configuración dada
+void GameOverState::_handleConfig(const ButtonConfig& config, std::function<void()> action1, std::function<void()> action2) {
+    float totalWidth = (config.buttonWidth * 2) + config.spacing;
+    float startX = (WINDOW_WIDTH - totalWidth) / 2.0f;
+
+    // Definir áreas de los botones
+    Rectangle button1Area = {
+        startX + config.clickPaddingX,
+        config.yPos + config.clickPaddingY,
+        config.buttonWidth - (config.clickPaddingX * 2),
+        config.buttonHeight - (config.clickPaddingY * 2)
+    };
+
+    Rectangle button2Area = {
+        startX + config.buttonWidth + config.spacing + config.clickPaddingX,
+        config.yPos + config.clickPaddingY,
+        config.buttonWidth - (config.clickPaddingX * 2),
+        config.buttonHeight - (config.clickPaddingY * 2)
+    };
+
+    // Llamar a la función que maneja los botones con las áreas definidas
+    _handleButtons(button1Area, button2Area, action1, action2);
+}
 
 void GameOverState::handleInput() {
-    Vector2 mousePos = GetMousePosition();
-    
-    // Configurar rectángulos de botones según el estado
-    if (!dead && !isVictory_) {
-        // Nivel completado - botones horizontales con sprites
-        float buttonWidth = 400;
-        float buttonHeight = 120;
-        float buttonSpacing = 100;
-        float totalWidth = (buttonWidth * 2) + buttonSpacing;
-        float startX = (WINDOW_WIDTH - totalWidth) / 2.0f;
-        float buttonY = 380;
-        
-        // Área clickeable más precisa (reducida)
-        float clickPaddingX = 50;
-        float clickPaddingY = 30;
-        
-        // Botón 1: Siguiente Nivel
-        Rectangle button1Area = {
-            startX + clickPaddingX,
-            buttonY + clickPaddingY,
-            buttonWidth - (clickPaddingX * 2),
-            buttonHeight - (clickPaddingY * 2)
+    if (!_isDead && !_isVictory) {
+
+        // Juego completado o siguiente nivel 
+        auto action1 = [this]() {
+
+            std::cout << "Clic en SIGUIENTE NIVEL" << std::endl;
+
+            // Si es el nivel 6, ir a pantalla de victoria total
+            if (_currentLevel >= 6) {
+                this->state_machine->add_state(std::make_unique<GameOverState>(6, false, _remainingTime, true), true);
+            }
+            // Si no, cargar siguiente nivel
+            else {
+                this->state_machine->add_state(std::make_unique<MainGameState>(_currentLevel + 1), true);
+            }
         };
-        
-        // Botón 2: Salir
-        Rectangle button2Area = {
-            startX + buttonWidth + buttonSpacing + clickPaddingX,
-            buttonY + clickPaddingY,
-            buttonWidth - (clickPaddingX * 2),
-            buttonHeight - (clickPaddingY * 2)
+
+        // Salir del juego
+        auto action2 = [this]() {
+            std::cout << "Clic en SALIR" << std::endl;
+            this->state_machine->set_game_ending(true);
         };
-        
-        if (CheckCollisionPointRec(mousePos, button1Area)) {
-            selectedOption = 0;
-            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                std::cout << "Clic en SIGUIENTE NIVEL" << std::endl;
-                if (currentLevel >= 6) {
-                    this->state_machine->add_state(std::make_unique<GameOverState>(6, false, remainingTime, true), true);
-                } else {
-                    this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel + 1), true);
-                }
-                return;
+
+        // Manejar botones con la configuración de nivel completado
+        _handleConfig(_levelConfig, action1, action2);
+    } 
+    else {
+        // Muerte o victoria total
+        auto action1 = [this]() {
+
+            if (_isVictory) {
+                std::cout << "Clic en EMPEZAR DE NUEVO" << std::endl;
+                this->state_machine->add_state(std::make_unique<MainGameState>(1), true);
+            } 
+            else {
+                std::cout << "Clic en REINTENTAR" << std::endl;
+                this->state_machine->add_state(std::make_unique<MainGameState>(_currentLevel), true);
             }
-        }
-        
-        if (CheckCollisionPointRec(mousePos, button2Area)) {
-            selectedOption = 1;
-            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                std::cout << "Clic en SALIR" << std::endl;
-                this->state_machine->set_game_ending(true);
-                return;
-            }
-        }
-        
-        // Navegación con teclado horizontal
-        if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
-            selectedOption = !selectedOption;
-        }
-        
-    } else {
-        // Victoria o muerte - ajustar según layout
-        if (isVictory_) {
-            // Victoria: botones horizontales con sprites
-            float buttonWidth = 350;
-            float buttonHeight = 100;
-            float spacing = 80;
-            float totalWidth = (buttonWidth * 2) + spacing;
-            float startX = (WINDOW_WIDTH - totalWidth) / 2.0f;
-            float startY = WINDOW_HEIGHT - 200;
-            float clickPadding = 40;
-            
-            Rectangle empezarClickArea = {
-                startX + clickPadding,
-                startY + clickPadding/2,
-                buttonWidth - (clickPadding * 2),
-                buttonHeight - clickPadding
-            };
-            
-            Rectangle salirClickArea = {
-                startX + buttonWidth + spacing + clickPadding,
-                startY + clickPadding/2,
-                buttonWidth - (clickPadding * 2),
-                buttonHeight - clickPadding
-            };
-            
-            if (CheckCollisionPointRec(mousePos, empezarClickArea)) {
-                selectedOption = 0;
-                if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                    std::cout << "Clic en EMPEZAR DE NUEVO" << std::endl;
-                    this->state_machine->add_state(std::make_unique<MainGameState>(1), true);
-                    return;
-                }
-            }
-            
-            if (CheckCollisionPointRec(mousePos, salirClickArea)) {
-                selectedOption = 1;
-                if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                    std::cout << "Clic en SALIR" << std::endl;
-                    this->state_machine->set_game_ending(true);
-                    return;
-                }
-            }
-            
-            // Navegación con teclado horizontal
-            if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
-                selectedOption = !selectedOption;
-            }
-        } else {
-            // Muerte: botones horizontales con sprites
-            float buttonWidth = 350;
-            float buttonHeight = 100;
-            float spacing = 80;
-            float totalWidth = (buttonWidth * 2) + spacing;
-            float startX = (WINDOW_WIDTH - totalWidth) / 2.0f;
-            float startY = WINDOW_HEIGHT - 200;
-            float clickPadding = 40;
-            
-            Rectangle reiniciarClickArea = {
-                startX + clickPadding,
-                startY + clickPadding/2,
-                buttonWidth - (clickPadding * 2),
-                buttonHeight - clickPadding
-            };
-            
-            Rectangle salirClickArea = {
-                startX + buttonWidth + spacing + clickPadding,
-                startY + clickPadding/2,
-                buttonWidth - (clickPadding * 2),
-                buttonHeight - clickPadding
-            };
-            
-            if (CheckCollisionPointRec(mousePos, reiniciarClickArea)) {
-                selectedOption = 0;
-                if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                    std::cout << "Clic en REINTENTAR" << std::endl;
-                    this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel), true);
-                    return;
-                }
-            }
-            
-            if (CheckCollisionPointRec(mousePos, salirClickArea)) {
-                selectedOption = 1;
-                if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                    std::cout << "Clic en SALIR" << std::endl;
-                    this->state_machine->set_game_ending(true);
-                    return;
-                }
-            }
-            
-            // Navegación con teclado horizontal
-            if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
-                selectedOption = !selectedOption;
-            }
-        }
+        };
+
+        // Salir del juego  
+        auto action2 = [this]() {
+            std::cout << "Clic en SALIR" << std::endl;
+            this->state_machine->set_game_ending(true);
+        };
+
+        // Manejar botones con la configuración de muerte/victoria
+        _handleConfig(_otherConfig, action1, action2);
     }
 
     if (IsKeyPressed(KEY_ENTER)) {
-        if(selectedOption){
+        if (_selectedOption) {
             this->state_machine->set_game_ending(true);
-        }else{
-            if (isVictory_) {
+        } 
+        else {
+            if (_isVictory) {
                 this->state_machine->add_state(std::make_unique<MainGameState>(1), true);
-            } else if (dead) {
-                this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel), true);
-            } else if (currentLevel >= 6) {
-                this->state_machine->add_state(std::make_unique<GameOverState>(6, false, remainingTime, true), true);
-            } else {
-                this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel + 1), true);
+            } 
+            else if (_isDead) {
+                this->state_machine->add_state(std::make_unique<MainGameState>(_currentLevel), true);
+            } 
+            else if (_currentLevel >= 6) {
+                this->state_machine->add_state(std::make_unique<GameOverState>(6, false, _remainingTime, true), true);
+            } 
+            else {
+                this->state_machine->add_state(std::make_unique<MainGameState>(_currentLevel + 1), true);
             }
         }
     }
 }
 
-void GameOverState::update(float) {
+void GameOverState::update(float) {}
+
+void GameOverState::_renderButtons(const ButtonConfig& config, const std::string& tex1, const std::string& tex2, bool useHover) {
+    auto& rm = ResourceManager::Get();
+
+    const Texture2D& t1 = rm.GetTexture(tex1);
+    const Texture2D& t2 = rm.GetTexture(tex2);
+
+    float totalWidth = (config.buttonWidth * 2) + config.spacing;
+    float startX = (WINDOW_WIDTH - totalWidth) / 2.0f;
+
+    Rectangle button1Rect = {startX, config.yPos, config.buttonWidth, config.buttonHeight};
+    Rectangle button2Rect = {startX + config.buttonWidth + config.spacing, config.yPos, config.buttonWidth, config.buttonHeight};
+
+    Color color1 = (_selectedOption == 0) ? WHITE : Color{180, 180, 180, 255};
+    Color color2 = (_selectedOption == 1) ? WHITE : Color{180, 180, 180, 255};
+
+    if (useHover) {
+        Vector2 mousePos = GetMousePosition();
+
+        Rectangle click1 = {
+            startX + config.clickPaddingX,
+            config.yPos + config.clickPaddingY,
+            config.buttonWidth - (config.clickPaddingX * 2),
+            config.buttonHeight - (config.clickPaddingY * 2)
+        };
+
+        Rectangle click2 = {
+            startX + config.buttonWidth + config.spacing + config.clickPaddingX,
+            config.yPos + config.clickPaddingY,
+            config.buttonWidth - (config.clickPaddingX * 2),
+            config.buttonHeight - (config.clickPaddingY * 2)
+        };
+
+        if (CheckCollisionPointRec(mousePos, click1)) {
+            color1 = WHITE;
+        }
+
+        if (CheckCollisionPointRec(mousePos, click2)) {
+            color2 = WHITE;
+        }
+    }
+
+    DrawTexturePro(t1, {0, 0, (float)t1.width, (float)t1.height}, button1Rect, {0, 0}, 0.0f, color1);
+    DrawTexturePro(t2, {0, 0, (float)t2.width, (float)t2.height}, button2Rect, {0, 0}, 0.0f, color2);
 }
 
 void GameOverState::render()
 {
     ClearBackground(BLACK);
-    Vector2 mousePos = GetMousePosition();
     auto& rm = ResourceManager::Get();
 
     // Dibujar background si existe (victoria, muerte o nivel completado)
-    if (background) {
+    if (_background) {
         DrawTexturePro(
-            *background,
-            {0, 0, (float)background->width, (float)background->height},
+            *_background,
+            {0, 0, (float)_background->width, (float)_background->height},
             {0, 0, (float)WINDOW_WIDTH, (float)WINDOW_HEIGHT},
             {0, 0}, 0.0f, WHITE
         );
     }
 
-    // --- RENDERIZADO ESPECÍFICO SEGÚN EL ESTADO ---
-    if (!dead && !isVictory_) {
+    // Dibujar información según el estado
+    if (!_isDead && !_isVictory) {
         // Mostrar solo tiempo restante en amarillo con reborde negro
-        int totalSeconds = (int)remainingTime;
+        int totalSeconds = (int)_remainingTime;
         int minutes = totalSeconds / 60;
         int seconds = totalSeconds % 60;
         char timeText[32];
         sprintf(timeText, "Tiempo restante: %02d:%02d", minutes, seconds);
-        int timeWidth = MeasureText(timeText, 35);
+        int timeWidth = MeasureText(timeText, _TIME_FONT_SIZE);
         int textX = (WINDOW_WIDTH - timeWidth) / 2;
-        int textY = 250;
+        int textY = _TIME_TEXT_Y;
         
         // Dibujar reborde negro (dibujando el texto desplazado en 8 direcciones)
-        int offset = 2;
+        int offset = _TEXT_OFFSET;
         for (int dx = -offset; dx <= offset; dx++) {
             for (int dy = -offset; dy <= offset; dy++) {
                 if (dx != 0 || dy != 0) {
-                    DrawText(timeText, textX + dx, textY + dy, 35, BLACK);
+                    DrawText(timeText, textX + dx, textY + dy, _TIME_FONT_SIZE, BLACK);
                 }
             }
         }
         
         // Dibujar texto amarillo encima
-        DrawText(timeText, textX, textY, 35, GOLD);
-    } else if (isVictory_) {
-        // VICTORIA - Dibujar sprite de congratulations encima del background
+        DrawText(timeText, textX, textY, _TIME_FONT_SIZE, GOLD);
+    } else if (_isVictory) {
         const Texture2D& congrats = rm.GetTexture("sprites/menus/items_congratulations.png");
         
-        float scale = 0.35f;
+        float scale = _CONGRATS_SCALE;
         float width = congrats.width * scale;
         float height = congrats.height * scale;
         float x = (WINDOW_WIDTH - width) / 2.0f;
-        float y = 100;
+        float y = _CONGRATS_Y;
         
         DrawTexturePro(
             congrats,
@@ -277,14 +264,13 @@ void GameOverState::render()
             {0, 0}, 0.0f, WHITE
         );
     } else {
-        // GAME OVER - Dibujar sprite con huesos encima del background
         const Texture2D& gameOver = rm.GetTexture("sprites/menus/game_over.png");
         
-        float scale = 0.45f;
+        float scale = _GAME_OVER_SCALE;
         float width = gameOver.width * scale;
         float height = gameOver.height * scale;
         float x = (WINDOW_WIDTH - width) / 2.0f;
-        float y = 80;
+        float y = _GAME_OVER_Y;
         
         DrawTexturePro(
             gameOver,
@@ -294,134 +280,12 @@ void GameOverState::render()
         );
     }
 
-    // --- Botones ---
-    if (!dead && !isVictory_) {
-        // Botones con sprites para nivel completado
-        const Texture2D& botonSiguiente = rm.GetTexture("sprites/icons/boton_siguiente_nivel.png");
-        const Texture2D& botonSalir = rm.GetTexture("sprites/icons/boton_salir.png");
-        
-        float buttonWidth = 400;
-        float buttonHeight = 120;
-        float buttonSpacing = 100;
-        float totalWidth = (buttonWidth * 2) + buttonSpacing;
-        float startX = (WINDOW_WIDTH - totalWidth) / 2.0f;
-        float buttonY = 380;
-        
-        // Dibujar botón Siguiente Nivel
-        Rectangle siguienteButton = {startX, buttonY, buttonWidth, buttonHeight};
-        DrawTexturePro(
-            botonSiguiente,
-            {0, 0, (float)botonSiguiente.width, (float)botonSiguiente.height},
-            siguienteButton,
-            {0, 0}, 0.0f,
-            (selectedOption == 0) ? WHITE : Color{180, 180, 180, 255}
-        );
-        
-        // Dibujar botón Salir
-        Rectangle salirButton = {startX + buttonWidth + buttonSpacing, buttonY, buttonWidth, buttonHeight};
-        DrawTexturePro(
-            botonSalir,
-            {0, 0, (float)botonSalir.width, (float)botonSalir.height},
-            salirButton,
-            {0, 0}, 0.0f,
-            (selectedOption == 1) ? WHITE : Color{180, 180, 180, 255}
-        );
-    } else if (isVictory_) {
-        // Botones con sprites para victoria - horizontal como en la imagen
-        const Texture2D& botonEmpezar = rm.GetTexture("sprites/icons/boton_reiniciar.png");
-        const Texture2D& botonSalir = rm.GetTexture("sprites/icons/boton_salir.png");
-        
-        float buttonWidth = 350;
-        float buttonHeight = 100;
-        float spacing = 80;
-        float totalWidth = (buttonWidth * 2) + spacing;
-        float startX = (WINDOW_WIDTH - totalWidth) / 2.0f;
-        float startY = WINDOW_HEIGHT - 200;
-        
-        float clickPadding = 40;
-        
-        // Botón EMPEZAR DE NUEVO
-        Rectangle empezarButton = {startX, startY, buttonWidth, buttonHeight};
-        Rectangle empezarClickArea = {
-            startX + clickPadding,
-            startY + clickPadding/2,
-            buttonWidth - (clickPadding * 2),
-            buttonHeight - clickPadding
-        };
-        bool empezarHover = CheckCollisionPointRec(mousePos, empezarClickArea);
-        
-        DrawTexturePro(
-            botonEmpezar,
-            {0, 0, (float)botonEmpezar.width, (float)botonEmpezar.height},
-            empezarButton,
-            {0, 0}, 0.0f,
-            (selectedOption == 0 || empezarHover) ? WHITE : Color{180, 180, 180, 255}
-        );
-        
-        // Botón SALIR
-        Rectangle salirButton = {startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight};
-        Rectangle salirClickArea = {
-            startX + buttonWidth + spacing + clickPadding,
-            startY + clickPadding/2,
-            buttonWidth - (clickPadding * 2),
-            buttonHeight - clickPadding
-        };
-        bool salirHover = CheckCollisionPointRec(mousePos, salirClickArea);
-        
-        DrawTexturePro(
-            botonSalir,
-            {0, 0, (float)botonSalir.width, (float)botonSalir.height},
-            salirButton,
-            {0, 0}, 0.0f,
-            (selectedOption == 1 || salirHover) ? WHITE : Color{180, 180, 180, 255}
-        );
+    // Renderizar botones según el estado
+    if (!_isDead && !_isVictory) {
+        _renderButtons(_levelConfig, _TEX_BUTTON_NEXT, _TEX_BUTTON_EXIT, false);
+    } else if (_isVictory) {
+        _renderButtons(_otherConfig, _TEX_BUTTON_RESTART, _TEX_BUTTON_EXIT, true);
     } else {
-        // GAME OVER - Botones horizontales con sprites
-        const Texture2D& botonReiniciar = rm.GetTexture("sprites/icons/boton_reiniciar.png");
-        const Texture2D& botonSalir = rm.GetTexture("sprites/icons/boton_salir.png");
-        
-        float buttonWidth = 350;
-        float buttonHeight = 100;
-        float spacing = 80;
-        float totalWidth = (buttonWidth * 2) + spacing;
-        float startX = (WINDOW_WIDTH - totalWidth) / 2.0f;
-        float startY = WINDOW_HEIGHT - 200;
-        float clickPadding = 40;
-        
-        // Botón REINICIAR
-        Rectangle reiniciarButton = {startX, startY, buttonWidth, buttonHeight};
-        Rectangle reiniciarClickArea = {
-            startX + clickPadding,
-            startY + clickPadding/2,
-            buttonWidth - (clickPadding * 2),
-            buttonHeight - clickPadding
-        };
-        bool reiniciarHover = CheckCollisionPointRec(mousePos, reiniciarClickArea);
-        
-        DrawTexturePro(
-            botonReiniciar,
-            {0, 0, (float)botonReiniciar.width, (float)botonReiniciar.height},
-            reiniciarButton,
-            {0, 0}, 0.0f,
-            (selectedOption == 0 || reiniciarHover) ? WHITE : Color{180, 180, 180, 255}
-        );
-        
-        // Botón SALIR
-        Rectangle salirButton = {startX + buttonWidth + spacing, startY, buttonWidth, buttonHeight};
-        Rectangle salirClickArea = {
-            startX + buttonWidth + spacing + clickPadding,
-            startY + clickPadding/2,
-            buttonWidth - (clickPadding * 2),
-            buttonHeight - clickPadding
-        };
-        bool salirHover = CheckCollisionPointRec(mousePos, salirClickArea);
-        
-        DrawTexturePro(
-            botonSalir,
-            {0, 0, (float)botonSalir.width, (float)botonSalir.height},
-            salirButton,
-            {0, 0}, 0.0f,
-            (selectedOption == 1 || salirHover) ? WHITE : Color{180, 180, 180, 255}
-        );
+        _renderButtons(_otherConfig, _TEX_BUTTON_RESTART, _TEX_BUTTON_EXIT, true);
     }
 }

@@ -23,24 +23,24 @@ public:
     void resume() override {}
 
 private:
-    entt::registry* registry_;
-    entt::entity playerEntity_;
-    float* levelTime_;
-    bool* freezeEnemies_;
-    bool* infiniteTime_;
-    bool* keyGivenByCheating_;
-    int* totalKeysInMap_;
-    int currentLevel_;
+    entt::registry* _registry;
+    entt::entity _playerEntity;
+    float* _levelTime;
+    bool* _freezeEnemies;
+    bool* _infiniteTime;
+    bool* _keyGivenByCheating;
+    int* _totalKeysInMap;
+    int _currentLevel;
 
     // UI State
-    bool awaitingPassword_;
-    std::string passwordInput_;
-    int selectedOption_;
-    bool authenticated_;
+    bool _awaitingPassword;
+    std::string _passwordInput;
+    int _selectedOption;
+    bool _authenticated;
 
     // Cheat flags locales (sincronizados con Player)
-    bool godMode_;
-    bool noClip_;
+    bool _godMode;
+    bool _noClip;
 
     // Estructura para definir opciones de cheats
     struct CheatOption {
@@ -52,8 +52,8 @@ private:
     std::vector<CheatOption> cheatOptions_;
 
     // Helper methods
-    void renderPasswordScreen();
-    void renderDevMenu();
-    void setupCheatOptions();
-    bool resolvePlayerEntity();
+    void _renderPasswordScreen();
+    void _renderDevMenu();
+    void _setupCheatOptions();
+    bool _resolvePlayerEntity();
 };

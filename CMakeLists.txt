@@ -35,14 +35,23 @@ target_sources(game PRIVATE
     src/core/DevModeState.cpp
     src/core/MainGameState.cpp
     src/core/StartGameState.cpp
+    src/core/PlayerSpriteCatalog.cpp
     src/core/StateMachine.cpp
     src/core/GameState.cpp
     src/core/ResourceManager.cpp
+    src/core/PlayerSelection.cpp
+    src/core/SelectPlayerState.cpp
     src/objects/Player.cpp
     src/objects/Enemy.cpp
     src/objects/Map.cpp
     src/objects/Mechanism.cpp
     src/objects/Spikes.cpp
+    src/ecs/systems/CollisionSystems.cpp
+    src/ecs/systems/EnemySystems.cpp
+    src/ecs/systems/LevelSetupSystem.cpp
+    src/ecs/systems/PlayerSystems.cpp
+    src/ecs/systems/RenderSystems.cpp
+    src/ecs/systems/WorldSystems.cpp
 )
 
 # Para que busque los includes propios del proyecto y de vendor

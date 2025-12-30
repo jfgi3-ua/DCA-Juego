@@ -1,6 +1,6 @@
 #pragma once
 #include <entt/entt.hpp>
-#include "Map.hpp"
+#include "objects/Map.hpp"
 
 void LevelSetupSystem(entt::registry& registry, Map& map);
 
@@ -15,3 +15,5 @@ inline const char* MechanismTypeToString(MechanismType type) {
 }
 
 static void createMechanism_( entt::registry& registry, const MechanismPair& m, float tile, int mechId);
+
+static int ComputeFramesForTexture(const Texture2D& tex);
