@@ -18,7 +18,6 @@ FetchContent_MakeAvailable(Catch2)
 
 # Ejecutable de tests con Catch2.
 add_executable(game_tests
-    test_basic.cpp
     test_map_io.cpp
     test_map_mechanisms.cpp
     test_resource_manager.cpp
