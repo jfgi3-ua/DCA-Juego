@@ -20,6 +20,7 @@ FetchContent_MakeAvailable(Catch2)
 add_executable(game_tests
     test_basic.cpp
     test_map_io.cpp
+    test_map_mechanisms.cpp
 )
 
 # Los tests enlazan con el núcleo del juego para reutilizar la lógica.
