@@ -21,6 +21,8 @@ add_executable(game_tests
     test_basic.cpp
     test_map_io.cpp
     test_map_mechanisms.cpp
+    test_resource_manager.cpp
+    raylib_stubs.cpp
 )
 
 # Los tests enlazan con el núcleo del juego para reutilizar la lógica.
@@ -33,5 +35,8 @@ target_compile_definitions(game_tests PRIVATE TESTS_DIR="${CMAKE_CURRENT_SOURCE_
 
 # Registro automático de tests en CTest.
 # CTest detecta los tests sin añadirlos manualmente uno a uno.
+# Usamos WORKING_DIRECTORY para que "assets/" sea resoluble desde el repo.
 include(Catch)
-catch_discover_tests(game_tests)
+catch_discover_tests(game_tests
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
