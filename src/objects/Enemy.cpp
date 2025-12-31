@@ -120,7 +120,7 @@ void Enemy::updateAI(const Map &map, float dt, int tileSize, float playerX, floa
                 timer = 0.0f;
                 moving = false; // Recalcular dirección inmediatamente
             } else {
-                patrolBehavior(map, dt, tileSize);
+                patrolBehavior(map);
             }
             break;
             
@@ -130,7 +130,7 @@ void Enemy::updateAI(const Map &map, float dt, int tileSize, float playerX, floa
                 state = EnemyState::PATROL;
                 timer = 0.0f;
             } else {
-                chaseBehavior(map, dt, tileSize, playerX, playerY);
+                chaseBehavior(map, tileSize, playerX, playerY);
             }
             break;
             
@@ -142,7 +142,7 @@ void Enemy::updateAI(const Map &map, float dt, int tileSize, float playerX, floa
                 retreatTimer = 0.0f;
                 timer = 0.0f;
             } else {
-                retreatBehavior(map, dt, tileSize, playerX, playerY);
+                retreatBehavior(map, tileSize, playerX, playerY);
             }
             break;
     }
@@ -151,7 +151,7 @@ void Enemy::updateAI(const Map &map, float dt, int tileSize, float playerX, floa
 // ==================== COMPORTAMIENTOS ====================
 
 // PATROL: Movimiento aleatorio (comportamiento original)
-void Enemy::patrolBehavior(const Map &map, float dt, int tileSize)
+void Enemy::patrolBehavior(const Map &map)
 {
     if (!moving && (moveCooldown == 0.0f || timer >= moveCooldown)) {
         const int dx[4] = {0, 0, 1, -1};
@@ -181,7 +181,7 @@ void Enemy::patrolBehavior(const Map &map, float dt, int tileSize)
 }
 
 // CHASE: Perseguir al jugador inteligentemente
-void Enemy::chaseBehavior(const Map &map, float dt, int tileSize, float playerX, float playerY)
+void Enemy::chaseBehavior(const Map &map, int tileSize, float playerX, float playerY)
 {
     // Decidir siguiente movimiento más frecuentemente cuando persigue
     if (!moving && timer >= 0.05f) {
@@ -249,7 +249,7 @@ void Enemy::chaseBehavior(const Map &map, float dt, int tileSize, float playerX,
 }
 
 // RETREAT: Alejarse del jugador
-void Enemy::retreatBehavior(const Map &map, float dt, int tileSize, float playerX, float playerY)
+void Enemy::retreatBehavior(const Map &map, int tileSize, float playerX, float playerY)
 {
     if (!moving && timer >= 0.1f) {
         // Calcular celda del jugador
