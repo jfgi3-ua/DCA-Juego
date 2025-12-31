@@ -22,6 +22,8 @@ add_executable(game_tests
     test_map_io.cpp
     test_map_mechanisms.cpp
     test_resource_manager.cpp
+    test_player_selection.cpp
+    test_state_machine.cpp
     raylib_stubs.cpp
 )
 
