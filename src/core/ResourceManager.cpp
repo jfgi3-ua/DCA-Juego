@@ -1,7 +1,6 @@
 #include "ResourceManager.hpp"
 #include <iostream>
 
-
 const std::string LOCAL_PATH = "assets/";
 
 #ifdef __linux__
@@ -12,14 +11,11 @@ const std::string INSTALL_PATH = "/usr/share/game/assets/";
 const std::string INSTALL_PATH = "assets/";
 #endif
 
-
-
 ResourceManager& ResourceManager::Get() {
     // static garantiza que solo se crea una vez
     static ResourceManager instance;
     return instance;
 }
-
 
 // encontrar la ruta completa de un asset dentro del proyecto o el sistema de ficheros
 // filename es un path relativo dentro de assets/, por ejemplo "sprites/player.png"
@@ -53,8 +49,8 @@ std::string ResourceManager::GetAssetPath(const std::string& filename) {
 const Texture2D& ResourceManager::GetTexture(const std::string& filename) {
 
     // 1. Revisar si ya está cacheada
-    auto it = textures.find(filename);
-    if (it != textures.end()) {
+    auto it = _textures.find(filename);
+    if (it != _textures.end()) {
         return it->second;
     }
 
@@ -70,34 +66,32 @@ const Texture2D& ResourceManager::GetTexture(const std::string& filename) {
     }
 
     // 4. Guardar en caché
-    textures[filename] = tex;
+    _textures[filename] = tex;
     std::cout << "Textura cargada: " << path << std::endl;
     
     // 5. Devolver referencia a la textura cacheada
-    return textures[filename];
+    return _textures[filename];
 }
-
 
 void ResourceManager::UnloadTexture(const std::string& filename) {
 
-    auto it = textures.find(filename);
-    if (it != textures.end()) {
+    auto it = _textures.find(filename);
+    if (it != _textures.end()) {
         // Liberar la textura de la GPU
         ::UnloadTexture(it->second);
 
         // Eliminar del mapa
-        textures.erase(it);
+        _textures.erase(it);
     }
 }
-
 
 void ResourceManager::UnloadAll() {
 
     // Liberar todas las texturas sin borrar en mitad del bucle
-    for (auto& t : textures) {
+    for (auto& t : _textures) {
         ::UnloadTexture(t.second);
     }
 
     // Ahora borramos el mapa entero
-    textures.clear();
+    _textures.clear();
 }

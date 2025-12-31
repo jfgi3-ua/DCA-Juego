@@ -12,11 +12,11 @@ extern "C" {
 DevModeState::DevModeState(entt::registry* registry, float* levelTime, bool* freezeEnemies,
                            bool* infiniteTime, bool* keyGivenByCheating, int* totalKeysInMap,
                            int currentLevel)
-    : registry_(registry), playerEntity_(entt::null), levelTime_(levelTime), freezeEnemies_(freezeEnemies),
-      infiniteTime_(infiniteTime), keyGivenByCheating_(keyGivenByCheating), totalKeysInMap_(totalKeysInMap),
-      currentLevel_(currentLevel),
-      awaitingPassword_(true), selectedOption_(-1), authenticated_(false),
-      godMode_(false), noClip_(false)
+    : _registry(registry), _playerEntity(entt::null), _levelTime(levelTime), _freezeEnemies(freezeEnemies),
+      _infiniteTime(infiniteTime), _keyGivenByCheating(keyGivenByCheating), _totalKeysInMap(totalKeysInMap),
+      _currentLevel(currentLevel),
+      _awaitingPassword(true), _selectedOption(-1), _authenticated(false),
+      _godMode(false), _noClip(false)
 {
 }
 
@@ -26,92 +26,92 @@ DevModeState::~DevModeState()
 
 void DevModeState::init()
 {
-    awaitingPassword_ = true;
-    authenticated_ = false;
-    passwordInput_.clear();
-    selectedOption_ = -1;
+    _awaitingPassword = true;
+    _authenticated = false;
+    _passwordInput.clear();
+    _selectedOption = -1;
 
     // Sincronizar estado de cheats con ECS
-    if (resolvePlayerEntity() && registry_ && registry_->all_of<PlayerCheatComponent>(playerEntity_)) {
-        const auto &cheats = registry_->get<PlayerCheatComponent>(playerEntity_);
-        godMode_ = cheats.godMode;
-        noClip_ = cheats.noClip;
+    if (_resolvePlayerEntity() && _registry && _registry->all_of<PlayerCheatComponent>(_playerEntity)) {
+        const auto &cheats = _registry->get<PlayerCheatComponent>(_playerEntity);
+        _godMode = cheats.godMode;
+        _noClip = cheats.noClip;
     }
 
     // Configurar las opciones de cheats
-    setupCheatOptions();
+    _setupCheatOptions();
 }
 
-void DevModeState::setupCheatOptions()
+void DevModeState::_setupCheatOptions()
 {
     cheatOptions_.clear();
 
     // Verificar que los punteros son válidos
-    if (!registry_ || !freezeEnemies_ || !infiniteTime_ || !keyGivenByCheating_) {
+    if (!_registry || !_freezeEnemies || !_infiniteTime || !_keyGivenByCheating) {
         std::cerr << "ERROR: Punteros nulos en setupCheatOptions!" << std::endl;
         return;
     }
 
-    resolvePlayerEntity();
+    _resolvePlayerEntity();
 
     // 0. God Mode
     cheatOptions_.push_back({
         "1. God Mode (Invulnerabilidad)",
         [this]() {
-            godMode_ = !godMode_;
-            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<PlayerCheatComponent>(playerEntity_)) {
-                auto &cheats = registry_->get<PlayerCheatComponent>(playerEntity_);
-                cheats.godMode = godMode_;
+            _godMode = !_godMode;
+            if (_registry && _registry->valid(_playerEntity) && _registry->all_of<PlayerCheatComponent>(_playerEntity)) {
+                auto &cheats = _registry->get<PlayerCheatComponent>(_playerEntity);
+                cheats.godMode = _godMode;
             }
-            std::cout << "God Mode: " << (godMode_ ? "ON" : "OFF") << std::endl;
+            std::cout << "God Mode: " << (_godMode ? "ON" : "OFF") << std::endl;
         },
-        [this]() { return godMode_ ? "[ON]" : "[OFF]"; }
+        [this]() { return _godMode ? "[ON]" : "[OFF]"; }
     });
 
     // 1. Congelar Enemigos
     cheatOptions_.push_back({
         "2. Congelar Enemigos",
         [this]() {
-            if (freezeEnemies_) {
-                *freezeEnemies_ = !(*freezeEnemies_);
-                std::cout << "Freeze Enemies: " << (*freezeEnemies_ ? "ON" : "OFF") << std::endl;
+            if (_freezeEnemies) {
+                *_freezeEnemies = !(*_freezeEnemies);
+                std::cout << "Freeze Enemies: " << (*_freezeEnemies ? "ON" : "OFF") << std::endl;
             }
         },
-        [this]() { return (freezeEnemies_ && *freezeEnemies_) ? "[ON]" : "[OFF]"; }
+        [this]() { return (_freezeEnemies && *_freezeEnemies) ? "[ON]" : "[OFF]"; }
     });
 
     // 2. Tiempo Infinito
     cheatOptions_.push_back({
         "3. Tiempo Infinito",
         [this]() {
-            if (infiniteTime_) {
-                *infiniteTime_ = !(*infiniteTime_);
-                std::cout << "Infinite Time: " << (*infiniteTime_ ? "ON" : "OFF") << std::endl;
+            if (_infiniteTime) {
+                *_infiniteTime = !(*_infiniteTime);
+                std::cout << "Infinite Time: " << (*_infiniteTime ? "ON" : "OFF") << std::endl;
             }
         },
-        [this]() { return (infiniteTime_ && *infiniteTime_) ? "[ON]" : "[OFF]"; }
+        [this]() { return (_infiniteTime && *_infiniteTime) ? "[ON]" : "[OFF]"; }
     });
 
     // 3. NoClip
     cheatOptions_.push_back({
         "4. NoClip (Atravesar Paredes)",
         [this]() {
-            noClip_ = !noClip_;
-            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<PlayerCheatComponent>(playerEntity_)) {
-                auto &cheats = registry_->get<PlayerCheatComponent>(playerEntity_);
-                cheats.noClip = noClip_;
+            _noClip = !_noClip;
+            if (_registry && _registry->valid(_playerEntity) && _registry->all_of<PlayerCheatComponent>(_playerEntity)) {
+                auto &cheats = _registry->get<PlayerCheatComponent>(_playerEntity);
+                cheats.noClip = _noClip;
             }
-            std::cout << "NoClip: " << (noClip_ ? "ON" : "OFF") << std::endl;
+            std::cout << "NoClip: " << (_noClip ? "ON" : "OFF") << std::endl;
         },
-        [this]() { return noClip_ ? "[ON]" : "[OFF]"; }
+        [this]() { return _noClip ? "[ON]" : "[OFF]"; }
     });
 
     // 4. Añadir vida
     cheatOptions_.push_back({
         "5. Anadir +1 Vida",
         [this]() {
-            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
-                auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
+            if (_registry && _registry->valid(_playerEntity) && _registry->all_of<PlayerStatsComponent>(_playerEntity)) {
+                auto &stats = _registry->get<PlayerStatsComponent>(_playerEntity);
                 if (stats.lives < 10) {
                     stats.lives++;
                 }
@@ -125,8 +125,8 @@ void DevModeState::setupCheatOptions()
     cheatOptions_.push_back({
         "6. Vidas Maximas (10)",
         [this]() {
-            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
-                auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
+            if (_registry && _registry->valid(_playerEntity) && _registry->all_of<PlayerStatsComponent>(_playerEntity)) {
+                auto &stats = _registry->get<PlayerStatsComponent>(_playerEntity);
                 stats.lives = 10;
                 std::cout << "Vidas al maximo (10)" << std::endl;
             }
@@ -138,14 +138,14 @@ void DevModeState::setupCheatOptions()
     cheatOptions_.push_back({
         "7. Obtener Llave",
         [this]() {
-            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
-                auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
+            if (_registry && _registry->valid(_playerEntity) && _registry->all_of<PlayerStatsComponent>(_playerEntity)) {
+                auto &stats = _registry->get<PlayerStatsComponent>(_playerEntity);
                 if (stats.keysCollected == 0) {
                     // Evitar misleading-indentation: usar llaves explícitas
-                    if (keyGivenByCheating_) {
-                        *keyGivenByCheating_ = true;
+                    if (_keyGivenByCheating) {
+                        *_keyGivenByCheating = true;
                     }
-                    int targetKeys = totalKeysInMap_ ? *totalKeysInMap_ : 1;
+                    int targetKeys = _totalKeysInMap ? *_totalKeysInMap : 1;
                     stats.keysCollected = targetKeys;
                     std::cout << "Llave obtenida (por cheat)" << std::endl;
                 } else {
@@ -154,8 +154,8 @@ void DevModeState::setupCheatOptions()
             }
         },
         [this]() {
-            if (registry_ && registry_->valid(playerEntity_) && registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
-                auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
+            if (_registry && _registry->valid(_playerEntity) && _registry->all_of<PlayerStatsComponent>(_playerEntity)) {
+                auto &stats = _registry->get<PlayerStatsComponent>(_playerEntity);
                 return (stats.keysCollected > 0) ? "[SI]" : "[NO]";
             }
             return "[NO]";
@@ -166,8 +166,8 @@ void DevModeState::setupCheatOptions()
     cheatOptions_.push_back({
         "8. Anadir +30 Segundos",
         [this]() {
-            if (levelTime_) {
-                *levelTime_ += 30.0f;
+            if (_levelTime) {
+                *_levelTime += 30.0f;
                 std::cout << "30 segundos anadidos" << std::endl;
             }
         },
@@ -181,12 +181,12 @@ void DevModeState::setupCheatOptions()
             if (this->state_machine) {
                 this->state_machine->remove_overlay_state();
                 // Si estamos en el nivel 6 o superior, mostrar pantalla de victoria
-                if (currentLevel_ >= 6) {
+                if (_currentLevel >= 6) {
                     std::cout << "Nivel final completado - Mostrando pantalla de victoria..." << std::endl;
                     this->state_machine->add_state(std::make_unique<GameOverState>(6, false, 0.0f, true), true);
                 } else {
                     std::cout << "Saltando al siguiente nivel..." << std::endl;
-                    this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel_ + 1), true);
+                    this->state_machine->add_state(std::make_unique<MainGameState>(_currentLevel + 1), true);
                 }
             }
         },
@@ -197,32 +197,32 @@ void DevModeState::setupCheatOptions()
     cheatOptions_.push_back({
         "0. Resetear Todos los Cheats",
         [this]() {
-            godMode_ = false;
+            _godMode = false;
             // Evitar misleading-indentation: usar llaves en asignaciones a punteros
-            if (freezeEnemies_) {
-                *freezeEnemies_ = false;
+            if (_freezeEnemies) {
+                *_freezeEnemies = false;
             }
-            if (infiniteTime_) {
-                *infiniteTime_ = false;
+            if (_infiniteTime) {
+                *_infiniteTime = false;
             }
-            noClip_ = false;
-            if (registry_ && registry_->valid(playerEntity_)) {
-                if (registry_->all_of<PlayerCheatComponent>(playerEntity_)) {
-                    auto &cheats = registry_->get<PlayerCheatComponent>(playerEntity_);
+            _noClip = false;
+            if (_registry && _registry->valid(_playerEntity)) {
+                if (_registry->all_of<PlayerCheatComponent>(_playerEntity)) {
+                    auto &cheats = _registry->get<PlayerCheatComponent>(_playerEntity);
                     cheats.godMode = false;
                     cheats.noClip = false;
                 }
-                if (registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
-                    auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
+                if (_registry->all_of<PlayerStatsComponent>(_playerEntity)) {
+                    auto &stats = _registry->get<PlayerStatsComponent>(_playerEntity);
                     stats.lives = 5;
                 }
             }
 
-            if (keyGivenByCheating_ && *keyGivenByCheating_ && registry_ && registry_->valid(playerEntity_) &&
-                registry_->all_of<PlayerStatsComponent>(playerEntity_)) {
-                auto &stats = registry_->get<PlayerStatsComponent>(playerEntity_);
+            if (_keyGivenByCheating && *_keyGivenByCheating && _registry && _registry->valid(_playerEntity) &&
+                _registry->all_of<PlayerStatsComponent>(_playerEntity)) {
+                auto &stats = _registry->get<PlayerStatsComponent>(_playerEntity);
                 stats.keysCollected = 0;
-                *keyGivenByCheating_ = false;
+                *_keyGivenByCheating = false;
                 std::cout << "Llave quitada (era de cheat)" << std::endl;
             }
 
@@ -236,23 +236,23 @@ void DevModeState::handleInput()
 {
     Vector2 mousePos = GetMousePosition();
 
-    if (awaitingPassword_)
+    if (_awaitingPassword)
     {
         // Capturar entrada de teclado
         int key = GetCharPressed();
         while (key > 0)
         {
-            if ((key >= 32) && (key <= 125) && passwordInput_.length() < 20)
+            if ((key >= 32) && (key <= 125) && _passwordInput.length() < 20)
             {
-                passwordInput_ += (char)key;
+                _passwordInput += (char)key;
             }
             key = GetCharPressed();
         }
 
         // Backspace
-        if (IsKeyPressed(KEY_BACKSPACE) && passwordInput_.length() > 0)
+        if (IsKeyPressed(KEY_BACKSPACE) && _passwordInput.length() > 0)
         {
-            passwordInput_.pop_back();
+            _passwordInput.pop_back();
         }
 
         // Botones
@@ -266,17 +266,17 @@ void DevModeState::handleInput()
 
         if (IsKeyPressed(KEY_ENTER) || confirmClicked)
         {
-            if (passwordInput_ == "developer")
+            if (_passwordInput == "developer")
             {
-                authenticated_ = true;
-                awaitingPassword_ = false;
-                selectedOption_ = -1;
-                passwordInput_.clear();
+                _authenticated = true;
+                _awaitingPassword = false;
+                _selectedOption = -1;
+                _passwordInput.clear();
                 std::cout << "Developer Mode activado!" << std::endl;
             }
             else
             {
-                passwordInput_.clear();
+                _passwordInput.clear();
                 std::cout << "Contraseña incorrecta" << std::endl;
             }
         }
@@ -287,7 +287,7 @@ void DevModeState::handleInput()
             this->state_machine->remove_overlay_state();
         }
     }
-    else if (authenticated_)
+    else if (_authenticated)
     {
         // Menú de opciones
         int menuX = GetScreenWidth() / 2 - 250;
@@ -305,7 +305,7 @@ void DevModeState::handleInput()
 
             if (CheckCollisionPointRec(mousePos, optionRect))
             {
-                selectedOption_ = i;
+                _selectedOption = i;
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
                 {
                     cheatOptions_[i].action();
@@ -316,18 +316,18 @@ void DevModeState::handleInput()
         // Navegación por teclado
         if (IsKeyPressed(KEY_UP))
         {
-            selectedOption_--;
-            if (selectedOption_ < 0) selectedOption_ = static_cast<int>(cheatOptions_.size()) - 1;
+            _selectedOption--;
+            if (_selectedOption < 0) _selectedOption = static_cast<int>(cheatOptions_.size()) - 1;
         }
         if (IsKeyPressed(KEY_DOWN))
         {
-            selectedOption_++;
-            if (selectedOption_ >= static_cast<int>(cheatOptions_.size())) selectedOption_ = 0;
+            _selectedOption++;
+            if (_selectedOption >= static_cast<int>(cheatOptions_.size())) _selectedOption = 0;
         }
 
-        if (IsKeyPressed(KEY_ENTER) && selectedOption_ >= 0 && selectedOption_ < static_cast<int>(cheatOptions_.size()))
+        if (IsKeyPressed(KEY_ENTER) && _selectedOption >= 0 && _selectedOption < static_cast<int>(cheatOptions_.size()))
         {
-            cheatOptions_[selectedOption_].action();
+            cheatOptions_[_selectedOption].action();
         }
 
         // Cerrar menú
@@ -346,36 +346,36 @@ void DevModeState::update(float /*deltaTime*/)
     // Este estado no actualiza lógica, solo maneja UI
 }
 
-bool DevModeState::resolvePlayerEntity()
+bool DevModeState::_resolvePlayerEntity()
 {
-    if (!registry_){
+    if (!_registry){
         return false;
     }
 
-    auto view = registry_->view<PlayerInputComponent>();
+    auto view = _registry->view<PlayerInputComponent>();
 
     if (view.empty()) {
-        playerEntity_ = entt::null;
+        _playerEntity = entt::null;
         return false;
     }
     
-    playerEntity_ = *view.begin();
-    return registry_->valid(playerEntity_);
+    _playerEntity = *view.begin();
+    return _registry->valid(_playerEntity);
 }
 
 void DevModeState::render()
 {
-    if (awaitingPassword_)
+    if (_awaitingPassword)
     {
-        renderPasswordScreen();
+        _renderPasswordScreen();
     }
-    else if (authenticated_)
+    else if (_authenticated)
     {
-        renderDevMenu();
+        _renderDevMenu();
     }
 }
 
-void DevModeState::renderPasswordScreen()
+void DevModeState::_renderPasswordScreen()
 {
     Vector2 mousePos = GetMousePosition();
 
@@ -396,7 +396,7 @@ void DevModeState::renderPasswordScreen()
 
     // Campo de contraseña
     char masked[32] = {0};
-    for (size_t i = 0; i < passwordInput_.length() && i < 31; i++)
+    for (size_t i = 0; i < _passwordInput.length() && i < 31; i++)
     {
         masked[i] = '*';
     }
@@ -422,7 +422,7 @@ void DevModeState::renderPasswordScreen()
     DrawText("Usa teclado o haz clic en los botones", menuX + 90, menuY + 350, 16, LIGHTGRAY);
 }
 
-void DevModeState::renderDevMenu()
+void DevModeState::_renderDevMenu()
 {
     Vector2 mousePos = GetMousePosition();
 
@@ -442,7 +442,7 @@ void DevModeState::renderDevMenu()
     DrawText("Haz clic o usa UP/DOWN y ENTER", menuX + 80, menuY + 60, 16, LIGHTGRAY);
 
     // Mostrar estado GOD global (cualquier cheat activo)
-    bool isGodActive = godMode_ || noClip_ || (*freezeEnemies_) || (*infiniteTime_);
+    bool isGodActive = _godMode || _noClip || (*_freezeEnemies) || (*_infiniteTime);
     if (isGodActive) {
         DrawRectangle(menuX + 10, menuY + 70, menuWidth - 20, 20, Fade(GOLD, 0.3f));
         DrawText("*** GOD MODE ACTIVO ***", menuX + 140, menuY + 73, 16, GOLD);
@@ -458,7 +458,7 @@ void DevModeState::renderDevMenu()
         };
 
         bool isHovered = CheckCollisionPointRec(mousePos, optionRect);
-        bool isSelected = (i == selectedOption_);
+        bool isSelected = (i == _selectedOption);
 
         if (isHovered || isSelected)
         {

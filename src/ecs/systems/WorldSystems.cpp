@@ -1,17 +1,6 @@
 #include "ecs/systems/WorldSystems.hpp"
 #include <cmath>
 
-bool IsMechanismBlockingCell(entt::registry &registry, int cellX, int cellY) {
-    auto view = registry.view<const MechanismComponent>();
-    for (auto entity : view) {
-        const auto &mech = view.get<const MechanismComponent>(entity).mechanism;
-        if (!mech.isActive()) continue;
-        IVec2 target = mech.getTargetPos();
-        if (target.x == cellX && target.y == cellY) return true;
-    }
-    return false;
-}
-
 void MovementSystem(entt::registry &registry, float deltaTime) {
     auto view = registry.view<TransformComponent, MovementComponent>();
 
@@ -87,22 +76,61 @@ void SpikeSystem(entt::registry &registry, float deltaTime) {
 
 void MechanismSystem(entt::registry &registry, const Map &map) {
     auto playerView = registry.view<const TransformComponent, PlayerInputComponent>();
-    if (!playerView) return;
+    if(!playerView) return;
 
     auto playerEntity = *playerView.begin();
-    const auto &trans = playerView.get<const TransformComponent>(playerEntity);
+    const auto &pTrans = playerView.get<const TransformComponent>(playerEntity);
 
     float tileSize = (float)map.tile();
-    int cellX = (int)(trans.position.x / tileSize);
-    int cellY = (int)(trans.position.y / tileSize);
+    int pCellX = (int)std::floor(pTrans.position.x / tileSize);
+    int pCellY = (int)std::floor(pTrans.position.y / tileSize);
 
-    auto mechView = registry.view<MechanismComponent>();
-    for (auto entity : mechView) {
-        auto &mech = mechView.get<MechanismComponent>(entity).mechanism;
-        if (!mech.isActive()) continue;
-        IVec2 trigger = mech.getTriggerPos();
-        if (trigger.x == cellX && trigger.y == cellY) {
-            mech.deactivate();
+    // 1) detectar si el player está pisando algún TRIGGER activo
+    int triggeredId = -1;
+
+    auto triggerView = registry.view<const MechanismComponent, const MechanismTriggerComponent, const TransformComponent>();
+    for (auto e : triggerView) {
+        const auto &mech = triggerView.get<const MechanismComponent>(e);
+        if (!mech.active) continue;
+
+        const auto &t = triggerView.get<const TransformComponent>(e);
+        int cx = (int)std::floor(t.position.x / tileSize);
+        int cy = (int)std::floor(t.position.y / tileSize);
+
+        if (cx == pCellX && cy == pCellY) {
+            triggeredId = mech.id;     // <-- asumo que MechanismComponent tiene 'int id'
+            break;
         }
     }
+
+    if (triggeredId == -1) return;
+
+    // 2) desactivar TODO lo que pertenezca a ese id (trigger + target)
+    auto mechView = registry.view<MechanismComponent>();
+    for (auto e : mechView) {
+        auto &mech = mechView.get<MechanismComponent>(e);
+        if (mech.id == triggeredId) {
+            mech.active = false;
+        }
+    }
+}
+
+
+bool IsMechanismBlockingCell(entt::registry &registry, int cellX, int cellY) {
+    float tileSize = TILE_SIZE;
+    // solo targets bloquean (la puerta/trampa/puente), el trigger no
+    auto view = registry.view<const MechanismComponent, const MechanismTargetComponent, const TransformComponent>();
+
+    for (auto entity : view) {
+        const auto &mech = view.get<const MechanismComponent>(entity);
+        if (!mech.active) continue;
+
+        const auto &tr = view.get<const TransformComponent>(entity);
+
+        int tx = (int)std::floor(tr.position.x / tileSize);
+        int ty = (int)std::floor(tr.position.y / tileSize);
+
+        if (tx == cellX && ty == cellY) return true;
+    }
+    return false;
 }

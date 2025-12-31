@@ -30,5 +30,5 @@ private:
 
 private:
     //cache texturas
-    std::unordered_map<std::string, Texture2D> textures;
+    std::unordered_map<std::string, Texture2D> _textures;
 };
