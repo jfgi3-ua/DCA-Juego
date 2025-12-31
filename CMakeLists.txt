@@ -5,12 +5,18 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-
 project(game
     VERSION 0.3
     DESCRIPTION "Laberinto"
     LANGUAGES CXX
 )
+
+# --- Testing base (CTest) ----------------------------------------------------
+# include(CTest) configura CTest y añade opciones estándar para tests.
+# enable_testing() activa el registro de tests en este proyecto.
+# Debe ir después de project() para que CMake tenga el proyecto definido.
+include(CTest)
+enable_testing()
 
 # Configuración de raylib multiplataforma
 include(FetchContent)
@@ -81,3 +87,6 @@ endif()
 
 # Organización de binarios
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Subdirectorio de tests (solo declara objetivos, no ejecuta nada. Se encontrará en la subcarpeta tests).
+add_subdirectory(tests)
