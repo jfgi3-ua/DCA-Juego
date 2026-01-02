@@ -289,3 +289,10 @@ cmake --build .
 cd ..
 .\build\game.exe
 ~~~
+
+#### Instalar
+
+~~~
+cd build
+cpack -C Release
+~~~
