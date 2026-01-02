@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) Descarga el repositorio para que el runner tenga el código.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2) Dependencias del sistema necesarias para compilar raylib (X11/GL).
+      # Sin esto, el configure falla al buscar X11 en runners de Ubuntu.
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev
+
+      # 3) Configura el proyecto con CMake (modo Debug para mejor diagnostico).
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+      # 4) Compila el proyecto (incluye game_tests).
+      - name: Build
+        run: cmake --build build
+
+      # 5) Ejecuta CTest y muestra errores si hay fallos.
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure

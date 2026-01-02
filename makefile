@@ -204,12 +204,6 @@ install: $(BIN_DIR)/$(APP_NAME)
 
 	@echo "$(GREEN)[INSTALL] Instalación completada.$(RESET)"
 
-
-uninstall:
-	@echo "$(RED)[UNINSTALL] Eliminando archivos instalados...$(RESET)"
-	rm -f $(DESTDIR)$(BINDIR)/$(APP_NAME)
-	rm -rf $(DESTDIR)$(DATADIR)
-	@echo "$(GREEN)[UNINSTALL] Completado.$(RESET)"
 	
 # =========================
 # Empaquetado .deb

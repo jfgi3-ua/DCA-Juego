@@ -5,12 +5,18 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-
 project(game
     VERSION 0.3
     DESCRIPTION "Laberinto"
     LANGUAGES CXX
 )
+
+# --- Testing base (CTest) ----------------------------------------------------
+# include(CTest) configura CTest y añade opciones estándar para tests.
+# enable_testing() activa el registro de tests en este proyecto.
+# Debe ir después de project() para que CMake tenga el proyecto definido.
+include(CTest)
+enable_testing()
 
 # Configuración de raylib multiplataforma
 include(FetchContent)
@@ -25,11 +31,9 @@ FetchContent_Declare(
 # Construir raylib dentro del proyecto
 FetchContent_MakeAvailable(raylib)
 
-# Ejecutable principal
-add_executable(game)
-
-# Fuentes del proyecto
-target_sources(game PRIVATE
+# Fuentes del proyecto (núcleo compartible).
+# Excluimos main.cpp en el siguiente paso para poder reutilizar el núcleo en tests sin arrancar el juego.
+set(GAME_CORE_SOURCES
     src/core/main.cpp
     src/core/GameOverState.cpp
     src/core/DevModeState.cpp
@@ -54,24 +58,49 @@ target_sources(game PRIVATE
     src/ecs/systems/WorldSystems.cpp
 )
 
+# Quitamos main.cpp del núcleo para que el core sea "headless"
+# y reutilizable en tests sin arrancar el juego.
+list(REMOVE_ITEM GAME_CORE_SOURCES src/core/main.cpp)
+
+# Librería con el conjunto de fuentes del núcleo del juego.
+# Se usa tanto por el ejecutable principal como por los tests.
+# Ahora el ejecutable y los tests comparten la misma lógica.
+add_library(game_core
+    ${GAME_CORE_SOURCES}
+)
+
 # Para que busque los includes propios del proyecto y de vendor
-target_include_directories(game PRIVATE
+target_include_directories(game_core PUBLIC
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/vendor/include
 )
 
-# Enlazar raylib
-target_link_libraries(game PRIVATE raylib)
+# Enlazar raylib desde el núcleo (consumidores heredan el enlace, por eso cambiamos a PUBLIC).
+# CUalquier consumidor (game/tests) heredan includes y enlace.
+target_link_libraries(game_core PUBLIC raylib)
+
+# Ejecutable principal (solo contiene main.cpp).
+add_executable(game
+    src/core/main.cpp
+)
+
+# El juego depende del núcleo.
+# El ejecutable queda limpio y usa el core como dependencia.
+target_link_libraries(game PRIVATE game_core)
 
 # Configuración multiplataforma
 if (WIN32)
     message(STATUS "Configurando para Windows")
-    # En Windows, raylib trae soporte para WinMM, gdi32, etc.
-    target_link_libraries(game PRIVATE raylib winmm gdi32 opengl32 user32)
+    # En Windows, raylib necesita WinMM, gdi32, etc. Lo ponemos en el core
+    # para que también lo hereden los tests que enlazan con game_core.
+    # Cambiado a PUBLIC para que tests hereden.
+    target_link_libraries(game_core PUBLIC winmm gdi32 opengl32 user32)
 elseif (UNIX)
     message(STATUS "Configurando para Linux")
-    # En Linux, raylib necesita enlazar con librerías del sistema
-    target_link_libraries(game PRIVATE m pthread GL X11)
+    # En Linux, raylib necesita enlazar con librerías del sistema.
+    # Se declaran en game_core para que game y tests hereden el enlace.
+    # Cambiado a PUBLIC para que tests hereden.
+    target_link_libraries(game_core PUBLIC m pthread GL X11)
 endif()
 
 # Enlace estático en MinGW para evitar DLLs externas
@@ -81,6 +110,9 @@ endif()
 
 # Organización de binarios
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Subdirectorio de tests (solo declara objetivos, no ejecuta nada. Se encontrará en la subcarpeta tests).
+add_subdirectory(tests)
 
 # Configuración de CPack para distribución multiplataforma
 set(CPACK_PACKAGE_NAME "Laberinto")
