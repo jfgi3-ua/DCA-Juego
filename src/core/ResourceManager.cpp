@@ -1,7 +1,7 @@
 #include "ResourceManager.hpp"
 #include <iostream>
 
-const std::string LOCAL_PATH = "../assets/";
+const std::string LOCAL_PATH = "./assets/";
 
 #ifdef __linux__
 // Ruta estándar en Linux para recursos de aplicaciones empaquetadas
