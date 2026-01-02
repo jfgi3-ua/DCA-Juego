@@ -67,7 +67,7 @@ void Player::handleInput(const Map& map, const std::vector<Vector2>& blockedTile
 
     // Calcular duración del movimiento en base al tamaño del tile y la velocidad
     // (más intuitivo: tiempo = distancia / velocidad). tileSize es la distancia en px.
-    _move_duration = (tileSize > 0 && _speed > 0.0f) ? (float)tileSize / _speed : 0.2f;
+    _move_duration = (tileSize > 0 && speed_ > 0.0f) ? (float)tileSize / speed_ : 0.2f;
     if (_move_duration <= 0.0f) _move_duration = 0.1f;
     _moving = true;
 }
