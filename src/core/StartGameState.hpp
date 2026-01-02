@@ -1,6 +1,8 @@
 #pragma once
 #include "GameState.hpp"
 #include "MainGameState.hpp"
+#include "Localization.hpp"
+
 
 extern "C" {
     #include <raylib.h>

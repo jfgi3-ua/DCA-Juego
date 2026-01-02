@@ -45,6 +45,20 @@ void StartGameState::handleInput() {
     // NOTE: main.cpp gestiona SwitchLocalization() globalmente. Aquí solo procesamos
     // el resto de entradas; la recarga de texturas se detecta en update().
 
+    //añadimos boton localizacion
+    Rectangle langButton = {
+        WINDOW_WIDTH - 60.0f - 20.0f,
+        20.0f,
+        60.0f,
+        30.0f
+    };
+
+    if (CheckCollisionPointRec(mousePos, langButton)) {
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            SwitchLocalization(); // Cambia EN <-> ES
+            return;
+        }
+    }
     // Configurar rectángulos de botones - en horizontal
     float buttonWidth = 250;
     float buttonHeight = 80;
@@ -211,5 +225,34 @@ void StartGameState::render() {
         {0, 0},
         0.0f,
         (selectedOption == 1 || exitHover) ? WHITE : Color{180, 180, 180, 255}
+    );
+
+    // Dibujar botón de cambio de idioma
+    Rectangle langButton = {
+        WINDOW_WIDTH - 60.0f - 20.0f,
+        20.0f,
+        60.0f,
+        30.0f
+    };
+
+    bool langHover = CheckCollisionPointRec(mousePos, langButton);
+
+    DrawRectangleRec(
+        langButton,
+        langHover ? Color{200, 200, 200, 255} : Color{160, 160, 160, 255}
+    );
+
+    std::string langText =
+        (GetCurrentLanguage() == "en") ? "EN" : "ES";
+
+    int fontSize = 20;
+    int textWidth = MeasureText(langText.c_str(), fontSize);
+
+    DrawText(
+        langText.c_str(),
+        langButton.x + (langButton.width - textWidth) / 2,
+        langButton.y + (langButton.height - fontSize) / 2,
+        fontSize,
+        BLACK
     );
 }
