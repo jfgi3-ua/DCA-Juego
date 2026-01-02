@@ -130,3 +130,27 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/assets/
 
 # Subdirectorio de tests (solo declara objetivos, no ejecuta nada. Se encontrará en la subcarpeta tests).
 add_subdirectory(tests)
+
+# Configuración de CPack para distribución multiplataforma
+set(CPACK_PACKAGE_NAME "Laberinto")
+set(CPACK_PACKAGE_VENDOR "Alejandro")
+set(CPACK_PACKAGE_CONTACT "ama266@alu.ua.com")
+
+# Instalar el ejecutable
+install(TARGETS game DESTINATION bin)
+
+# Instalar assets
+if(UNIX)
+    install(DIRECTORY assets/ DESTINATION share/game/assets)
+elseif(WIN32)
+    install(DIRECTORY assets/ DESTINATION bin/assets)
+endif()
+
+# Configuración específica por plataforma
+if(WIN32)
+    set(CPACK_GENERATOR "NSIS")
+elseif(UNIX)
+    set(CPACK_GENERATOR "DEB")
+endif()
+
+include(CPack)
