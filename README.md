@@ -239,7 +239,7 @@ make
 make clean
 ~~~
 
-## 8. Pruebas de compilación y ejecución (CMake)
+## 8. Pruebas de compilación, ejecución e instalación (CMake)
 
 ### Linux
 
@@ -260,6 +260,13 @@ cmake --build build --config Release
 
 ~~~
 ./build/game
+~~~
+
+#### Instalar
+
+~~~
+cd build
+cpack
 ~~~
 
 ### Windows
