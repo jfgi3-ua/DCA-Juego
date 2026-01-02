@@ -8,6 +8,7 @@
 #include "StateMachine.hpp"
 #include "MainGameState.hpp"
 #include "ResourceManager.hpp"
+#include "Localization.hpp"
 #include <deque> 
 
 extern "C" {
@@ -101,4 +102,8 @@ class GameOverState : public GameState
         void _handleButtons(const Rectangle& button1Area, const Rectangle& button2Area, std::function<void()> action1, std::function<void()> action2);
         void _handleConfig(const ButtonConfig& config, std::function<void()> action1, std::function<void()> action2);
         void _renderButtons(const ButtonConfig& config, const std::string& tex1, const std::string& tex2, bool useHover);
+        void _handleLangButtonInput();
+        void _renderLangButton() const;
+        Rectangle _getLangButtonRect() const;
+
 };

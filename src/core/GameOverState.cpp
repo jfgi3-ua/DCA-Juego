@@ -111,6 +111,27 @@ void GameOverState::init() {
     }
 }
 
+//rectangulo del boton de idioma
+Rectangle GameOverState::_getLangButtonRect() const {
+    return {
+        WINDOW_WIDTH - 60.0f - 20.0f,
+        20.0f,
+        60.0f,
+        30.0f
+    };
+}
+
+// Maneja la entrada del botón de cambio de idioma
+void GameOverState::_handleLangButtonInput() {
+    Vector2 mousePos = GetMousePosition();
+    Rectangle rect = _getLangButtonRect();
+
+    if (CheckCollisionPointRec(mousePos, rect) &&
+        IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        SwitchLocalization();
+    }
+}
+
 // Maneja la lógica de los botones y la selección (Ratón y teclado)
 void GameOverState::_handleButtons(const Rectangle& button1Area, const Rectangle& button2Area, std::function<void()> action1, std::function<void()> action2) {
     Vector2 mousePos = GetMousePosition();
@@ -162,8 +183,9 @@ void GameOverState::_handleConfig(const ButtonConfig& config, std::function<void
 }
 
 void GameOverState::handleInput() {
-    if (!_isDead && !_isVictory) {
+    _handleLangButtonInput();
 
+    if (!_isDead && !_isVictory) {
         // Juego completado o siguiente nivel 
 
         auto action1 = [this]() {
@@ -293,6 +315,34 @@ void GameOverState::_renderButtons(const ButtonConfig& config, const std::string
     DrawTexturePro(t2, {0, 0, (float)t2.width, (float)t2.height}, button2Rect, {0, 0}, 0.0f, color2);
 }
 
+//render boton de idioma
+void GameOverState::_renderLangButton() const {
+    Vector2 mousePos = GetMousePosition();
+    Rectangle rect = _getLangButtonRect();
+
+    bool hover = CheckCollisionPointRec(mousePos, rect);
+
+    DrawRectangleRec(
+        rect,
+        hover ? Color{200, 200, 200, 255}
+              : Color{160, 160, 160, 255}
+    );
+
+    std::string langText =
+        (GetCurrentLanguage() == "en") ? "EN" : "ES";
+
+    int fontSize = 20;
+    int textWidth = MeasureText(langText.c_str(), fontSize);
+
+    DrawText(
+        langText.c_str(),
+        rect.x + (rect.width - textWidth) / 2,
+        rect.y + (rect.height - fontSize) / 2,
+        fontSize,
+        BLACK
+    );
+}
+
 void GameOverState::render()
 {
     ClearBackground(BLACK);
@@ -380,4 +430,6 @@ void GameOverState::render()
     } else {
         _renderButtons(_otherConfig, GetButtonSprite("boton_reiniciar"), GetButtonSprite("boton_salir"), true);
     }
+
+        _renderLangButton();
 }
