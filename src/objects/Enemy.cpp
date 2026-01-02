@@ -16,7 +16,7 @@ static void shuffledNeighbors(int out[4]) {
 // ==================== UTILIDADES ====================
 
 // Calcular distancia en píxeles al jugador
-float Enemy::distanceToPlayer(float playerX, float playerY) const {
+float Enemy::_distanceToPlayer(float playerX, float playerY) const {
     float dx = (px - playerX);
     float dy = (py - playerY);
     return std::sqrt(dx * dx + dy * dy);
@@ -24,7 +24,7 @@ float Enemy::distanceToPlayer(float playerX, float playerY) const {
 
 // Verificar si hay línea de visión directa al jugador (sin paredes de por medio)
 // Usa el algoritmo de Bresenham para trazar una línea entre el enemigo y el jugador
-bool Enemy::hasLineOfSight(const Map &map, int playerCellX, int playerCellY) const {
+bool Enemy::_hasLineOfSight(const Map &map, int playerCellX, int playerCellY) const {
     int x0 = x;
     int y0 = y;
     int x1 = playerCellX;
@@ -92,19 +92,19 @@ void Enemy::update(const Map &map, float dt, int tileSize, float playerX, float 
     timer += dt;
     
     // Árbol de decisiones de IA
-    updateAI(map, dt, tileSize, playerX, playerY);
+    _updateAI(map, dt, tileSize, playerX, playerY);
     
     // Mover hacia el objetivo si está en movimiento
     if (moving) {
-        moveTowardsTarget(dt, tileSize);
+        _moveTowardsTarget(dt, tileSize);
     }
 }
 
 // ==================== ÁRBOL DE DECISIONES ====================
 
-void Enemy::updateAI(const Map &map, float dt, int tileSize, float playerX, float playerY)
+void Enemy::_updateAI(const Map &map, float dt, int tileSize, float playerX, float playerY)
 {
-    float distToPlayer = distanceToPlayer(playerX, playerY);
+    float distToPlayer = _distanceToPlayer(playerX, playerY);
     float distInTiles = distToPlayer / tileSize;
     
     // Calcular celda del jugador
@@ -115,22 +115,22 @@ void Enemy::updateAI(const Map &map, float dt, int tileSize, float playerX, floa
     switch (state) {
         case EnemyState::PATROL:
             // ¿El jugador está cerca Y hay línea de visión? -> Cambiar a CHASE
-            if (distInTiles <= detectionRange && hasLineOfSight(map, playerCellX, playerCellY)) {
+            if (distInTiles <= detectionRange && _hasLineOfSight(map, playerCellX, playerCellY)) {
                 state = EnemyState::CHASE;
                 timer = 0.0f;
                 moving = false; // Recalcular dirección inmediatamente
             } else {
-                patrolBehavior(map);
+                _patrolBehavior(map);
             }
             break;
             
         case EnemyState::CHASE:
             // ¿El jugador está lejos O no hay línea de visión? -> Volver a PATROL
-            if (distInTiles > detectionRange * 1.5f || !hasLineOfSight(map, playerCellX, playerCellY)) {
+            if (distInTiles > detectionRange * 1.5f || !_hasLineOfSight(map, playerCellX, playerCellY)) {
                 state = EnemyState::PATROL;
                 timer = 0.0f;
             } else {
-                chaseBehavior(map, tileSize, playerX, playerY);
+                _chaseBehavior(map, tileSize, playerX, playerY);
             }
             break;
             
@@ -142,7 +142,7 @@ void Enemy::updateAI(const Map &map, float dt, int tileSize, float playerX, floa
                 retreatTimer = 0.0f;
                 timer = 0.0f;
             } else {
-                retreatBehavior(map, tileSize, playerX, playerY);
+                _retreatBehavior(map, tileSize, playerX, playerY);
             }
             break;
     }
@@ -151,7 +151,7 @@ void Enemy::updateAI(const Map &map, float dt, int tileSize, float playerX, floa
 // ==================== COMPORTAMIENTOS ====================
 
 // PATROL: Movimiento aleatorio (comportamiento original)
-void Enemy::patrolBehavior(const Map &map)
+void Enemy::_patrolBehavior(const Map &map)
 {
     if (!moving && (moveCooldown == 0.0f || timer >= moveCooldown)) {
         const int dx[4] = {0, 0, 1, -1};
@@ -181,7 +181,7 @@ void Enemy::patrolBehavior(const Map &map)
 }
 
 // CHASE: Perseguir al jugador inteligentemente
-void Enemy::chaseBehavior(const Map &map, int tileSize, float playerX, float playerY)
+void Enemy::_chaseBehavior(const Map &map, int tileSize, float playerX, float playerY)
 {
     // Decidir siguiente movimiento más frecuentemente cuando persigue
     if (!moving && timer >= 0.05f) {
@@ -249,7 +249,7 @@ void Enemy::chaseBehavior(const Map &map, int tileSize, float playerX, float pla
 }
 
 // RETREAT: Alejarse del jugador
-void Enemy::retreatBehavior(const Map &map, int tileSize, float playerX, float playerY)
+void Enemy::_retreatBehavior(const Map &map, int tileSize, float playerX, float playerY)
 {
     if (!moving && timer >= 0.1f) {
         // Calcular celda del jugador
@@ -315,7 +315,7 @@ void Enemy::retreatBehavior(const Map &map, int tileSize, float playerX, float p
 
 // ==================== MOVIMIENTO ====================
 
-void Enemy::moveTowardsTarget(float dt, int tileSize)
+void Enemy::_moveTowardsTarget(float dt, int tileSize)
 {
     float targetPx = targetX * tileSize + tileSize * 0.5f;
     float targetPy = targetY * tileSize + tileSize * 0.5f;
