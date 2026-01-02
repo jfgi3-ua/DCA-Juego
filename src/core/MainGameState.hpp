@@ -37,8 +37,7 @@ class MainGameState : public GameState
         int _tile = 32;
         int _level = 1;
 
-        // Temporizador del nivel (segundos). 30s base + 30s por nivel
-        float _levelTime = 30.0f;
+        float levelTime_ = 60.0f;
 
         // Total de llaves en el mapa (guardado al inicio, no cambia)
         int _totalKeysInMap = 0;
