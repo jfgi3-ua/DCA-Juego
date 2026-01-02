@@ -14,17 +14,17 @@ std::string GetButtonSprite(const std::string& base) {
     return "sprites/icons/" + base + GetButtonSpriteLangSuffix() + ".png";
 }
 
-const std::string GameOverState::TEX_BUTTON_NEXT = "sprites/icons/boton_siguiente_nivel.png";
-const std::string GameOverState::TEX_BUTTON_EXIT = "sprites/icons/boton_salir.png";
-const std::string GameOverState::TEX_BUTTON_RESTART = "sprites/icons/boton_reiniciar.png";
+const std::string GameOverState::_TEX_BUTTON_NEXT = "sprites/icons/boton_siguiente_nivel.png";
+const std::string GameOverState::_TEX_BUTTON_EXIT = "sprites/icons/boton_salir.png";
+const std::string GameOverState::_TEX_BUTTON_RESTART = "sprites/icons/boton_reiniciar.png";
 
 GameOverState::GameOverState(int nivel, bool die, float time, bool isVictory)
 {
-    isDead_ = die;
-    remainingTime_ = time;
-    isVictory_ = isVictory;
-    backgroundColor_ = isVictory_ ? GOLD : (isDead_ ? RED : DARKGREEN); // Si añadimos sprites eliminar color de fondo
-    currentLevel_ = nivel;
+    _isDead = die;
+    _remainingTime = time;
+    _isVictory = isVictory;
+    _backgroundColor = _isVictory ? GOLD : (_isDead ? RED : DARKGREEN); // Si añadimos sprites eliminar color de fondo
+    _currentLevel = nivel;
     // Guardar idioma actual para detectar cambios y recargar sprites si es necesario
     currentLang_ = GetCurrentLanguage();
 }
@@ -49,7 +49,7 @@ void GameOverState::_loadSprites(const std::vector<std::string>& sprites) {
                 bg = "sprites/menus/background_congratulations" + suf + ".png";
             }
         }
-        background_ = &rm.GetTexture(bg);
+        _background = &rm.GetTexture(bg);
         // Ajustar backgroundDrawRect_ para que la versión _en tenga el mismo tamaño visual
         // que la versión en español (si existe). Calculamos la escala basada en el ancho
         // del sprite español para mantener la proporción visual.
@@ -191,13 +191,13 @@ void GameOverState::handleInput() {
         // Muerte o victoria total
 
         auto action1 = [this]() {
-            if (isVictory_) {
+            if (_isVictory) {
                 std::cout << _( "Clic en EMPEZAR DE NUEVO" ) << std::endl;
                 this->state_machine->add_state(std::make_unique<MainGameState>(1), true);
             } 
             else {
                 std::cout << _( "Clic en REINTENTAR" ) << std::endl;
-                this->state_machine->add_state(std::make_unique<MainGameState>(currentLevel_), true);
+                this->state_machine->add_state(std::make_unique<MainGameState>(_currentLevel), true);
             }
         };
 
@@ -238,12 +238,12 @@ void GameOverState::update(float)
     std::string lang = GetCurrentLanguage();
     if (lang != currentLang_) {
         currentLang_ = lang;
-        if (isVictory_) {
-            loadSprites_(spritesPaths_.victorySprites);
-        } else if (isDead_) {
-            loadSprites_(spritesPaths_.deathSprites);
+        if (_isVictory) {
+            _loadSprites(_spritesPaths.victorySprites);
+        } else if (_isDead) {
+            _loadSprites(_spritesPaths.deathSprites);
         } else {
-            loadSprites_(spritesPaths_.levelCompletedSprites);
+            _loadSprites(_spritesPaths.levelCompletedSprites);
         }
     }
 }
@@ -301,8 +301,8 @@ void GameOverState::render()
     // Dibujar background si existe (victoria, muerte o nivel completado)
     if (_background) {
         DrawTexturePro(
-            *background_,
-            {0, 0, (float)background_->width, (float)background_->height},
+            *_background,
+            {0, 0, (float)_background->width, (float)_background->height},
             backgroundDrawRect_,
             {0, 0}, 0.0f, WHITE
         );
@@ -316,7 +316,7 @@ void GameOverState::render()
         int seconds = totalSeconds % 60;
         char timeText[64];
         sprintf(timeText, _( "Tiempo restante: %02d:%02d" ), minutes, seconds);
-        int timeWidth = MeasureText(timeText, TIME_FONT_SIZE);
+        int timeWidth = MeasureText(timeText, _TIME_FONT_SIZE);
         int textX = (WINDOW_WIDTH - timeWidth) / 2;
         int textY = _TIME_TEXT_Y;
         
@@ -331,23 +331,23 @@ void GameOverState::render()
         }
         
         // Dibujar texto amarillo encima
-        DrawText(timeText, textX, textY, TIME_FONT_SIZE, GOLD);
-    } else if (isVictory_) {
+        DrawText(timeText, textX, textY, _TIME_FONT_SIZE, GOLD);
+    } else if (_isVictory) {
         std::string suf = GetButtonSpriteLangSuffix();
         const Texture2D& congrats = rm.GetTexture("sprites/menus/items_congratulations" + suf + ".png");
         // Ajustar tamaño y posición para que coincida con el español
-        float scale = CONGRATS_SCALE;
+        float scale = _CONGRATS_SCALE;
         float width = congrats.width * scale;
         float height = congrats.height * scale;
         float x = (WINDOW_WIDTH - width) / 2.0f;
-        float y = CONGRATS_Y;
+        float y = _CONGRATS_Y;
         // Si es inglés, forzar el mismo ancho y alto que el sprite español
         if (suf == "_en") {
             const Texture2D& congrats_es = rm.GetTexture("sprites/menus/items_congratulations.png");
             width = congrats_es.width * scale;
             height = congrats_es.height * scale;
             x = (WINDOW_WIDTH - width) / 2.0f;
-            y = CONGRATS_Y;
+            y = _CONGRATS_Y;
         }
         DrawTexturePro(
             congrats,
@@ -373,11 +373,11 @@ void GameOverState::render()
     }
 
     // Renderizar botones según el estado
-    if (!isDead_ && !isVictory_) {
-        renderButtons_(levelConfig_, GetButtonSprite("boton_siguiente_nivel"), GetButtonSprite("boton_salir"), false);
-    } else if (isVictory_) {
-        renderButtons_(otherConfig_, GetButtonSprite("boton_reiniciar"), GetButtonSprite("boton_salir"), true);
+    if (!_isDead && !_isVictory) {
+        _renderButtons(_levelConfig, GetButtonSprite("boton_siguiente_nivel"), GetButtonSprite("boton_salir"), false);
+    } else if (_isVictory) {
+        _renderButtons(_otherConfig, GetButtonSprite("boton_reiniciar"), GetButtonSprite("boton_salir"), true);
     } else {
-        renderButtons_(otherConfig_, GetButtonSprite("boton_reiniciar"), GetButtonSprite("boton_salir"), true);
+        _renderButtons(_otherConfig, GetButtonSprite("boton_reiniciar"), GetButtonSprite("boton_salir"), true);
     }
 }

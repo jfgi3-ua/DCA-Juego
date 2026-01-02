@@ -72,7 +72,7 @@ void StartGameState::handleInput() {
 
     // Detectar hover con ratón
     if (CheckCollisionPointRec(mousePos, playButton)) {
-        _selectedOption = 0;
+        selectedOption = 0;
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             std::cout << "Clic en JUGAR" << std::endl;
             this->state_machine->add_state(std::make_unique<SelectPlayerState>(), true);
@@ -81,7 +81,7 @@ void StartGameState::handleInput() {
     }
 
     if (CheckCollisionPointRec(mousePos, exitButton)) {
-        _selectedOption = 1;
+        selectedOption = 1;
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             std::cout << "Clic en SALIR" << std::endl;
             this->state_machine->set_game_ending(true);
@@ -92,12 +92,12 @@ void StartGameState::handleInput() {
     // Cambiar selección menu con teclado
     if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
         std::cout << "Tecla izquierda/derecha presionada." << std::endl;
-        _selectedOption = !_selectedOption;
+        selectedOption = !selectedOption;
     }
 
     if (IsKeyPressed(KEY_ENTER)) {
         std::cout << "Tecla enter presionada." << std::endl;
-        if(_selectedOption){
+        if(selectedOption){
             this->state_machine->set_game_ending(true);
         }else{
             this->state_machine->add_state(std::make_unique<SelectPlayerState>(), true);
@@ -105,7 +105,7 @@ void StartGameState::handleInput() {
     }
 }
 
-void StartGameState::update(float dt) {
+void StartGameState::update(float /*dt*/) {
     // Detectar cambio de idioma y recargar texturas de botones si procede
     std::string lang = GetCurrentLanguage();
     if (lang != lastLang_) {
@@ -197,7 +197,7 @@ void StartGameState::render() {
         playButton,
         {0, 0},
         0.0f,
-        (_selectedOption == 0 || playHover) ? WHITE : Color{180, 180, 180, 255}
+        (selectedOption == 0 || playHover) ? WHITE : Color{180, 180, 180, 255}
     );
 
     // Botón SALIR
@@ -210,6 +210,6 @@ void StartGameState::render() {
         exitButton,
         {0, 0},
         0.0f,
-        (_selectedOption == 1 || exitHover) ? WHITE : Color{180, 180, 180, 255}
+        (selectedOption == 1 || exitHover) ? WHITE : Color{180, 180, 180, 255}
     );
 }

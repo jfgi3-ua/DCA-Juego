@@ -341,7 +341,7 @@ void MainGameState::_renderTimerAndLevel()
 
     // Mostrar nivel actual arriba a la izquierda
     std::string levelText = std::string(_("Nivel: ")) + std::to_string(_level);
-    DrawText(levelText.c_str(), 10, 10, 24, DARKGRAY);
+    DrawText(levelText.c_str(), 10, 10, 24, YELLOW);
 }
 
 void MainGameState::render()
