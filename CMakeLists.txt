@@ -45,6 +45,7 @@ set(GAME_CORE_SOURCES
     src/core/ResourceManager.cpp
     src/core/PlayerSelection.cpp
     src/core/SelectPlayerState.cpp
+    src/core/Localization.cpp
     src/objects/Player.cpp
     src/objects/Enemy.cpp
     src/objects/Map.cpp
@@ -110,6 +111,22 @@ endif()
 
 # Organización de binarios
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Instalación de archivos de localización
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/locale/
+    DESTINATION share/game/locale
+    FILES_MATCHING PATTERN "*.mo"
+)
+
+# Instalación del ejecutable
+install(TARGETS game
+    RUNTIME DESTINATION bin
+)
+
+# Instalación de assets
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/assets/
+    DESTINATION share/game/assets
+)
 
 # Subdirectorio de tests (solo declara objetivos, no ejecuta nada. Se encontrará en la subcarpeta tests).
 add_subdirectory(tests)

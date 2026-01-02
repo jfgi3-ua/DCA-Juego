@@ -202,6 +202,12 @@ install: $(BIN_DIR)/$(APP_NAME)
 	install -d $(DESTDIR)$(DATADIR)/assets
 	cp -r $(ASSETS_DIR)/. $(DESTDIR)$(DATADIR)/assets/
 
+	# Instalar archivos de localización
+	install -d $(DESTDIR)$(DATADIR)/locale/es/LC_MESSAGES
+	install -d $(DESTDIR)$(DATADIR)/locale/en/LC_MESSAGES
+	install -m 0644 locale/es/LC_MESSAGES/messages.mo $(DESTDIR)$(DATADIR)/locale/es/LC_MESSAGES/
+	install -m 0644 locale/en/LC_MESSAGES/messages.mo $(DESTDIR)$(DATADIR)/locale/en/LC_MESSAGES/
+
 	@echo "$(GREEN)[INSTALL] Instalación completada.$(RESET)"
 
 	

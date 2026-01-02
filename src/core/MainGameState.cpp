@@ -1,3 +1,5 @@
+#include <libintl.h>
+#define _(String) gettext(String)
 #include "MainGameState.hpp"
 #include "GameOverState.hpp"
 #include "DevModeState.hpp"
@@ -236,13 +238,13 @@ void MainGameState::_renderHUD(){
     Rectangle bagHud{ (float)pad, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad };
     DrawRectangleRounded(bagHud, 0.25f, 6, Fade(BLACK, 0.10f));
     DrawRectangleRoundedLinesEx(bagHud, 0.25f, 6, 1.0f, DARKGRAY);
-    DrawText("Mochila", (int)bagHud.x + 10, (int)bagHud.y + 6, 16, DARKGRAY);
+    DrawText(_("Mochila"), (int)bagHud.x + 10, (int)bagHud.y + 6, 16, DARKGRAY);
 
     // Panel de vidas (alineado a la derecha dentro del HUD)
     Rectangle livesHud{ (float)GetScreenWidth() - 190.0f, baseY + pad, 180.0f, HUD_HEIGHT - 2*pad };
     DrawRectangleRounded(livesHud, 0.25f, 6, Fade(BLACK, 0.10f));
     DrawRectangleRoundedLinesEx(livesHud, 0.25f, 6, 1.0f, DARKGRAY);
-    DrawText("Vidas", (int)livesHud.x + 10, (int)livesHud.y + 6, 16, DARKGRAY);
+    DrawText(_("Vidas"), (int)livesHud.x + 10, (int)livesHud.y + 6, 16, DARKGRAY);
 
     _renderPlayerHUD(bagHud, livesHud, baseY);
 }
@@ -285,13 +287,13 @@ void MainGameState::_renderPlayerHUD(const Rectangle& bagHud, const Rectangle& l
 
         // --- C. ESTADO DE CHEATS (HUD) ---
         if (cheats.godMode) {
-            DrawText("GOD", (int)livesHud.x + 10, (int)livesHud.y + 8, 16, GOLD);
+            DrawText(_("GOD"), (int)livesHud.x + 10, (int)livesHud.y + 8, 16, GOLD);
         }
         if (cheats.noClip) {
-            DrawText("NOCLIP", (int)livesHud.x + 60, (int)livesHud.y + 8, 16, GOLD);
+            DrawText(_("NOCLIP"), (int)livesHud.x + 60, (int)livesHud.y + 8, 16, GOLD);
         }
         if (playerState.invulnerableTimer > 0.0f && playerState.invulnerableTimer < playerState.invulnerableDuration) {
-            DrawText("INVULNERABLE", (int)bagHud.x + 10, (int)bagHud.y - 18, 14, MAROON);
+            DrawText(_("INVULNERABLE"), (int)bagHud.x + 10, (int)bagHud.y - 18, 14, MAROON);
         }
 
         // --- D. MENSAJE DE SALIDA (Contextual) ---
@@ -310,11 +312,11 @@ void MainGameState::_renderPlayerHUD(const Rectangle& bagHud, const Rectangle& l
                 if (stats.keysCollected < _totalKeysInMap) {
                     // Caso: Faltan llaves
                     int remaining = _totalKeysInMap - stats.keysCollected;
-                    msg = "Necesitas " + std::to_string(remaining) + " llave" + (remaining > 1 ? "s" : "") + " más";
+                    msg = std::string(_("Necesitas ")) + std::to_string(remaining) + " " + _(remaining > 1 ? "llaves" : "llave") + " " + _("más");
                     msgColor = RED;
                 } else {
                     // Caso: Nivel completado
-                    msg = "¡Presiona ENTER para Siguiente Nivel!";
+                    msg = _( "¡Presiona ENTER para Siguiente Nivel!" );
                     msgColor = GREEN;
                 }
 
@@ -332,15 +334,14 @@ void MainGameState::_renderTimerAndLevel()
     int timerFont = 22;
     int minutes = (int)levelTime_ / 60;
     int seconds = (int)levelTime_ % 60;
-    std::string timeText = "Tiempo: " + std::to_string(minutes) + ":" +
+    std::string timeText = std::string(_("Tiempo: ")) + std::to_string(minutes) + ":" +
                           (seconds < 10 ? "0" : "") + std::to_string(seconds);
     int textW = MeasureText(timeText.c_str(), timerFont);
     DrawText(timeText.c_str(), (GetScreenWidth() - textW) / 2, (int)(GetScreenHeight() - HUD_HEIGHT) + 8, timerFont, DARKGRAY);
 
     // Mostrar nivel actual arriba a la izquierda
-    std::string levelText = "Nivel: " + std::to_string(_level);
+    std::string levelText = std::string(_("Nivel: ")) + std::to_string(_level);
     DrawText(levelText.c_str(), 10, 10, 24, YELLOW);
-
 }
 
 void MainGameState::render()

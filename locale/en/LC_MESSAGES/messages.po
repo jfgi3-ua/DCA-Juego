@@ -1,0 +1,141 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-12-29 08:27+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/core/GameOverState.cpp:119
+msgid "Clic en SIGUIENTE NIVEL"
+msgstr "Click on NEXT LEVEL"
+
+#: src/core/GameOverState.cpp:132 src/core/GameOverState.cpp:155
+#: src/core/StartGameState.cpp:97
+msgid "Clic en SALIR"
+msgstr "Click on EXIT"
+
+#: src/core/GameOverState.cpp:144
+msgid "Clic en EMPEZAR DE NUEVO"
+msgstr "Click on START AGAIN"
+
+#: src/core/GameOverState.cpp:148
+msgid "Clic en REINTENTAR"
+msgstr "Click on RETRY"
+
+#: src/core/GameOverState.cpp:253
+#, c-format
+msgid "Tiempo restante: %02d:%02d"
+msgstr "Time left: %02d:%02d"
+
+#: src/core/MainGameState.cpp:236
+msgid "Mochila"
+msgstr "Backpack"
+
+#: src/core/MainGameState.cpp:242
+msgid "Vidas"
+msgstr "Lives"
+
+#: src/core/MainGameState.cpp:285
+msgid "GOD"
+msgstr "GOD"
+
+#: src/core/MainGameState.cpp:288
+msgid "NOCLIP"
+msgstr "NOCLIP"
+
+#: src/core/MainGameState.cpp:291
+msgid "INVULNERABLE"
+msgstr "INVULNERABLE"
+
+#: src/core/MainGameState.cpp:310
+msgid "Necesitas "
+msgstr "You need "
+
+#: src/core/MainGameState.cpp:310
+msgid "llaves"
+msgstr "keys"
+
+#: src/core/MainGameState.cpp:310
+msgid "más"
+msgstr "more"
+
+#: src/core/MainGameState.cpp:314
+msgid "¡Presiona ENTER para Siguiente Nivel!"
+msgstr "Press ENTER for Next Level!"
+
+#: src/core/MainGameState.cpp:332
+msgid "Tiempo: "
+msgstr "Time: "
+
+#: src/core/MainGameState.cpp:338
+msgid "Nivel: "
+msgstr "Level: "
+
+#: src/core/SelectPlayerState.cpp:137
+msgid "Seleccion"
+msgstr "Selection"
+
+#: src/core/SelectPlayerState.cpp:138
+msgid "Preview"
+msgstr "Preview"
+
+#: src/core/StartGameState.cpp:88
+msgid "Clic en JUGAR"
+msgstr "Click on PLAY"
+
+#: src/core/StartGameState.cpp:105
+msgid "Tecla izquierda/derecha presionada."
+msgstr "Left/right key pressed."
+
+#: src/core/StartGameState.cpp:112
+msgid "Tecla enter presionada."
+msgstr "Enter key pressed."
+
+# Traducciones para selección de personaje
+msgid "Selecciona tu personaje"
+msgstr "Select your character"
+
+msgid "Selección"
+msgstr "Selection"
+
+msgid "Vista previa"
+msgstr "Preview"
+
+msgid "Sin sets disponibles"
+msgstr "No sets available"
+
+msgid "Set incompleto, se usará el predeterminado"
+msgstr "Incomplete set, default will be used"
+
+msgid "Usa ARRIBA/ABAJO y ENTER para continuar"
+msgstr "Use UP/DOWN and ENTER to continue"
+
+msgid "Arquero"
+msgstr "Archer"
+
+msgid "Hechicera"
+msgstr "Enchantress"
+
+msgid "Caballero"
+msgstr "Knight"
+
+msgid "Mosquetero"
+msgstr "Musketeer"
+
+msgid "Espadachín"
+msgstr "Swordsman"
+
+msgid "Mago"
+msgstr "Wizard"

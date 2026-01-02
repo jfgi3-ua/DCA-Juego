@@ -7,18 +7,22 @@
 #include "objects/Map.hpp" // Para medir el mapa antes
 #include "Config.hpp" // Archivo de configuración global (TILE_SIZE, HUD_HEIGHT)
 #include "ResourceManager.hpp"
+#include "Localization.hpp"
 extern "C" {
   #include <raylib.h>
 }
 
 int main() {
+
+  // Inicializar localización (por defecto español)
+  InitLocalization("es");
+
   // 0) Medir el tamaño del mapa y preparar la ventana acorde
   Map tmp;
   auto& rm = ResourceManager::Get();
   int level_ = 6; // Define the level number or get it from user input or configuration
   std::string relativePath = "maps/map_" + std::to_string(level_) + ".txt";
   tmp.loadFromFile(rm.GetAssetPath(relativePath), TILE_SIZE);
-
 
   const int MAP_W_PX = tmp.width() * TILE_SIZE;
   const int MAP_H_PX = tmp.height() * TILE_SIZE;
@@ -39,8 +43,14 @@ int main() {
   state_machine.handle_state_changes(delta_time);
 
   // 3) Bucle principal (hasta que se cierre la ventana o termine el juego)
+
   while (!WindowShouldClose() && !state_machine.is_game_ending()) {
     delta_time = GetFrameTime();
+
+    // Permitir cambio de idioma con tecla L/l
+    if (IsKeyPressed(KEY_L)) {
+      SwitchLocalization();
+    }
 
     state_machine.handle_state_changes(delta_time);
 

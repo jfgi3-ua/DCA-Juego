@@ -8,6 +8,7 @@
 #include "StateMachine.hpp"
 #include "MainGameState.hpp"
 #include "ResourceManager.hpp"
+#include "Localization.hpp"
 #include <deque> 
 
 extern "C" {
@@ -78,6 +79,10 @@ class GameOverState : public GameState
         const Texture2D* _titulo = nullptr;
         const Texture2D* _background = nullptr;
 
+        // Idioma actual (para detectar cambios y recargar sprites)
+        std::string currentLang_ = "";
+        // Rectángulo destino al dibujar el background (permite mantener tamaño consistente entre idiomas)
+        Rectangle backgroundDrawRect_ = {0, 0, (float)WINDOW_WIDTH, (float)WINDOW_HEIGHT};
         // Constantes para renderizado
         static constexpr float _CONGRATS_SCALE = 0.35f;
         static constexpr float _GAME_OVER_SCALE = 0.45f;
@@ -97,4 +102,8 @@ class GameOverState : public GameState
         void _handleButtons(const Rectangle& button1Area, const Rectangle& button2Area, std::function<void()> action1, std::function<void()> action2);
         void _handleConfig(const ButtonConfig& config, std::function<void()> action1, std::function<void()> action2);
         void _renderButtons(const ButtonConfig& config, const std::string& tex1, const std::string& tex2, bool useHover);
+        void _handleLangButtonInput();
+        void _renderLangButton() const;
+        Rectangle _getLangButtonRect() const;
+
 };

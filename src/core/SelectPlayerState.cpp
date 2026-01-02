@@ -1,3 +1,5 @@
+#include <libintl.h>
+#define _(String) gettext(String)
 #include "SelectPlayerState.hpp"
 #include "MainGameState.hpp"
 #include "PlayerSelection.hpp"
@@ -129,14 +131,14 @@ void SelectPlayerState::render() {
     DrawRectangleRounded(previewPanel, 0.18f, 6, Fade(LIGHTGRAY, 0.35f));
     DrawRectangleRoundedLinesEx(previewPanel, 0.18f, 6, 1.0f, GRAY);
 
-    const char* title = "Selecciona tu personaje";
+    const char* title = _( "Selecciona tu personaje" );
     int titleWidth = MeasureText(title, 28);
     DrawText(title, (WINDOW_WIDTH - titleWidth) / 2, 70, 28, DARKGRAY);
-    DrawText("Seleccion", (int)listPanel.x + 14, (int)listPanel.y + 10, 18, DARKGRAY);
-    DrawText("Preview", (int)previewPanel.x + 14, (int)previewPanel.y + 10, 18, DARKGRAY);
+    DrawText(_("Selección"), (int)listPanel.x + 14, (int)listPanel.y + 10, 18, DARKGRAY);
+    DrawText(_("Vista previa"), (int)previewPanel.x + 14, (int)previewPanel.y + 10, 18, DARKGRAY);
 
     if (sets_.empty()) {
-        const char* emptyText = "Sin sets disponibles";
+        const char* emptyText = _( "Sin sets disponibles" );
         int emptyWidth = MeasureText(emptyText, 20);
         DrawText(emptyText, (WINDOW_WIDTH - emptyWidth) / 2, 120, 20, GRAY);
     } else {
@@ -144,9 +146,19 @@ void SelectPlayerState::render() {
         int lineHeight = 24;
         int listStartY = (int)listPanel.y + 50;
         int listLeftX = (int)listPanel.x + 20;
+        // Nombres originales en español, traducibles
+        static const std::map<std::string, const char*> playerNameMap = {
+            {"Archer", "Arquero"},
+            {"Enchantress", "Hechicera"},
+            {"Knight", "Caballero"},
+            {"Musketeer", "Mosquetero"},
+            {"Swordsman", "Espadachín"},
+            {"Wizard", "Mago"}
+        };
         for (int i = 0; i < (int)sets_.size(); ++i) {
             int y = listStartY + (i * lineHeight);
-            const char* name = sets_[i].id.c_str();
+            std::string id = sets_[i].id;
+            const char* name = playerNameMap.count(id) ? _(playerNameMap.at(id)) : _(id.c_str());
             Color color = (i == selectedIndex_) ? BLACK : DARKGRAY;
             if (i == selectedIndex_) {
                 Rectangle hi{ (float)listLeftX - 8.0f, (float)y - 4.0f, listPanel.width - 28.0f, 24.0f };
@@ -158,7 +170,7 @@ void SelectPlayerState::render() {
 
         const auto& selected = sets_[selectedIndex_];
         if (!selected.hasIdle || !selected.hasWalk) {
-            const char* warn = "Set incompleto, se usara el default";
+            const char* warn = _( "Set incompleto, se usará el predeterminado" );
             DrawText(warn, (int)listPanel.x + 18, (int)(listPanel.y + listPanel.height - 32),
                      18, MAROON);
         }
@@ -179,7 +191,7 @@ void SelectPlayerState::render() {
 
     RenderSystem(previewRegistry_, 0.0f, 0.0f, previewTileSize_);
 
-    const char* hint = "Usa ARRIBA/ABAJO y ENTER para continuar";
+    const char* hint = _( "Usa ARRIBA/ABAJO y ENTER para continuar" );
     int hintWidth = MeasureText(hint, 18);
     DrawText(hint, (WINDOW_WIDTH - hintWidth) / 2, 120, 18, GRAY);
 }

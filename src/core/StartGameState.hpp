@@ -1,6 +1,8 @@
 #pragma once
 #include "GameState.hpp"
 #include "MainGameState.hpp"
+#include "Localization.hpp"
+
 
 extern "C" {
     #include <raylib.h>
@@ -19,5 +21,7 @@ class StartGameState : public GameState {
         void resume() override {}
 
     private:
-        int _selectedOption = 0;               // 0 = Jugar, 1 = Salir
+        int selectedOption = 0;               // 0 = Jugar, 1 = Salir
+        std::string lastLang_;
+
 };

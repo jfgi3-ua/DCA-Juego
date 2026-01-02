@@ -3,13 +3,13 @@ Section: games
 Priority: optional
 Maintainer: Esther Peral (Back n' Lovers) <eps63@alu.ua.es>
 Uploaders: Esther <eps63@alu.ua.es>, Fernando <jfgi3@alu.ua.es>, Alejandro <ama266@alu.ua.es>, Hugo <hrvr1@alu.ua.es>
-Build-Depends: debhelper-compat (= 13), g++, libgl1-mesa-dev, libx11-dev
+Build-Depends: debhelper-compat (= 13), g++, libgl1-mesa-dev, libx11-dev, gettext
 Standards-Version: 4.6.0
 Rules-Requires-Root: no
 Homepage: https://github.com/jfgi3-ua/DCA-Juego.git
 
 Package: game
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, gettext
 Description: Juego desarrollado para DCA
  Realizado por Esther Peral, Juan Fernando Ganim, Alejandro Montoya, Hugo Redondo.
