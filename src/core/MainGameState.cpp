@@ -13,6 +13,12 @@ extern "C" {
   #include <raylib.h>
 }
 
+static int ComputeFramesForTexture(const Texture2D& tex) {
+    if (tex.height <= 0) return 1;
+    int frames = tex.width / tex.height;
+    return frames > 0 ? frames : 1;
+}
+
 MainGameState::MainGameState(int level)
 {
     _level = level > 0 ? level : 1;
@@ -34,8 +40,90 @@ void MainGameState::init()
     // Cargar entidades del nivel en el registry
     LevelSetupSystem(_registry, _map);
 
-    // Inicializar temporizador: 30s base + 30s por cada nivel adicional
-    _levelTime = 30.0f + (_level - 1) * 30.0f;
+    // Inicializar temporizador: 45s base + 60s por cada nivel adicional
+    levelTime_ = 45.0f + (_level - 1) * 60.0f;
+
+    // ---------------------------------------------------------
+    // REFACTOR: ENTT
+    // ---------------------------------------------------------
+    // --- PLAYER ---
+    // Verificar si LevelSetupSystem ya creó el jugador
+    auto existingPlayerView = _registry.view<PlayerInputComponent>();
+    if (!existingPlayerView.empty()) {
+        // El jugador ya existe, no crear uno nuevo
+        return;
+    }
+
+    // 1. Obtener coordenadas del grid donde está la 'P' (ej: x=2, y=3)
+    IVec2 startGridPos = _map.playerStart();
+
+    // 2. Convertir a posición de mundo (píxeles)
+    // Usamos la esquina superior izquierda del tile como referencia (más fácil para ECS)
+    float centerX = (startGridPos.x * _map.tile()) + (_map.tile() / 2.0f);
+    float centerY = (startGridPos.y * _map.tile()) + (_map.tile() / 2.0f);
+    auto playerEntity = _registry.create();
+
+    // 3. Componente de Stats
+    _registry.emplace<PlayerStatsComponent>(playerEntity, 5); // 5 vidas iniciales
+
+    // 4. Guardamos la posición central.
+    _registry.emplace<TransformComponent>(playerEntity, Vector2{centerX, centerY}, Vector2{(float)_map.tile(), (float)_map.tile()});
+
+    // 5. Configuración del Sprite
+    std::string idlePath;
+    std::string walkPath;
+    if (PlayerSelection::HasSelectedSpriteSet() &&
+        PlayerSelection::SelectedHasIdle() && PlayerSelection::SelectedHasWalk()) {
+        idlePath = PlayerSelection::GetSelectedIdlePath();
+        walkPath = PlayerSelection::GetSelectedWalkPath();
+    } else {
+        auto sets = DiscoverPlayerSpriteSets();
+        auto defaultId = ResolveDefaultPlayerSpriteSetId(sets);
+        auto it = std::find_if(sets.begin(), sets.end(),
+                               [&](const PlayerSpriteSet& set) { return set.id == defaultId; });
+        if (it != sets.end() && it->hasIdle && it->hasWalk) {
+            idlePath = it->idlePath;
+            walkPath = it->walkPath;
+        } else {
+            idlePath = "sprites/player/Archer/Idle.png";
+            walkPath = "sprites/player/Archer/Walk.png";
+        }
+    }
+
+    Texture2D playerIdleTex = rm.GetTexture(idlePath);
+    Texture2D playerWalkTex = rm.GetTexture(walkPath);
+    Vector2 manualOffset = { 0.0f, -10.0f };  // Ajuste manual del sprite
+    int idleFrames = ComputeFramesForTexture(playerIdleTex);
+    int walkFrames = ComputeFramesForTexture(playerWalkTex);
+    _registry.emplace<SpriteComponent>(playerEntity, playerIdleTex, manualOffset, 1.5f);
+    _registry.emplace<GridClipComponent>(playerEntity, idleFrames);
+    _registry.emplace<AnimationComponent>(playerEntity, playerIdleTex, playerWalkTex,
+                                         idleFrames, walkFrames, 0.2f, 0.12f);
+
+    // 6. Componente de Movimiento (Velocidad 150.0f igual que Player.hpp)
+    _registry.emplace<MovementComponent>(playerEntity, 75.0f);
+
+    // 7. Etiqueta de Input (para que sepa que ESTE es el jugador controlable) <-- // ?? Esta parte tengo que estudiarmela mejor
+    _registry.emplace<PlayerInputComponent>(playerEntity);
+
+    // 8. Estado de jugador (invulnerabilidad y retroceso)
+    _registry.emplace<PlayerStateComponent>(playerEntity, Vector2{centerX, centerY}, 1.5f);
+
+    // 9. Cheats del jugador (god/no-clip)
+    _registry.emplace<PlayerCheatComponent>(playerEntity, false, false);
+
+    // -- Colisiones --
+    // 1. Añadir ColliderComponent al JUGADOR
+    // Ajustamos la caja para que sea un poco más pequeña que el tile (hitbox permisiva... de momento)
+    float hitSize = _tile * 0.6f;
+    // Offset centrado relativo al centro del personaje (que es donde está transform.position)
+    // Como transform.position es el CENTRO, un rect en {-w/2, -h/2} estaría centrado.
+    _registry.emplace<ColliderComponent>(playerEntity,
+        Rectangle{ -hitSize/2, -hitSize/2, hitSize, hitSize },
+        CollisionType::Player
+    );
+
+    std::cout << "Nivel cargado. Entidades generadas via ECS." << std::endl;
 }
 
 void MainGameState::handleInput()
@@ -43,7 +131,7 @@ void MainGameState::handleInput()
     // 1. Activar menú de desarrollador con CTRL+D
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_D)) {
         this->state_machine->add_overlay_state(
-            std::make_unique<DevModeState>(&_registry, &_levelTime, &_freezeEnemies, &_infiniteTime,
+            std::make_unique<DevModeState>(&_registry, &levelTime_, &_freezeEnemies, &_infiniteTime,
                                            &_keyGivenByCheating, &_totalKeysInMap, _level)
         );
         return;
@@ -53,7 +141,7 @@ void MainGameState::handleInput()
     if (IsKeyPressed(KEY_SPACE)) {
         // Argumentos de GameOverState: nivel actual, ha muerto (true), tiempo restante, juego terminado (false)
         this->state_machine->add_state(
-            std::make_unique<GameOverState>(_level, true, _levelTime, false), 
+            std::make_unique<GameOverState>(_level, true, levelTime_, false), 
             true // Reemplazar el estado actual
         );
         return;
@@ -73,7 +161,7 @@ void MainGameState::_checkGameEndConditions()
 
     // Derrota por vidas
     if (stats.lives <= 0) {
-        this->state_machine->add_state(std::make_unique<GameOverState>(_level, true, _levelTime, false), true);
+        this->state_machine->add_state(std::make_unique<GameOverState>(_level, true, levelTime_, false), true);
         return;
     }
 
@@ -83,7 +171,7 @@ void MainGameState::_checkGameEndConditions()
     if (cellX >= 0 && cellY >= 0 && cellX < _map.width() && cellY < _map.height()) {
         if (_map.at(cellX, cellY) == 'X' && stats.keysCollected >= _totalKeysInMap) {
             bool gameFinished = (_level >= 6);
-            this->state_machine->add_state(std::make_unique<GameOverState>(_level, false, _levelTime, gameFinished), true);
+            this->state_machine->add_state(std::make_unique<GameOverState>(_level, false, levelTime_, gameFinished), true);
         }
     }
 }
@@ -92,9 +180,9 @@ void MainGameState::update(float deltaTime)
 {
     // Reducir temporizador de nivel (excepto si está en modo tiempo infinito)
     if (!_infiniteTime) {
-        _levelTime -= deltaTime;
-        if (_levelTime <= 0.0f) {
-            _levelTime = 0.0f;
+        levelTime_ -= deltaTime;
+        if (levelTime_ <= 0.0f) {
+            levelTime_ = 0.0f;
             // Tiempo agotado -> Game Over (dead = true)
             this->state_machine->add_state(std::make_unique<GameOverState>(_level, true, 0.0f, false), true);
             return;
@@ -223,7 +311,7 @@ void MainGameState::_renderPlayerHUD(const Rectangle& bagHud, const Rectangle& l
 
                 if (stats.keysCollected < _totalKeysInMap) {
                     // Caso: Faltan llaves
-                    int remaining = totalKeysInMap_ - stats.keysCollected;
+                    int remaining = _totalKeysInMap - stats.keysCollected;
                     msg = std::string(_("Necesitas ")) + std::to_string(remaining) + " " + _(remaining > 1 ? "llaves" : "llave") + " " + _("más");
                     msgColor = RED;
                 } else {
@@ -252,7 +340,7 @@ void MainGameState::_renderTimerAndLevel()
     DrawText(timeText.c_str(), (GetScreenWidth() - textW) / 2, (int)(GetScreenHeight() - HUD_HEIGHT) + 8, timerFont, DARKGRAY);
 
     // Mostrar nivel actual arriba a la izquierda
-    std::string levelText = std::string(_("Nivel: ")) + std::to_string(level_);
+    std::string levelText = std::string(_("Nivel: ")) + std::to_string(_level);
     DrawText(levelText.c_str(), 10, 10, 24, DARKGRAY);
 }
 
