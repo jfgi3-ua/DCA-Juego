@@ -142,7 +142,7 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/assets/
 add_subdirectory(tests)
 
 # Configuración de CPack para distribución multiplataforma
-set(CPACK_PACKAGE_NAME "Laberinto")
+set(CPACK_PACKAGE_NAME "escape_del_laberinto")
 set(CPACK_PACKAGE_VENDOR "Alejandro")
 set(CPACK_PACKAGE_CONTACT "ama266@alu.ua.com")
 
