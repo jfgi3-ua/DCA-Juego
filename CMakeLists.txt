@@ -92,12 +92,22 @@ target_link_libraries(escape_del_laberinto PRIVATE game_core)
 # Configuración multiplataforma
 if (WIN32)
     message(STATUS "Configurando para Windows")
+
+    # Añadimos el directorio de MSYS2 UCRT64 para que encuentre libintl y libiconv 
+    link_directories("C:/msys64/ucrt64/lib")
+    # Enlazar gettext en el core 
+    target_link_libraries(game_core PUBLIC intl iconv) 
+    # Enlazar gettext también en el ejecutable 
+    target_link_libraries(game PRIVATE intl iconv)
+
     # En Windows, raylib necesita WinMM, gdi32, etc. Lo ponemos en el core
     # para que también lo hereden los tests que enlazan con game_core.
     # Cambiado a PUBLIC para que tests hereden.
     target_link_libraries(game_core PUBLIC winmm gdi32 opengl32 user32)
+    
 elseif (UNIX)
     message(STATUS "Configurando para Linux")
+    
     # En Linux, raylib necesita enlazar con librerías del sistema.
     # Se declaran en game_core para que escape_del_laberinto y tests hereden el enlace.
     # Cambiado a PUBLIC para que tests hereden.
