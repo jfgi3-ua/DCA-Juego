@@ -98,7 +98,7 @@ if (WIN32)
     # Enlazar gettext en el core 
     target_link_libraries(game_core PUBLIC intl iconv) 
     # Enlazar gettext también en el ejecutable 
-    target_link_libraries(game PRIVATE intl iconv)
+    target_link_libraries(escape_del_laberinto PRIVATE intl iconv)
 
     # En Windows, raylib necesita WinMM, gdi32, etc. Lo ponemos en el core
     # para que también lo hereden los tests que enlazan con game_core.
