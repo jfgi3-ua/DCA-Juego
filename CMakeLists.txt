@@ -6,7 +6,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 project(escape_del_laberinto
-    VERSION 0.3
+    VERSION 1.0
     DESCRIPTION "escape_del_laberinto"
     LANGUAGES CXX
 )
