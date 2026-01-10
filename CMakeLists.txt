@@ -7,7 +7,7 @@ endif()
 
 project(escape_del_laberinto
     VERSION 0.3
-    DESCRIPTION "Laberinto"
+    DESCRIPTION "escape_del_laberinto"
     LANGUAGES CXX
 )
 
