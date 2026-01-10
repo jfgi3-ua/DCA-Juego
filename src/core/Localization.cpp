@@ -5,6 +5,10 @@
 #include <cstdlib>
 #include <filesystem>
 
+#ifdef _WIN32 
+    #include <windows.h>
+#endif
+
 static std::string currentLang = "es";
 
 void InitLocalization(const std::string& lang) {
@@ -33,7 +37,14 @@ void InitLocalization(const std::string& lang) {
     bindtextdomain("messages", localeDir);
     textdomain("messages");
     bind_textdomain_codeset("messages", "UTF-8");
-    setenv("LANGUAGE", lang.c_str(), 1);
+
+    #ifdef _WIN32 // Windows NO tiene setenv() 
+        SetEnvironmentVariableA("LANGUAGE", lang.c_str()); 
+        SetEnvironmentVariableA("LANG", lang.c_str()); 
+        SetEnvironmentVariableA("LC_MESSAGES", lang.c_str()); 
+    #else // Linux / macOS 
+        setenv("LANGUAGE", lang.c_str(), 1); 
+    #endif
 }
 
 void SwitchLocalization() {
