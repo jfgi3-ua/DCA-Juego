@@ -259,7 +259,7 @@ cmake --build build --config Release
 #### Ejecutar 
 
 ~~~
-./build/game
+./build/escape_del_laberinto
 ~~~
 
 #### Instalar
@@ -287,7 +287,7 @@ cmake --build .
 
 ~~~
 cd ..
-.\build\game.exe
+.\build\escape_del_laberinto.exe
 ~~~
 
 #### Instalar
