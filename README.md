@@ -259,7 +259,7 @@ cmake --build build --config Release
 #### Ejecutar 
 
 ~~~
-./build/game
+./build/escape_del_laberinto
 ~~~
 
 #### Instalar
@@ -275,7 +275,6 @@ cpack
 mkdir build
 cd build
 cmake .. -G "MinGW Makefiles"
-cd ..
 ~~~
 
 #### Compilar
@@ -288,7 +287,7 @@ cmake --build .
 
 ~~~
 cd ..
-.\build\game.exe
+.\build\escape_del_laberinto.exe
 ~~~
 
 #### Instalar
