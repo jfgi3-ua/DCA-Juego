@@ -5,7 +5,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-project(game
+project(escape_del_laberinto
     VERSION 0.3
     DESCRIPTION "Laberinto"
     LANGUAGES CXX
@@ -77,17 +77,17 @@ target_include_directories(game_core PUBLIC
 )
 
 # Enlazar raylib desde el núcleo (consumidores heredan el enlace, por eso cambiamos a PUBLIC).
-# CUalquier consumidor (game/tests) heredan includes y enlace.
+# CUalquier consumidor (escape_del_laberinto/tests) heredan includes y enlace.
 target_link_libraries(game_core PUBLIC raylib)
 
 # Ejecutable principal (solo contiene main.cpp).
-add_executable(game
+add_executable(escape_del_laberinto
     src/core/main.cpp
 )
 
 # El juego depende del núcleo.
 # El ejecutable queda limpio y usa el core como dependencia.
-target_link_libraries(game PRIVATE game_core)
+target_link_libraries(escape_del_laberinto PRIVATE game_core)
 
 # Configuración multiplataforma
 if (WIN32)
@@ -99,7 +99,7 @@ if (WIN32)
 elseif (UNIX)
     message(STATUS "Configurando para Linux")
     # En Linux, raylib necesita enlazar con librerías del sistema.
-    # Se declaran en game_core para que game y tests hereden el enlace.
+    # Se declaran en game_core para que escape_del_laberinto y tests hereden el enlace.
     # Cambiado a PUBLIC para que tests hereden.
     target_link_libraries(game_core PUBLIC m pthread GL X11)
 endif()
@@ -114,18 +114,18 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Instalación de archivos de localización
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/locale/
-    DESTINATION share/game/locale
+    DESTINATION share/escape_del_laberinto/locale
     FILES_MATCHING PATTERN "*.mo"
 )
 
 # Instalación del ejecutable
-install(TARGETS game
+install(TARGETS escape_del_laberinto
     RUNTIME DESTINATION bin
 )
 
 # Instalación de assets
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/assets/
-    DESTINATION share/game/assets
+    DESTINATION share/escape_del_laberinto/assets
 )
 
 # Subdirectorio de tests (solo declara objetivos, no ejecuta nada. Se encontrará en la subcarpeta tests).
@@ -137,11 +137,11 @@ set(CPACK_PACKAGE_VENDOR "Alejandro")
 set(CPACK_PACKAGE_CONTACT "ama266@alu.ua.com")
 
 # Instalar el ejecutable
-install(TARGETS game DESTINATION bin)
+install(TARGETS escape_del_laberinto DESTINATION bin)
 
 # Instalar assets
 if(UNIX)
-    install(DIRECTORY assets/ DESTINATION share/game/assets)
+    install(DIRECTORY assets/ DESTINATION share/escape_del_laberinto/assets)
 elseif(WIN32)
     install(DIRECTORY assets/ DESTINATION bin/assets)
 endif()
