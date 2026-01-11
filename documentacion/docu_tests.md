@@ -295,3 +295,95 @@ ctest --test-dir build --output-on-failure
 * `game_core` centraliza el código compartido entre el juego y los tests, evitando dependencias del ejecutable y de `main.cpp`.
 * Para evitar problemas con el directorio de trabajo (CWD), los tests usan `TESTS_DIR` definido desde CMake.
 * Los stubs de raylib garantizan ejecución headless y permiten validar comportamiento de caché/carga sin GPU.
+
+---
+
+## 10) Implementacion del patron ECS (Entity Component System)
+
+Esta implementacion usa **EnTT** (`vendor/include/entt/entt.hpp`) como motor ECS. El objetivo es desacoplar datos de comportamiento y permitir que el juego trate entidades del mundo como combinaciones de componentes, procesadas por sistemas especializados.
+
+### 10.1) Estructura general
+
+- **Entidades**: identificadores sin logica propia (`entt::entity`), creados y gestionados desde un `entt::registry`.
+- **Componentes**: structs simples (datos puros) en `src/ecs/components/`, agrupados por dominio:
+  - **World**: `TransformComponent`, `MovementComponent`, `SpriteComponent`, `AnimationComponent`, `ColliderComponent`, `SpikeComponent`, `MechanismComponent`, etc.
+  - **Player**: `PlayerInputComponent`, `PlayerStateComponent`, `PlayerStatsComponent`, `PlayerCheatComponent`.
+  - **Enemy**: `EnemyAIComponent`.
+- **Sistemas**: funciones libres en `src/ecs/systems/` que operan sobre vistas del registro (`registry.view<...>()`).
+
+Punto de entrada central: `src/ecs/Ecs.hpp`, que agrupa componentes y sistemas para su uso en los estados del juego.
+
+### 10.2) Registro y ciclo de juego
+
+El `entt::registry` vive en `src/core/MainGameState.hpp` y se usa en el loop principal:
+
+1. **Creacion de entidades** en `LevelSetupSystem(...)` (`src/ecs/systems/LevelSetupSystem.cpp`).
+2. **Update** en `MainGameState::update(...)` (`src/core/MainGameState.cpp`), con el orden:
+   - `InputSystem`
+   - `EnemyAISystem`
+   - `MovementSystem`
+   - `AnimationSystem`
+   - `SpikeSystem`
+   - `InvulnerabilitySystem`
+   - `CollisionSystem`
+   - `MechanismSystem`
+3. **Render** en `_renderMap()` usando `RenderSystem(...)` (y un registro separado para el preview en `SelectPlayerState`).
+
+Este orden es importante: el input decide destinos, el movimiento interpola, la animacion responde a movimiento, las colisiones corrigen estado, y los mecanismos reaccionan al estado del jugador.
+
+### 10.3) Componentes clave y su rol
+
+- `TransformComponent`: posicion y tamano en mundo (base para render y colisiones).
+- `MovementComponent`: movimiento por casillas con interpolacion temporal (start/target, progreso, duracion).
+- `SpriteComponent` + `GridClipComponent` + `AnimationComponent`: render animado por spritesheet o fijo.
+- `ManualSpriteComponent`: recortes manuales para sprites no basados en grid (pinchos, mecanismos).
+- `ColliderComponent` + `CollisionType`: hitboxes y categorizacion (Player, Enemy, Spike, Item).
+- `MechanismComponent` + `MechanismTriggerComponent` + `MechanismTargetComponent`: enlazan trigger/target por `id` logico.
+- `PlayerStateComponent`: invulnerabilidad y ultima casilla valida.
+- `EnemyAIComponent`: estado y temporizadores para patrulla, persecucion y retirada.
+
+### 10.4) Sistemas y comportamiento
+
+- **InputSystem**: detecta input, calcula celda destino, actualiza `MovementComponent` y orienta sprite.
+- **MovementSystem**: interpola posicion desde `startPos` a `targetPos` segun `deltaTime`.
+- **AnimationSystem**: alterna texturas y frames segun si la entidad camina o esta idle.
+- **SpikeSystem**: activa/desactiva pinchos en intervalos, sincronizando collider.
+- **CollisionSystem**: resuelve colisiones jugador vs peligros/objetos, reduce vidas, invulnerabilidad y recoge items.
+- **EnemyAISystem**: cambia entre `Patrol/Chase/Retreat` con line-of-sight y bloqueo por mecanismos.
+- **MechanismSystem**: detecta triggers en la celda del jugador y desactiva la pareja trigger/target.
+- **LevelSetupSystem**: lee `Map` y genera entidades (jugador, enemigos, pinchos, llaves, mecanismos).
+- **RenderSystem**: dibuja entidades segun combinacion de componentes, con reglas de recorte y escalado.
+
+### 10.5) Flujo de datos y dependencias
+
+El ECS no vive aislado: se integra con clases ya existentes del proyecto:
+
+- `Map` (`src/objects/Map.*`) aporta informacion de tiles, walkability y mecanismos.
+- `ResourceManager` gestiona texturas cargadas desde assets.
+- `PlayerSelection` y `PlayerSpriteCatalog` alimentan los sprites del jugador.
+
+Esto permite que el ECS use los datos de mapa y recursos sin reescribir todo el subsistema de carga.
+
+### 10.6) Ejemplo minimo de entidad
+
+```cpp
+auto e = registry.create();
+registry.emplace<TransformComponent>(e, Vector2{cx, cy}, Vector2{tile, tile});
+registry.emplace<SpriteComponent>(e, tex, Vector2{0,0}, 1.0f);
+registry.emplace<ColliderComponent>(e, Rectangle{-w/2, -h/2, w, h}, CollisionType::Item);
+registry.emplace<ItemComponent>(e, true);
+```
+
+Con esta combinacion, el sistema de colisiones trata la entidad como item recolectable y el render la dibuja.
+
+### 10.7) Migracion de POO a ECS y dificultades
+
+La migracion a ECS se realizo en un punto relativamente **avanzado** del desarrollo. En ese momento ya existia un conjunto de clases orientadas a objetos (por ejemplo en `src/objects/`) y flujos de juego estables. Esto implico:
+
+- **Compatibilidad temporal**: hubo que mantener estructuras antiguas (mapa, recursos, estados) mientras se movia la logica a ECS.
+- **Duplicidad de logica**: algunas partes quedaron duplicadas o con "puentes" (por ejemplo, creacion de entidades en `LevelSetupSystem` y validaciones en `MainGameState`).
+- **Reasignacion de responsabilidades**: funcionalidad antes embebida en clases ahora vive en sistemas independientes. Esto obligo a redefinir el orden de ejecucion y los puntos de integracion.
+- **Ajustes de datos**: atributos antes guardados en objetos (posicion, animacion, colisiones) se repartieron en componentes, requiriendo revisar muchos accesos.
+- **Render y recursos**: al migrar tarde, se tuvo que adaptar el render a leer componentes (`SpriteComponent`, `GridClipComponent`, etc.) sin romper las rutas de assets ya existentes.
+
+El resultado es un ECS funcional que convive con el resto del codigo legado, con un flujo de datos mas claro y escalable para ampliar comportamiento por composicion en lugar de herencia.
