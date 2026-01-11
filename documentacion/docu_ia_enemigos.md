@@ -33,7 +33,7 @@ La IA se implementa en la clase `Enemy` ubicada en:
 ```cpp
 class Enemy {
     // Posición y movimiento
-    int x, y;                    // Posición en grid (celdas)
+    int x, y;                    // Posición en grid
     float px, py;                // Posición en píxeles
     int targetX, targetY;        // Objetivo de movimiento
     float speed;                 // Velocidad base
