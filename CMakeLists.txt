@@ -46,11 +46,7 @@ set(GAME_CORE_SOURCES
     src/core/PlayerSelection.cpp
     src/core/SelectPlayerState.cpp
     src/core/Localization.cpp
-    src/objects/Player.cpp
-    src/objects/Enemy.cpp
     src/objects/Map.cpp
-    src/objects/Mechanism.cpp
-    src/objects/Spikes.cpp
     src/ecs/systems/CollisionSystems.cpp
     src/ecs/systems/EnemySystems.cpp
     src/ecs/systems/LevelSetupSystem.cpp
